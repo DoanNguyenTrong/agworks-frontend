@@ -108,7 +108,7 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
                     <SidebarMenuItem key={item.path}>
                       <SidebarMenuButton
                         asChild
-                        active={location.pathname === item.path}
+                        data-active={location.pathname === item.path}
                       >
                         <Link to={item.path} className="flex items-center gap-2">
                           <item.icon className="h-4 w-4" />

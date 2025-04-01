@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, CalendarDays, Clock, Users } from "lucide-react";
 import { Link } from "react-router-dom";
-import { sites, workOrders, workerApplications } from "@/lib/data";
+import { sites, workOrders, workerApplications, blocks } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 

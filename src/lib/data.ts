@@ -1,5 +1,4 @@
-
-import { User, Site, Block, WorkOrder, WorkerApplication, WorkerTask } from './types';
+import { User, Site, Block, WorkOrder, WorkerApplication, WorkerTask, PaymentCalculation } from './types';
 
 // Mock Users
 export const users: User[] = [
