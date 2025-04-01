@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,10 +33,14 @@ import AdminCustomerEdit from "./pages/AdminCustomerEdit";
 import AdminWorkerView from "./pages/AdminWorkerView";
 import AdminWorkerEdit from "./pages/AdminWorkerEdit";
 import HelpPage from "./pages/HelpPage";
+import CustomerManagerEdit from "./pages/CustomerManagerEdit";
+import WorkerTasks from "./pages/WorkerTasks";
+import WorkerTaskDetails from "./pages/WorkerTaskDetails";
+import WorkerSettings from "./pages/WorkerSettings";
+import WorkerHelp from "./pages/WorkerHelp";
 
 const queryClient = new QueryClient();
 
-// Protected route component
 const ProtectedRoute = ({ 
   children, 
   allowedRoles
@@ -83,7 +86,6 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             
-            {/* Admin Routes */}
             <Route 
               path="/admin" 
               element={
@@ -157,7 +159,6 @@ const App = () => (
               } 
             />
             
-            {/* Customer Routes */}
             <Route 
               path="/customer" 
               element={
@@ -263,7 +264,6 @@ const App = () => (
               } 
             />
             
-            {/* Site Manager Routes */}
             <Route 
               path="/manager" 
               element={
@@ -313,7 +313,6 @@ const App = () => (
               } 
             />
             
-            {/* Worker Routes */}
             <Route 
               path="/worker" 
               element={
@@ -355,7 +354,6 @@ const App = () => (
               } 
             />
             
-            {/* Catch-all */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
