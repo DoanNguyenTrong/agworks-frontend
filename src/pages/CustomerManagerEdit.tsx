@@ -8,7 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import ManagerForm from "@/components/ManagerForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { siteManagers } from "@/lib/data";
+import { users } from "@/lib/data";
 
 export default function CustomerManagerEdit() {
   const { id } = useParams();
@@ -18,7 +18,8 @@ export default function CustomerManagerEdit() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch manager data
+    // Fetch manager data - find site managers among users
+    const siteManagers = users.filter(user => user.role === "siteManager");
     const foundManager = siteManagers.find(manager => manager.id === id);
     if (foundManager) {
       setManager(foundManager);

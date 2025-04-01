@@ -1,4 +1,3 @@
-
 import { User, Site, Block, WorkOrder, WorkerApplication, WorkerTask, PaymentCalculation } from './types';
 
 // Mock Users
@@ -45,7 +44,6 @@ export const users: User[] = [
     phone: "555-444-5555",
     createdAt: "2023-01-05T00:00:00Z"
   },
-  // Additional mock users
   {
     id: "u6",
     email: "customer2@winery.com",
@@ -110,6 +108,9 @@ export const users: User[] = [
   }
 ];
 
+// Mock site managers extracted from users
+export const siteManagers = users.filter(user => user.role === "siteManager");
+
 // Mock Sites
 export const sites: Site[] = [
   {
@@ -127,7 +128,6 @@ export const sites: Site[] = [
     customerId: "u2",
     createdAt: "2023-02-02T00:00:00Z"
   },
-  // Additional mock sites
   {
     id: "s3",
     name: "Eastside Terraces",
@@ -197,7 +197,6 @@ export const blocks: Block[] = [
     vines: 1800,
     createdAt: "2023-03-03T00:00:00Z"
   },
-  // Additional mock blocks
   {
     id: "b4",
     name: "Block D - Pinot Noir",
@@ -304,7 +303,6 @@ export const workOrders: WorkOrder[] = [
     createdAt: "2023-05-25T00:00:00Z",
     createdBy: "u3"
   },
-  // Additional mock work orders
   {
     id: "wo3",
     siteId: "s2",
@@ -421,7 +419,6 @@ export const workerApplications: WorkerApplication[] = [
     status: "approved",
     createdAt: "2023-05-27T00:00:00Z"
   },
-  // Additional mock worker applications
   {
     id: "wa3",
     workerId: "u10",
@@ -510,7 +507,6 @@ export const workerTasks: WorkerTask[] = [
     completedAt: "2023-06-01T12:15:00Z",
     status: "approved"
   },
-  // Additional mock worker tasks
   {
     id: "wt5",
     workerId: "u10",

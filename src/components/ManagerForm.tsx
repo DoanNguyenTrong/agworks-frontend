@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { sites } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const managerSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -19,18 +20,22 @@ const managerSchema = z.object({
   sendInvite: z.boolean().default(true),
 });
 
-interface ManagerFormProps {
+export type ManagerFormData = z.infer<typeof managerSchema>;
+
+export interface ManagerFormProps {
   onComplete?: () => void;
-  defaultValues?: z.infer<typeof managerSchema>;
+  onSubmit?: (data: ManagerFormData) => void;
+  defaultValues?: ManagerFormData;
+  isEditMode?: boolean;
 }
 
-export default function ManagerForm({ onComplete, defaultValues }: ManagerFormProps) {
+export default function ManagerForm({ onComplete, onSubmit, defaultValues, isEditMode = false }: ManagerFormProps) {
   const { currentUser } = useAuth();
   
   // Get customer sites
   const customerSites = sites.filter(site => site.customerId === currentUser?.id);
   
-  const form = useForm<z.infer<typeof managerSchema>>({
+  const form = useForm<ManagerFormData>({
     resolver: zodResolver(managerSchema),
     defaultValues: defaultValues || {
       name: "",
@@ -42,23 +47,29 @@ export default function ManagerForm({ onComplete, defaultValues }: ManagerFormPr
     },
   });
 
-  const onSubmit = (data: z.infer<typeof managerSchema>) => {
+  const handleSubmit = (data: ManagerFormData) => {
     console.log("Site manager data:", data);
     
-    // In a real app, this would make an API call to create the site manager
-    toast({
-      title: "Site manager created",
-      description: `${data.name} has been added as a site manager.`,
-    });
-    
-    if (onComplete) {
-      onComplete();
+    if (onSubmit) {
+      onSubmit(data);
+    } else {
+      // Default behavior if no onSubmit is provided
+      toast({
+        title: isEditMode ? "Site manager updated" : "Site manager created",
+        description: isEditMode 
+          ? `${data.name} has been updated.`
+          : `${data.name} has been added as a site manager.`,
+      });
+      
+      if (onComplete) {
+        onComplete();
+      }
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="name"
@@ -135,52 +146,54 @@ export default function ManagerForm({ onComplete, defaultValues }: ManagerFormPr
           )}
         />
         
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input {...field} type="password" />
-              </FormControl>
-              <FormDescription>
-                If left empty, a temporary password will be generated.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="sendInvite"
-          render={({ field }) => (
-            <FormItem className="flex items-center gap-2">
-              <FormControl>
-                <input
-                  type="checkbox"
-                  checked={field.value}
-                  onChange={field.onChange}
-                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                />
-              </FormControl>
-              <div>
-                <FormLabel>Send invitation email</FormLabel>
+        {!isEditMode && (
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input {...field} type="password" />
+                </FormControl>
                 <FormDescription>
-                  Send an email with login instructions to the site manager.
+                  If left empty, a temporary password will be generated.
                 </FormDescription>
-              </div>
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        
+        {!isEditMode && (
+          <FormField
+            control={form.control}
+            name="sendInvite"
+            render={({ field }) => (
+              <FormItem className="flex items-center gap-2">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div>
+                  <FormLabel>Send invitation email</FormLabel>
+                  <FormDescription>
+                    Send an email with login instructions to the site manager.
+                  </FormDescription>
+                </div>
+              </FormItem>
+            )}
+          />
+        )}
         
         <div className="flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={onComplete}>
             Cancel
           </Button>
           <Button type="submit">
-            Create Site Manager
+            {isEditMode ? "Update Site Manager" : "Create Site Manager"}
           </Button>
         </div>
       </form>
