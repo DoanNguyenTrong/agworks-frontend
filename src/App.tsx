@@ -239,6 +239,14 @@ const App = () => (
               } 
             />
             <Route 
+              path="/customer/managers/edit/:id" 
+              element={
+                <ProtectedRoute allowedRoles={["customer"]}>
+                  <CustomerManagerEdit />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/customer/settings" 
               element={
                 <ProtectedRoute allowedRoles={["customer"]}>
@@ -315,10 +323,34 @@ const App = () => (
               } 
             />
             <Route 
+              path="/worker/tasks" 
+              element={
+                <ProtectedRoute allowedRoles={["worker"]}>
+                  <WorkerTasks />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/worker/tasks/:id" 
+              element={
+                <ProtectedRoute allowedRoles={["worker"]}>
+                  <WorkerTaskDetails />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/worker/settings" 
+              element={
+                <ProtectedRoute allowedRoles={["worker"]}>
+                  <WorkerSettings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/worker/help" 
               element={
                 <ProtectedRoute allowedRoles={["worker"]}>
-                  <HelpPage />
+                  <WorkerHelp />
                 </ProtectedRoute>
               } 
             />

@@ -6,6 +6,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const workerSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -132,11 +133,9 @@ export default function WorkerForm({ onComplete, onSubmit, defaultValues, isEdit
             render={({ field }) => (
               <FormItem className="flex items-center gap-2">
                 <FormControl>
-                  <input
-                    type="checkbox"
+                  <Checkbox
                     checked={field.value}
-                    onChange={field.onChange}
-                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    onCheckedChange={field.onChange}
                   />
                 </FormControl>
                 <div>

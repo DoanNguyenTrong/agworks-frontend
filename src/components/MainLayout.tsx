@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,7 +34,6 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
   const location = useLocation();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
-  // Redirect if not logged in
   useEffect(() => {
     if (!currentUser) {
       navigate("/login");
@@ -103,21 +101,6 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
         return "/";
     }
   };
-  
-  const getProfilePath = () => {
-    switch (currentUser.role) {
-      case "admin":
-        return "/admin/profile";
-      case "customer":
-        return "/customer/profile";
-      case "siteManager":
-        return "/manager/profile";
-      case "worker":
-        return "/worker/profile";
-      default:
-        return "/";
-    }
-  };
 
   const navItems = getNavItems();
 
@@ -129,7 +112,6 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        {/* Desktop Sidebar */}
         <Sidebar className="hidden md:block">
           <SidebarHeader className="flex h-16 items-center px-4 border-b">
             <div className="flex items-center">
@@ -172,12 +154,6 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
           <SidebarFooter className="border-t p-4">
             <div className="flex flex-col gap-2">
               <Button variant="ghost" size="sm" className="justify-start" asChild>
-                <Link to={getProfilePath()}>
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
-                </Link>
-              </Button>
-              <Button variant="ghost" size="sm" className="justify-start" asChild>
                 <Link to={getSettingsPath()}>
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
@@ -198,9 +174,7 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
           </SidebarFooter>
         </Sidebar>
 
-        {/* Main Content */}
         <div className="flex-1 flex flex-col">
-          {/* Mobile Header */}
           <header className="h-16 border-b flex items-center justify-between px-4 md:hidden">
             <div className="flex items-center">
               <Button variant="ghost" className="p-0 mr-4" onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}>
@@ -211,7 +185,6 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
             <SidebarTrigger className="md:flex hidden" />
           </header>
 
-          {/* Mobile Navigation */}
           {isMobileNavOpen && (
             <div className="fixed inset-0 bg-background z-50 pt-16 md:hidden">
               <div className="p-4">
@@ -250,17 +223,6 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
                     variant="ghost" 
                     className="w-full justify-start"
                     onClick={() => {
-                      navigate(getProfilePath());
-                      setIsMobileNavOpen(false);
-                    }}
-                  >
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start"
-                    onClick={() => {
                       navigate(getSettingsPath());
                       setIsMobileNavOpen(false);
                     }}
@@ -289,7 +251,6 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
             </div>
           )}
 
-          {/* Page Content */}
           <main className="flex-1 overflow-auto p-4 md:p-6 agworks-scrollbar">
             {pageTitle && (
               <div className="mb-6">
