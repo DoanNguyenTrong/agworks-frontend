@@ -56,6 +56,7 @@ const workOrderSchema = z.object({
   acres: z.number().optional(),
   rows: z.number().optional(),
   vines: z.number().optional(),
+  vinesPerRow: z.number().optional(), // Added this field to the schema
   notes: z.string().optional(),
 });
 
@@ -78,6 +79,7 @@ export default function WorkOrderForm() {
       acres: undefined,
       rows: undefined,
       vines: undefined,
+      vinesPerRow: undefined, // Added default value for this field
       notes: "",
     },
   });
