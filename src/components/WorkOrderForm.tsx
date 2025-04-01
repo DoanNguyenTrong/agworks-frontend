@@ -79,7 +79,7 @@ export default function WorkOrderForm() {
       acres: undefined,
       rows: undefined,
       vines: undefined,
-      vinesPerRow: undefined, // Added default value for this field
+      vinesPerRow: undefined,
       notes: "",
     },
   });

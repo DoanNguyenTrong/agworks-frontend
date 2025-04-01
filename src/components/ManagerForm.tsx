@@ -119,7 +119,7 @@ export default function ManagerForm({ onComplete, defaultValues }: ManagerFormPr
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
                   {customerSites.map(site => (
                     <SelectItem key={site.id} value={site.id}>
                       {site.name}

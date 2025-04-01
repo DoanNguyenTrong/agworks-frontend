@@ -126,7 +126,7 @@ export default function SiteForm() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="none">None</SelectItem>
                         {siteManagers.map(manager => (
                           <SelectItem key={manager.id} value={manager.id}>
                             {manager.name}
