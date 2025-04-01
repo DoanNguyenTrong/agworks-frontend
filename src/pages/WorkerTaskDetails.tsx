@@ -6,9 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, MapPin, Calendar, Clock, DollarSign } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, Clock, DollarSign, Image } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { workerTasks, workOrders } from "@/lib/data";
+import { workerApplications, workerTasks, workOrders } from "@/lib/data";
 import { format } from "date-fns";
 
 export default function WorkerTaskDetails() {
@@ -17,6 +17,7 @@ export default function WorkerTaskDetails() {
   const { currentUser } = useAuth();
   const [task, setTask] = useState<any>(null);
   const [workOrder, setWorkOrder] = useState<any>(null);
+  const [application, setApplication] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -28,11 +29,21 @@ export default function WorkerTaskDetails() {
       const foundOrder = workOrders.find(order => order.id === foundTask.orderId);
       if (foundOrder) {
         setWorkOrder(foundOrder);
+        
+        // Find application
+        if (currentUser) {
+          const foundApplication = workerApplications.find(
+            app => app.workerId === currentUser.id && app.orderrId === foundOrder.id
+          );
+          if (foundApplication) {
+            setApplication(foundApplication);
+          }
+        }
       }
     }
     
     setIsLoading(false);
-  }, [id]);
+  }, [id, currentUser]);
 
   if (isLoading) {
     return (
@@ -71,6 +82,24 @@ export default function WorkerTaskDetails() {
     );
   }
 
+  // Calculate total earnings
+  const photoCount = task.photoUrls ? task.photoUrls.length : 0;
+  const totalEarnings = photoCount * workOrder.payRate;
+  
+  // Get task status
+  const getStatus = () => {
+    if (!application) return "registered";
+    
+    if (application.status === "approved") {
+      if (workOrder.status === "inProgress") return "working";
+      if (workOrder.status === "completed") return "worked";
+    }
+    
+    return application.status;
+  };
+  
+  const status = getStatus();
+
   return (
     <MainLayout pageTitle="Task Details">
       <div className="mb-6">
@@ -86,9 +115,21 @@ export default function WorkerTaskDetails() {
         <div className="md:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle className="capitalize">
-                {workOrder.workType} - {format(new Date(workOrder.startDate), "MMMM d, yyyy")}
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="capitalize">
+                  {workOrder.workType} - {format(new Date(workOrder.startDate), "MMMM d, yyyy")}
+                </CardTitle>
+                <Badge 
+                  variant={
+                    status === "worked" ? "success" : 
+                    status === "working" ? "default" :
+                    status === "approved" ? "outline" : 
+                    "secondary"
+                  }
+                >
+                  {status}
+                </Badge>
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-start gap-4">
@@ -123,7 +164,7 @@ export default function WorkerTaskDetails() {
                 <DollarSign className="h-5 w-5 text-muted-foreground mt-0.5" />
                 <div>
                   <p className="font-medium">Pay Rate</p>
-                  <p className="text-muted-foreground">${workOrder.payRate.toFixed(2)} per row/vine (depending on work type)</p>
+                  <p className="text-muted-foreground">${workOrder.payRate.toFixed(2)} per photo</p>
                 </div>
               </div>
 
@@ -131,39 +172,44 @@ export default function WorkerTaskDetails() {
 
               <div>
                 <p className="font-medium mb-2">Task Completion</p>
-                <div className="flex items-center gap-2">
-                  <p>Status:</p>
-                  <Badge 
-                    variant={task.status === "approved" ? "success" : 
-                            task.status === "pending" ? "outline" : "secondary"}
-                  >
-                    {task.status}
-                  </Badge>
+                <div className="flex items-center justify-between">
+                  <p>Completed at: {format(new Date(task.completedAt), "MMMM d, yyyy h:mm a")}</p>
+                  <div className="text-right">
+                    <p className="font-semibold">Total Earnings</p>
+                    <p className="text-xl font-bold text-green-600">${totalEarnings.toFixed(2)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {photoCount} photos × ${workOrder.payRate.toFixed(2)}
+                    </p>
+                  </div>
                 </div>
-                <p className="text-muted-foreground mt-2">
-                  Completed at: {format(new Date(task.completedAt), "MMMM d, yyyy h:mm a")}
-                </p>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <div>
+        <div className="md:col-span-3">
           <Card>
             <CardHeader>
-              <CardTitle>Task Photo</CardTitle>
+              <CardTitle className="flex items-center">
+                <Image className="h-5 w-5 mr-2" />
+                Task Photos ({photoCount})
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              {task.imageUrl ? (
-                <div className="overflow-hidden rounded-md">
-                  <img 
-                    src={task.imageUrl} 
-                    alt="Task completion evidence" 
-                    className="w-full h-auto object-cover"
-                  />
+              {task.photoUrls && task.photoUrls.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {task.photoUrls.map((url: string, index: number) => (
+                    <div key={index} className="overflow-hidden rounded-md border bg-muted/50">
+                      <img 
+                        src={url} 
+                        alt={`Task completion evidence ${index + 1}`} 
+                        className="w-full aspect-square object-cover"
+                      />
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground text-center py-12">No image available</p>
+                <p className="text-muted-foreground text-center py-12">No photos uploaded yet</p>
               )}
             </CardContent>
           </Card>

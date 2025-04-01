@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Search, Eye, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
-import { workerTasks, workOrders } from "@/lib/data";
+import { workerApplications, workOrders, workerTasks, sites, blocks } from "@/lib/data";
 import { format } from "date-fns";
 
 export default function WorkerTasks() {
@@ -17,10 +17,15 @@ export default function WorkerTasks() {
   const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Get approved applications for current worker
+  const myApplications = currentUser
+    ? workerApplications.filter(app => app.workerId === currentUser.id)
+    : [];
+
   // Get tasks for current worker
-  const myTasks = workerTasks.filter(task => 
-    task.workerId === currentUser?.id
-  );
+  const myTasks = currentUser
+    ? workerTasks.filter(task => task.workerId === currentUser.id)
+    : [];
 
   // Filter tasks by search term
   const filteredTasks = myTasks.filter(task => {
@@ -31,6 +36,22 @@ export default function WorkerTasks() {
 
   const handleRowDoubleClick = (id: string) => {
     navigate(`/worker/tasks/${id}`);
+  };
+
+  // Get tasks grouped by order
+  const getOrderStatus = (orderId: string) => {
+    const application = myApplications.find(app => app.orderrId === orderId);
+    if (!application) return "registered";
+    
+    const order = workOrders.find(order => order.id === orderId);
+    if (!order) return "registered";
+    
+    if (application.status === "approved") {
+      if (order.status === "inProgress") return "working";
+      if (order.status === "completed") return "worked";
+    }
+    
+    return application.status;
   };
 
   return (
@@ -56,6 +77,8 @@ export default function WorkerTasks() {
                 <TableHead>Work Type</TableHead>
                 <TableHead>Location</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Photos</TableHead>
+                <TableHead>Earnings</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -63,6 +86,10 @@ export default function WorkerTasks() {
               {filteredTasks.length > 0 ? (
                 filteredTasks.map((task) => {
                   const order = workOrders.find(order => order.id === task.orderId);
+                  const status = getOrderStatus(task.orderId);
+                  const photoCount = task.photoUrls ? task.photoUrls.length : 0;
+                  const earnings = order ? (photoCount * order.payRate).toFixed(2) : "0.00";
+                  
                   return (
                     <TableRow 
                       key={task.id}
@@ -80,12 +107,18 @@ export default function WorkerTasks() {
                       </TableCell>
                       <TableCell>
                         <Badge 
-                          variant={task.status === "approved" ? "success" : 
-                                  task.status === "pending" ? "outline" : "secondary"}
+                          variant={
+                            status === "worked" ? "success" : 
+                            status === "working" ? "default" :
+                            status === "approved" ? "outline" : 
+                            "secondary"
+                          }
                         >
-                          {task.status}
+                          {status}
                         </Badge>
                       </TableCell>
+                      <TableCell>{photoCount}</TableCell>
+                      <TableCell>${earnings}</TableCell>
                       <TableCell className="text-right">
                         <Button 
                           variant="ghost" 
@@ -103,7 +136,7 @@ export default function WorkerTasks() {
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={7} className="text-center py-8">
                     <div className="flex flex-col items-center gap-2">
                       <Clock className="h-10 w-10 text-muted-foreground" />
                       <p className="text-muted-foreground">No tasks found</p>

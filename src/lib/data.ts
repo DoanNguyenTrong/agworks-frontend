@@ -23,9 +23,10 @@ export const users: User[] = [
   {
     id: "u3",
     email: "manager@vineyard.com",
-    name: "Site Manager",
+    name: "Sarah Johnson",
     role: "siteManager",
     phone: "555-987-6543",
+    profileImage: "/profile-sarah.jpg",
     createdAt: "2023-01-03T00:00:00Z"
   },
   {
@@ -34,6 +35,7 @@ export const users: User[] = [
     name: "John Worker",
     role: "worker",
     phone: "555-222-3333",
+    profileImage: "/profile-john.jpg",
     createdAt: "2023-01-04T00:00:00Z"
   },
   {
@@ -42,6 +44,7 @@ export const users: User[] = [
     name: "Jane Worker",
     role: "worker",
     phone: "555-444-5555",
+    profileImage: "/profile-jane.jpg",
     createdAt: "2023-01-05T00:00:00Z"
   },
   {
@@ -72,6 +75,7 @@ export const users: User[] = [
     name: "David Chen",
     role: "siteManager",
     phone: "555-111-2222",
+    profileImage: "/profile-david.jpg",
     createdAt: "2023-01-20T00:00:00Z"
   },
   {
@@ -80,6 +84,7 @@ export const users: User[] = [
     name: "Maria Rodriguez",
     role: "siteManager",
     phone: "555-333-4444",
+    profileImage: "/profile-maria.jpg",
     createdAt: "2023-01-25T00:00:00Z"
   },
   {
@@ -88,6 +93,7 @@ export const users: User[] = [
     name: "Michael Johnson",
     role: "worker",
     phone: "555-555-6666",
+    profileImage: "/profile-michael.jpg",
     createdAt: "2023-02-01T00:00:00Z"
   },
   {
@@ -96,6 +102,7 @@ export const users: User[] = [
     name: "Emily Williams",
     role: "worker",
     phone: "555-666-7777",
+    profileImage: "/profile-emily.jpg",
     createdAt: "2023-02-05T00:00:00Z"
   },
   {
@@ -104,6 +111,7 @@ export const users: User[] = [
     name: "Carlos Sanchez",
     role: "worker",
     phone: "555-777-9999",
+    profileImage: "/profile-carlos.jpg",
     createdAt: "2023-02-10T00:00:00Z"
   }
 ];
@@ -262,6 +270,21 @@ export const blocks: Block[] = [
   }
 ];
 
+// Set default start and end times for work orders
+const setDefaultTimes = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  // Set start time to 6:00 AM
+  date.setHours(6, 0, 0, 0);
+  return date.toISOString();
+};
+
+const setEndTimes = (dateStr: string): string => {
+  const date = new Date(dateStr);
+  // Set end time to 4:00 PM
+  date.setHours(16, 0, 0, 0);
+  return date.toISOString();
+};
+
 // Mock Work Orders
 export const workOrders: WorkOrder[] = [
   {
@@ -269,8 +292,8 @@ export const workOrders: WorkOrder[] = [
     siteId: "s1",
     blockId: "b1",
     address: "1234 Vine St, Napa, CA 94558",
-    startDate: "2023-06-01T08:00:00Z",
-    endDate: "2023-06-01T17:00:00Z",
+    startDate: setDefaultTimes("2023-06-01"),
+    endDate: setEndTimes("2023-06-01"),
     workType: "pruning",
     neededWorkers: 5,
     expectedHours: 8,
@@ -289,8 +312,8 @@ export const workOrders: WorkOrder[] = [
     siteId: "s1",
     blockId: "b2",
     address: "1234 Vine St, Napa, CA 94558",
-    startDate: "2023-06-05T08:00:00Z",
-    endDate: "2023-06-05T17:00:00Z",
+    startDate: setDefaultTimes("2023-06-05"),
+    endDate: setEndTimes("2023-06-05"),
     workType: "shootThinning",
     neededWorkers: 4,
     expectedHours: 8,
@@ -308,8 +331,8 @@ export const workOrders: WorkOrder[] = [
     siteId: "s2",
     blockId: "b3",
     address: "5678 Grape Rd, Sonoma, CA 95476",
-    startDate: "2023-06-10T08:00:00Z",
-    endDate: "2023-06-10T17:00:00Z",
+    startDate: setDefaultTimes("2023-06-10"),
+    endDate: setEndTimes("2023-06-10"),
     workType: "pruning",
     neededWorkers: 5,
     expectedHours: 8,
@@ -327,8 +350,8 @@ export const workOrders: WorkOrder[] = [
     siteId: "s3",
     blockId: "b5",
     address: "910 Ridge Rd, Napa, CA 94558",
-    startDate: "2023-06-15T09:00:00Z",
-    endDate: "2023-06-15T18:00:00Z",
+    startDate: setDefaultTimes("2023-06-15"),
+    endDate: setEndTimes("2023-06-15"),
     workType: "other",
     neededWorkers: 6,
     expectedHours: 8,
@@ -347,8 +370,8 @@ export const workOrders: WorkOrder[] = [
     siteId: "s4",
     blockId: "b7",
     address: "123 Oak St, Sonoma, CA 95476",
-    startDate: "2023-06-20T07:30:00Z",
-    endDate: "2023-06-20T16:30:00Z",
+    startDate: setDefaultTimes("2023-06-20"),
+    endDate: setEndTimes("2023-06-20"),
     workType: "shootThinning",
     neededWorkers: 7,
     expectedHours: 8,
@@ -366,8 +389,8 @@ export const workOrders: WorkOrder[] = [
     siteId: "s5",
     blockId: "b8",
     address: "456 Ridge Way, Sonoma, CA 95476",
-    startDate: "2023-06-25T08:00:00Z",
-    endDate: "2023-06-25T17:00:00Z",
+    startDate: setDefaultTimes("2023-06-25"),
+    endDate: setEndTimes("2023-06-25"),
     workType: "pruning",
     neededWorkers: 5,
     expectedHours: 8,
@@ -385,8 +408,8 @@ export const workOrders: WorkOrder[] = [
     siteId: "s6",
     blockId: "b9",
     address: "789 Mountain Rd, Napa, CA 94559",
-    startDate: "2023-07-01T08:00:00Z",
-    endDate: "2023-07-01T17:00:00Z",
+    startDate: setDefaultTimes("2023-07-01"),
+    endDate: setEndTimes("2023-07-01"),
     workType: "shootThinning",
     neededWorkers: 4,
     expectedHours: 8,
@@ -476,7 +499,7 @@ export const workerTasks: WorkerTask[] = [
     workerId: "u4",
     workerName: "John Worker",
     orderId: "wo1",
-    imageUrl: "/task-image-1.jpg",
+    photoUrls: ["/task-image-1.jpg", "/task-image-1b.jpg", "/task-image-1c.jpg"],
     completedAt: "2023-06-01T10:15:00Z",
     status: "approved"
   },
@@ -485,7 +508,7 @@ export const workerTasks: WorkerTask[] = [
     workerId: "u4",
     workerName: "John Worker",
     orderId: "wo1",
-    imageUrl: "/task-image-2.jpg",
+    photoUrls: ["/task-image-2.jpg", "/task-image-2b.jpg"],
     completedAt: "2023-06-01T11:30:00Z",
     status: "approved"
   },
@@ -494,7 +517,7 @@ export const workerTasks: WorkerTask[] = [
     workerId: "u5",
     workerName: "Jane Worker",
     orderId: "wo1",
-    imageUrl: "/task-image-3.jpg",
+    photoUrls: ["/task-image-3.jpg", "/task-image-3b.jpg", "/task-image-3c.jpg", "/task-image-3d.jpg"],
     completedAt: "2023-06-01T10:45:00Z",
     status: "approved"
   },
@@ -503,7 +526,7 @@ export const workerTasks: WorkerTask[] = [
     workerId: "u5",
     workerName: "Jane Worker",
     orderId: "wo1", 
-    imageUrl: "/task-image-4.jpg",
+    photoUrls: ["/task-image-4.jpg", "/task-image-4b.jpg"],
     completedAt: "2023-06-01T12:15:00Z",
     status: "approved"
   },
@@ -512,7 +535,7 @@ export const workerTasks: WorkerTask[] = [
     workerId: "u10",
     workerName: "Michael Johnson",
     orderId: "wo1",
-    imageUrl: "/task-image-5.jpg",
+    photoUrls: ["/task-image-5.jpg", "/task-image-5b.jpg", "/task-image-5c.jpg"],
     completedAt: "2023-06-01T09:45:00Z",
     status: "approved"
   },
@@ -521,7 +544,7 @@ export const workerTasks: WorkerTask[] = [
     workerId: "u10",
     workerName: "Michael Johnson",
     orderId: "wo1",
-    imageUrl: "/task-image-6.jpg",
+    photoUrls: ["/task-image-6.jpg"],
     completedAt: "2023-06-01T10:30:00Z",
     status: "approved"
   },
@@ -530,7 +553,7 @@ export const workerTasks: WorkerTask[] = [
     workerId: "u4",
     workerName: "John Worker",
     orderId: "wo1",
-    imageUrl: "/task-image-7.jpg",
+    photoUrls: ["/task-image-7.jpg", "/task-image-7b.jpg"],
     completedAt: "2023-06-01T13:15:00Z",
     status: "approved"
   },
@@ -539,7 +562,7 @@ export const workerTasks: WorkerTask[] = [
     workerId: "u5",
     workerName: "Jane Worker",
     orderId: "wo1",
-    imageUrl: "/task-image-8.jpg",
+    photoUrls: ["/task-image-8.jpg", "/task-image-8b.jpg", "/task-image-8c.jpg"],
     completedAt: "2023-06-01T14:00:00Z",
     status: "approved"
   },
@@ -548,7 +571,7 @@ export const workerTasks: WorkerTask[] = [
     workerId: "u4",
     workerName: "John Worker",
     orderId: "wo2",
-    imageUrl: "/task-image-9.jpg",
+    photoUrls: ["/task-image-9.jpg", "/task-image-9b.jpg"],
     completedAt: "2023-06-05T09:30:00Z",
     status: "approved"
   },
@@ -557,7 +580,7 @@ export const workerTasks: WorkerTask[] = [
     workerId: "u5",
     workerName: "Jane Worker",
     orderId: "wo2",
-    imageUrl: "/task-image-10.jpg",
+    photoUrls: ["/task-image-10.jpg", "/task-image-10b.jpg", "/task-image-10c.jpg"],
     completedAt: "2023-06-05T10:15:00Z",
     status: "approved"
   },
@@ -566,7 +589,7 @@ export const workerTasks: WorkerTask[] = [
     workerId: "u10",
     workerName: "Michael Johnson",
     orderId: "wo2",
-    imageUrl: "/task-image-11.jpg",
+    photoUrls: ["/task-image-11.jpg"],
     completedAt: "2023-06-05T11:00:00Z",
     status: "pending"
   },
@@ -575,7 +598,7 @@ export const workerTasks: WorkerTask[] = [
     workerId: "u4",
     workerName: "John Worker",
     orderId: "wo2",
-    imageUrl: "/task-image-12.jpg",
+    photoUrls: ["/task-image-12.jpg", "/task-image-12b.jpg"],
     completedAt: "2023-06-05T11:45:00Z",
     status: "pending"
   }
@@ -593,12 +616,13 @@ export const getPaymentCalculations = (orderId: string): PaymentCalculation[] =>
   return workerIds.map(workerId => {
     const workerTasks = tasks.filter(task => task.workerId === workerId);
     const worker = users.find(user => user.id === workerId);
+    const totalPhotos = workerTasks.reduce((total, task) => total + (task.photoUrls?.length || 0), 0);
     
     return {
       workerId,
       workerName: worker?.name || "Unknown Worker",
       taskCount: workerTasks.length,
-      totalAmount: workerTasks.length * order.payRate
+      totalAmount: totalPhotos * order.payRate
     };
   });
 };

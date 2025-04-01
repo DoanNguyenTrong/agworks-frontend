@@ -1,4 +1,5 @@
 
+import { Link } from "react-router-dom";
 import MainLayout from "@/components/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,8 @@ import {
   DollarSign,
   Camera,
   ClipboardList,
+  UserCircle,
+  Bell,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { workerApplications, workOrders, workerTasks, sites, blocks } from "@/lib/data";
@@ -40,13 +43,34 @@ export default function WorkerDashboard() {
   const earnings = completedTasks.reduce((total, task) => {
     const order = workOrders.find(o => o.id === task.orderId);
     if (order && task.status === "approved") {
-      return total + order.payRate;
+      const photoCount = task.photoUrls ? task.photoUrls.length : 1;
+      return total + (order.payRate * photoCount);
     }
     return total;
   }, 0);
 
   return (
     <MainLayout pageTitle="Worker Dashboard">
+      <div className="flex items-center mb-8">
+        <div className="mr-4">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+            {currentUser?.profileImage ? (
+              <img 
+                src={currentUser.profileImage} 
+                alt={currentUser.name} 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <UserCircle className="w-10 h-10 text-primary" />
+            )}
+          </div>
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold">{currentUser?.name}</h2>
+          <p className="text-muted-foreground">{currentUser?.email}</p>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader className="pb-2">
@@ -135,7 +159,7 @@ export default function WorkerDashboard() {
                       <DollarSign className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground" />
                       <div>
                         <p className="text-sm font-medium">Pay Rate</p>
-                        <p className="text-sm text-muted-foreground">${order.payRate.toFixed(2)} per piece</p>
+                        <p className="text-sm text-muted-foreground">${order.payRate.toFixed(2)} per photo</p>
                       </div>
                     </div>
                   </div>
@@ -145,9 +169,11 @@ export default function WorkerDashboard() {
                       <Camera className="mr-2 h-4 w-4" />
                       Upload Task Photo
                     </Button>
-                    <Button variant="outline" className="sm:flex-1">
-                      <ClipboardList className="mr-2 h-4 w-4" />
-                      View My Tasks
+                    <Button variant="outline" className="sm:flex-1" asChild>
+                      <Link to="/worker/tasks">
+                        <ClipboardList className="mr-2 h-4 w-4" />
+                        View My Tasks
+                      </Link>
                     </Button>
                   </div>
                 </CardContent>
@@ -208,32 +234,43 @@ export default function WorkerDashboard() {
         <>
           <h2 className="text-xl font-semibold mb-6 mt-10">Recent Task Photos</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {completedTasks.slice(0, 8).map(task => (
-              <div key={task.id} className="border rounded-lg overflow-hidden">
-                <div className="aspect-square relative bg-muted">
-                  <div className="absolute top-2 right-2">
-                    <Badge variant={task.status === "approved" ? "default" : task.status === "rejected" ? "destructive" : "secondary"}>
-                      {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
-                    </Badge>
+            {completedTasks.slice(0, 8).map(task => {
+              const photoUrl = task.photoUrls && task.photoUrls.length > 0 ? task.photoUrls[0] : null;
+              return (
+                <div key={task.id} className="border rounded-lg overflow-hidden">
+                  <div className="aspect-square relative bg-muted">
+                    <div className="absolute top-2 right-2">
+                      <Badge variant={task.status === "approved" ? "default" : task.status === "rejected" ? "destructive" : "secondary"}>
+                        {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
+                      </Badge>
+                    </div>
+                    {photoUrl ? (
+                      <img
+                        src={photoUrl}
+                        alt="Task completion"
+                        className="object-cover w-full h-full"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                        <Camera className="h-12 w-12" />
+                      </div>
+                    )}
                   </div>
-                  <img
-                    src={task.imageUrl || "/placeholder.svg"}
-                    alt="Task completion"
-                    className="object-cover w-full h-full"
-                  />
+                  <div className="p-3">
+                    <p className="text-sm font-medium truncate">Task #{task.id}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(task.completedAt), "MMM d, yyyy")}
+                    </p>
+                  </div>
                 </div>
-                <div className="p-3">
-                  <p className="text-sm font-medium truncate">Task #{task.id}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {format(new Date(task.completedAt), "MMM d, yyyy")}
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
           {completedTasks.length > 8 && (
             <div className="text-center mt-4">
-              <Button variant="outline">View All Task Photos</Button>
+              <Button variant="outline" asChild>
+                <Link to="/worker/tasks">View All Task Photos</Link>
+              </Button>
             </div>
           )}
         </>

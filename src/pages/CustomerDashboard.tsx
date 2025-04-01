@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import MainLayout from "@/components/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,12 +7,16 @@ import { PlusCircle, Map, Grape, ClipboardList, UserPlus } from "lucide-react";
 import { sites, blocks, workOrders } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import ManagerForm from "@/components/ManagerForm";
+import { toast } from "@/hooks/use-toast";
 
 export default function CustomerDashboard() {
   const { currentUser } = useAuth();
   const [customerSites, setCustomerSites] = useState([]);
   const [customerBlocks, setCustomerBlocks] = useState([]);
   const [activeOrders, setActiveOrders] = useState([]);
+  const [isAddManagerDialogOpen, setIsAddManagerDialogOpen] = useState(false);
   
   useEffect(() => {
     if (currentUser) {
@@ -34,6 +37,15 @@ export default function CustomerDashboard() {
       setActiveOrders(userOrders);
     }
   }, [currentUser]);
+  
+  const handleAddManager = (data) => {
+    // In a real app, this would make an API call
+    toast({
+      title: "Site manager invited",
+      description: `${data.name} has been invited as a site manager.`,
+    });
+    setIsAddManagerDialogOpen(false);
+  };
 
   return (
     <MainLayout pageTitle="Vineyard Dashboard">
@@ -84,9 +96,9 @@ export default function CustomerDashboard() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
         {customerSites.length > 0 ? (
-          customerSites.map(site => (
+          customerSites.slice(0, 3).map(site => (
             <Card key={site.id} className="overflow-hidden">
               <div className="h-1 bg-primary"></div>
               <CardHeader>
@@ -135,6 +147,15 @@ export default function CustomerDashboard() {
           </div>
         )}
       </div>
+      
+      {customerSites.length > 3 && (
+        <div className="flex justify-center mb-12">
+          <Button variant="outline" asChild>
+            <Link to="/customer/sites">View All Sites</Link>
+          </Button>
+        </div>
+      )}
+      {customerSites.length > 0 && customerSites.length <= 3 && <div className="mb-12"></div>}
 
       {/* Blocks Overview */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
@@ -216,11 +237,9 @@ export default function CustomerDashboard() {
       {/* Site Manager Overview */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">Site Managers</h2>
-        <Button asChild>
-          <Link to="/customer/accounts">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Site Manager
-          </Link>
+        <Button onClick={() => setIsAddManagerDialogOpen(true)}>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Site Manager
         </Button>
       </div>
 
@@ -283,6 +302,18 @@ export default function CustomerDashboard() {
           </div>
         )}
       </div>
+
+      <Dialog open={isAddManagerDialogOpen} onOpenChange={setIsAddManagerDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Add New Site Manager</DialogTitle>
+          </DialogHeader>
+          <ManagerForm
+            onComplete={() => setIsAddManagerDialogOpen(false)}
+            onSubmit={handleAddManager}
+          />
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }

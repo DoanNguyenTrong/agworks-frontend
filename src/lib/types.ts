@@ -9,6 +9,7 @@ export interface User {
   logo?: string;
   phone?: string;
   address?: string;
+  profileImage?: string;
 }
 
 export interface Site {
@@ -65,7 +66,8 @@ export interface WorkerTask {
   workerId: string;
   workerName: string;
   orderId: string;
-  imageUrl: string;
+  imageUrl?: string;
+  photoUrls?: string[];
   completedAt: string;
   status: "pending" | "approved" | "rejected";
 }

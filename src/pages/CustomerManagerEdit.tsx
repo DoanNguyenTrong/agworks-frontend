@@ -1,50 +1,47 @@
 
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "@/components/MainLayout";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import ManagerForm from "@/components/ManagerForm";
-import { useAuth } from "@/contexts/AuthContext";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ArrowLeft, UserCircle } from "lucide-react";
+import { siteManagers } from "@/lib/data";
 import { toast } from "@/hooks/use-toast";
-import { users } from "@/lib/data";
 
 export default function CustomerManagerEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
-  const [manager, setManager] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-
+  const [manager, setManager] = useState<any>(null);
+  
+  // Form state
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  
   useEffect(() => {
-    // Fetch manager data - find site managers among users
-    const siteManagers = users.filter(user => user.role === "siteManager");
     const foundManager = siteManagers.find(manager => manager.id === id);
     if (foundManager) {
       setManager(foundManager);
+      setName(foundManager.name);
+      setEmail(foundManager.email);
+      setPhone(foundManager.phone || "");
     }
     setIsLoading(false);
   }, [id]);
-
-  const handleDelete = () => {
-    // In a real application, this would be an API call
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // In a real app, this would make an API call
     toast({
-      title: "Site manager deleted",
-      description: `${manager.name} has been removed as a site manager.`,
+      title: "Manager updated",
+      description: "Site manager information has been updated successfully.",
     });
     navigate("/customer/accounts");
   };
-
-  const handleFormSubmit = (data: any) => {
-    // In a real application, this would be an API call
-    toast({
-      title: "Site manager updated",
-      description: `${data.name} has been updated.`,
-    });
-    navigate("/customer/accounts");
-  };
-
+  
   if (isLoading) {
     return (
       <MainLayout pageTitle="Edit Site Manager">
@@ -54,7 +51,7 @@ export default function CustomerManagerEdit() {
       </MainLayout>
     );
   }
-
+  
   if (!manager) {
     return (
       <MainLayout pageTitle="Edit Site Manager">
@@ -70,43 +67,82 @@ export default function CustomerManagerEdit() {
 
   return (
     <MainLayout pageTitle="Edit Site Manager">
+      <Button 
+        variant="ghost" 
+        className="p-0 mb-6"
+        onClick={() => navigate("/customer/accounts")}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to Site Managers
+      </Button>
+      
       <Card>
-        <CardContent className="pt-6">
-          <ManagerForm 
-            onComplete={() => navigate("/customer/accounts")}
-            onSubmit={handleFormSubmit}
-            defaultValues={{
-              name: manager.name,
-              email: manager.email,
-              phone: manager.phone || "",
-            }}
-            isEditMode={true}
-          />
+        <CardHeader>
+          <div className="flex items-center mb-2">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
+              {manager.profileImage ? (
+                <img 
+                  src={manager.profileImage} 
+                  alt={manager.name} 
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                <UserCircle className="w-6 h-6 text-primary" />
+              )}
+            </div>
+            <CardTitle>Edit {manager.name}</CardTitle>
+          </div>
+          <CardDescription>
+            Update this site manager's information
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <div className="grid gap-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3">
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={() => navigate("/customer/accounts")}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Save Changes</Button>
+            </div>
+          </form>
         </CardContent>
       </Card>
-
-      <div className="mt-8">
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive">Delete Site Manager</Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the site manager
-                account and remove their access to all sites.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDelete}>
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
     </MainLayout>
   );
 }

@@ -1,348 +1,259 @@
 
 import { useState } from "react";
 import MainLayout from "@/components/MainLayout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Switch } from "@/components/ui/switch";
-
-// Form schemas
-const profileSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().optional(),
-});
-
-const passwordSchema = z.object({
-  currentPassword: z.string().min(1, "Current password is required"),
-  newPassword: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
-}).refine(data => data.newPassword === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
-
-const workPreferencesSchema = z.object({
-  autoApproveWorkers: z.boolean().default(false),
-  manualReviewRequired: z.boolean().default(true),
-  autoCompleteOrders: z.boolean().default(false),
-});
+import { User, Bell, Shield, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function ManagerSettings() {
   const { currentUser } = useAuth();
-  const [activeTab, setActiveTab] = useState("profile");
+  const [name, setName] = useState(currentUser?.name || "");
+  const [email, setEmail] = useState(currentUser?.email || "");
+  const [phone, setPhone] = useState(currentUser?.phone || "");
   
-  // Profile form
-  const profileForm = useForm<z.infer<typeof profileSchema>>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: {
-      name: currentUser?.name || "",
-      email: currentUser?.email || "",
-      phone: currentUser?.phone || "",
-    },
-  });
-
-  // Password form
-  const passwordForm = useForm<z.infer<typeof passwordSchema>>({
-    resolver: zodResolver(passwordSchema),
-    defaultValues: {
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    },
-  });
+  // Notification settings
+  const [newWorkOrderNotif, setNewWorkOrderNotif] = useState(true);
+  const [workerApplicationNotif, setWorkerApplicationNotif] = useState(true);
+  const [taskCompletionNotif, setTaskCompletionNotif] = useState(true);
+  const [generalNotif, setGeneralNotif] = useState(false);
   
-  // Work preferences form
-  const preferenceForm = useForm<z.infer<typeof workPreferencesSchema>>({
-    resolver: zodResolver(workPreferencesSchema),
-    defaultValues: {
-      autoApproveWorkers: false,
-      manualReviewRequired: true,
-      autoCompleteOrders: false,
-    },
-  });
-  
-  // Submit handlers
-  const onProfileSubmit = (data: z.infer<typeof profileSchema>) => {
-    console.log("Profile data:", data);
+  const handleUpdateProfile = (e: React.FormEvent) => {
+    e.preventDefault();
     toast({
       title: "Profile updated",
-      description: "Your profile has been updated successfully.",
+      description: "Your profile information has been updated successfully.",
     });
   };
   
-  const onPasswordSubmit = (data: z.infer<typeof passwordSchema>) => {
-    console.log("Password data:", data);
-    passwordForm.reset({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
+  const handleUpdateNotifications = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast({
+      title: "Notification settings updated",
+      description: "Your notification preferences have been saved.",
     });
+  };
+  
+  const handleUpdatePassword = (e: React.FormEvent) => {
+    e.preventDefault();
     toast({
       title: "Password updated",
       description: "Your password has been changed successfully.",
     });
   };
   
-  const onPreferenceSubmit = (data: z.infer<typeof workPreferencesSchema>) => {
-    console.log("Work preferences:", data);
-    toast({
-      title: "Preferences updated",
-      description: "Your work preferences have been saved.",
-    });
-  };
-
   return (
-    <MainLayout pageTitle="Settings">
-      <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="w-full md:w-auto justify-start border-b pb-0">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="password">Password</TabsTrigger>
-          <TabsTrigger value="preferences">Work Preferences</TabsTrigger>
+    <MainLayout pageTitle="Site Manager Settings">
+      <Tabs defaultValue="profile" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+          <TabsTrigger value="profile">
+            <User className="h-4 w-4 mr-2" />
+            Profile
+          </TabsTrigger>
+          <TabsTrigger value="notifications">
+            <Bell className="h-4 w-4 mr-2" />
+            Notifications
+          </TabsTrigger>
+          <TabsTrigger value="security">
+            <Shield className="h-4 w-4 mr-2" />
+            Security
+          </TabsTrigger>
         </TabsList>
         
-        {/* Profile Settings */}
         <TabsContent value="profile">
           <Card>
             <CardHeader>
-              <CardTitle>Profile Settings</CardTitle>
+              <CardTitle>Profile Information</CardTitle>
               <CardDescription>
-                Update your personal information.
+                Update your personal information and contact details.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Form {...profileForm}>
-                <form id="profile-form" onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
-                  <div className="flex items-center gap-4 mb-4">
-                    <Avatar className="h-20 w-20">
-                      <AvatarFallback className="text-xl">
-                        {currentUser?.name?.charAt(0)}
-                      </AvatarFallback>
+              <form onSubmit={handleUpdateProfile} className="space-y-4">
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="w-full md:w-auto flex flex-col items-center space-y-2">
+                    <Avatar className="w-24 h-24">
+                      <AvatarFallback className="text-2xl">{name.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <div>
-                      <h3 className="font-medium">Profile Picture</h3>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        This will be displayed on your profile.
-                      </p>
-                      <div className="flex gap-2">
-                        <Button type="button" variant="outline" size="sm">
-                          Change Photo
-                        </Button>
-                        <Button type="button" variant="ghost" size="sm">
-                          Remove
-                        </Button>
-                      </div>
+                    <Button type="button" variant="outline" size="sm">
+                      Change Photo
+                    </Button>
+                  </div>
+                  
+                  <div className="flex-1 space-y-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input 
+                        id="name"
+                        value={name} 
+                        onChange={(e) => setName(e.target.value)}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input 
+                        id="email"
+                        type="email"
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input 
+                        id="phone"
+                        value={phone} 
+                        onChange={(e) => setPhone(e.target.value)}
+                      />
                     </div>
                   </div>
-                  
-                  <FormField
-                    control={profileForm.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name</FormLabel>
-                        <FormControl>
-                          <Input {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={profileForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input {...field} type="email" />
-                          </FormControl>
-                          <FormDescription>
-                            This email will be used for login and notifications.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={profileForm.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button type="submit">Save Changes</Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="notifications">
+          <Card>
+            <CardHeader>
+              <CardTitle>Notification Settings</CardTitle>
+              <CardDescription>
+                Configure how and when you receive notifications.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleUpdateNotifications} className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="work-order-notif">Work Order Updates</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Get notified about new work orders and changes to existing orders
+                      </p>
+                    </div>
+                    <Switch 
+                      id="work-order-notif" 
+                      checked={newWorkOrderNotif}
+                      onCheckedChange={setNewWorkOrderNotif}
                     />
                   </div>
-                </form>
-              </Form>
+                  
+                  <Separator />
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="worker-app-notif">Worker Applications</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Get notified when workers apply to your work orders
+                      </p>
+                    </div>
+                    <Switch 
+                      id="worker-app-notif" 
+                      checked={workerApplicationNotif}
+                      onCheckedChange={setWorkerApplicationNotif}
+                    />
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="task-completion-notif">Task Completions</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Get notified when workers complete tasks with photo evidence
+                      </p>
+                    </div>
+                    <Switch 
+                      id="task-completion-notif" 
+                      checked={taskCompletionNotif}
+                      onCheckedChange={setTaskCompletionNotif}
+                    />
+                  </div>
+                  
+                  <Separator />
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="general-notif">General Updates</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Updates about platform features and announcements
+                      </p>
+                    </div>
+                    <Switch 
+                      id="general-notif" 
+                      checked={generalNotif}
+                      onCheckedChange={setGeneralNotif}
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex justify-end">
+                  <Button type="submit">Save Preferences</Button>
+                </div>
+              </form>
             </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button type="submit" form="profile-form">Save Changes</Button>
-            </CardFooter>
           </Card>
         </TabsContent>
         
-        {/* Password Settings */}
-        <TabsContent value="password">
+        <TabsContent value="security">
           <Card>
             <CardHeader>
-              <CardTitle>Change Password</CardTitle>
+              <CardTitle>Security Settings</CardTitle>
               <CardDescription>
-                Update your account password.
+                Manage your password and security preferences.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Form {...passwordForm}>
-                <form id="password-form" onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-6">
-                  <FormField
-                    control={passwordForm.control}
-                    name="currentPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Current Password</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="password" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              <form onSubmit={handleUpdatePassword} className="space-y-6">
+                <div className="space-y-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="current-password">Current Password</Label>
+                    <Input
+                      id="current-password"
+                      type="password"
+                      placeholder="Enter your current password"
+                    />
+                  </div>
                   
-                  <FormField
-                    control={passwordForm.control}
-                    name="newPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>New Password</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="password" />
-                        </FormControl>
-                        <FormDescription>
-                          Password must be at least 8 characters.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid gap-2">
+                    <Label htmlFor="new-password">New Password</Label>
+                    <Input
+                      id="new-password"
+                      type="password"
+                      placeholder="Enter your new password"
+                    />
+                  </div>
                   
-                  <FormField
-                    control={passwordForm.control}
-                    name="confirmPassword"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Confirm New Password</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="password" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </form>
-              </Form>
+                  <div className="grid gap-2">
+                    <Label htmlFor="confirm-password">Confirm New Password</Label>
+                    <Input
+                      id="confirm-password"
+                      type="password"
+                      placeholder="Confirm your new password"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <Button variant="destructive" type="button">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
+                  </Button>
+                  <Button type="submit">Update Password</Button>
+                </div>
+              </form>
             </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button type="submit" form="password-form">Change Password</Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-        
-        {/* Work Preferences Settings */}
-        <TabsContent value="preferences">
-          <Card>
-            <CardHeader>
-              <CardTitle>Work Preferences</CardTitle>
-              <CardDescription>
-                Configure your work order and worker management preferences.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...preferenceForm}>
-                <form id="preference-form" onSubmit={preferenceForm.handleSubmit(onPreferenceSubmit)} className="space-y-6">
-                  <FormField
-                    control={preferenceForm.control}
-                    name="autoApproveWorkers"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">Auto-Approve Workers</FormLabel>
-                          <FormDescription>
-                            Automatically approve workers who apply to your work orders.
-                          </FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={preferenceForm.control}
-                    name="manualReviewRequired"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">Manual Task Review</FormLabel>
-                          <FormDescription>
-                            Require manual review of completed tasks before payment.
-                          </FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={preferenceForm.control}
-                    name="autoCompleteOrders"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                          <FormLabel className="text-base">Auto-Complete Orders</FormLabel>
-                          <FormDescription>
-                            Automatically mark orders as completed when all tasks are done.
-                          </FormDescription>
-                        </div>
-                        <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                      </FormItem>
-                    )}
-                  />
-                </form>
-              </Form>
-            </CardContent>
-            <CardFooter className="flex justify-end">
-              <Button type="submit" form="preference-form">Save Preferences</Button>
-            </CardFooter>
           </Card>
         </TabsContent>
       </Tabs>
