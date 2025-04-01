@@ -43,13 +43,7 @@ export default function CreateWorkOrder() {
         Back to Work Orders
       </Button>
       
-      <WorkOrderForm 
-        onSubmit={handleWorkOrderSubmit}
-        managedSites={managedSites}
-        availableBlocks={blocks.filter(block => 
-          managedSites.some(site => site.id === block.siteId)
-        )}
-      />
+      <WorkOrderForm />
     </MainLayout>
   );
 }

@@ -137,7 +137,7 @@ export default function WorkerPerformance({ tasks, payRate }: WorkerPerformanceP
                   <Tooltip
                     formatter={(value, name) => {
                       if (name === 'tasks') return [`${value} tasks`, 'Tasks'];
-                      if (name === 'earnings') return [`$${value.toFixed(2)}`, 'Earnings'];
+                      if (name === 'earnings') return [`$${typeof value === 'number' ? value.toFixed(2) : value}`, 'Earnings'];
                       return [value, name];
                     }}
                   />
