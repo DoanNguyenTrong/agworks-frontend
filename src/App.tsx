@@ -14,10 +14,21 @@ import AdminDashboard from "./pages/AdminDashboard";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import SiteManagerDashboard from "./pages/SiteManagerDashboard";
 import WorkerDashboard from "./pages/WorkerDashboard";
-import SiteManagement from "./pages/SiteManagement";
-import BlockManagement from "./pages/BlockManagement";
+import SiteManagementPage from "./pages/SiteManagementPage";
+import BlockManagementPage from "./pages/BlockManagementPage";
 import WorkOrderManagement from "./pages/WorkOrderManagement";
 import WorkOrderDetails from "./pages/WorkOrderDetails";
+import AdminCustomers from "./pages/AdminCustomers";
+import AdminWorkers from "./pages/AdminWorkers";
+import AdminSettings from "./pages/AdminSettings";
+import SiteForm from "./pages/SiteForm";
+import SiteDetails from "./pages/SiteDetails";
+import BlockForm from "./pages/BlockForm";
+import BlockDetails from "./pages/BlockDetails";
+import CustomerAccounts from "./pages/CustomerAccounts";
+import CustomerSettings from "./pages/CustomerSettings";
+import CreateWorkOrder from "./pages/CreateWorkOrder";
+import ManagerSettings from "./pages/ManagerSettings";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +87,30 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/admin/customers" 
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminCustomers />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/workers" 
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminWorkers />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/settings" 
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminSettings />
+                </ProtectedRoute>
+              } 
+            />
             
             {/* Customer Routes */}
             <Route 
@@ -90,7 +125,31 @@ const App = () => (
               path="/customer/sites" 
               element={
                 <ProtectedRoute allowedRoles={["customer"]}>
-                  <SiteManagement />
+                  <SiteManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/customer/sites/new" 
+              element={
+                <ProtectedRoute allowedRoles={["customer"]}>
+                  <SiteForm />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/customer/sites/edit/:id" 
+              element={
+                <ProtectedRoute allowedRoles={["customer"]}>
+                  <SiteForm />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/customer/sites/:id" 
+              element={
+                <ProtectedRoute allowedRoles={["customer"]}>
+                  <SiteDetails />
                 </ProtectedRoute>
               } 
             />
@@ -98,7 +157,47 @@ const App = () => (
               path="/customer/blocks" 
               element={
                 <ProtectedRoute allowedRoles={["customer"]}>
-                  <BlockManagement />
+                  <BlockManagementPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/customer/blocks/new" 
+              element={
+                <ProtectedRoute allowedRoles={["customer"]}>
+                  <BlockForm />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/customer/blocks/edit/:id" 
+              element={
+                <ProtectedRoute allowedRoles={["customer"]}>
+                  <BlockForm />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/customer/blocks/:id" 
+              element={
+                <ProtectedRoute allowedRoles={["customer"]}>
+                  <BlockDetails />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/customer/accounts" 
+              element={
+                <ProtectedRoute allowedRoles={["customer"]}>
+                  <CustomerAccounts />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/customer/settings" 
+              element={
+                <ProtectedRoute allowedRoles={["customer"]}>
+                  <CustomerSettings />
                 </ProtectedRoute>
               } 
             />
@@ -121,10 +220,26 @@ const App = () => (
               } 
             />
             <Route 
+              path="/manager/orders/new" 
+              element={
+                <ProtectedRoute allowedRoles={["siteManager"]}>
+                  <CreateWorkOrder />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/manager/orders/:id" 
               element={
                 <ProtectedRoute allowedRoles={["siteManager"]}>
                   <WorkOrderDetails />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/manager/settings" 
+              element={
+                <ProtectedRoute allowedRoles={["siteManager"]}>
+                  <ManagerSettings />
                 </ProtectedRoute>
               } 
             />

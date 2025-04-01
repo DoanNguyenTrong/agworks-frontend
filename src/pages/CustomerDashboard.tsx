@@ -4,7 +4,7 @@ import MainLayout from "@/components/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { PlusCircle, Map, Grape, ClipboardList } from "lucide-react";
+import { PlusCircle, Map, Grape, ClipboardList, UserPlus } from "lucide-react";
 import { sites, blocks, workOrders } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
@@ -77,7 +77,7 @@ export default function CustomerDashboard() {
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">Your Sites</h2>
         <Button asChild>
-          <Link to="/customer/sites">
+          <Link to="/customer/sites/new">
             <PlusCircle className="mr-2 h-4 w-4" />
             Add New Site
           </Link>
@@ -111,8 +111,10 @@ export default function CustomerDashboard() {
                     </span>
                   </div>
                 </div>
-                <Button variant="outline" className="w-full">
-                  View Details
+                <Button variant="outline" className="w-full" asChild>
+                  <Link to={`/customer/sites/${site.id}`}>
+                    View Details
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
@@ -125,7 +127,7 @@ export default function CustomerDashboard() {
               Add your first vineyard site to get started
             </p>
             <Button asChild>
-              <Link to="/customer/sites">
+              <Link to="/customer/sites/new">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add New Site
               </Link>
@@ -138,7 +140,7 @@ export default function CustomerDashboard() {
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">Your Blocks</h2>
         <Button asChild>
-          <Link to="/customer/blocks">
+          <Link to="/customer/blocks/new">
             <PlusCircle className="mr-2 h-4 w-4" />
             Add New Block
           </Link>
@@ -178,8 +180,10 @@ export default function CustomerDashboard() {
                       </div>
                     )}
                   </div>
-                  <Button variant="outline" className="w-full">
-                    View Details
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link to={`/customer/blocks/${block.id}`}>
+                      View Details
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -193,7 +197,7 @@ export default function CustomerDashboard() {
               Define growing blocks within your vineyard sites
             </p>
             <Button asChild>
-              <Link to="/customer/blocks">
+              <Link to="/customer/blocks/new">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add New Block
               </Link>
@@ -207,6 +211,38 @@ export default function CustomerDashboard() {
             </Button>
           </div>
         )}
+      </div>
+
+      {/* Site Manager Overview */}
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+        <h2 className="text-xl font-semibold">Site Managers</h2>
+        <Button asChild>
+          <Link to="/customer/accounts">
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Site Manager
+          </Link>
+        </Button>
+      </div>
+
+      <div className="mb-12">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Manage Your Site Managers</h3>
+                <p className="text-muted-foreground mb-4 md:mb-0 max-w-lg">
+                  Assign managers to your vineyard sites to supervise work orders and oversee field operations.
+                </p>
+              </div>
+              <Button asChild>
+                <Link to="/customer/accounts">
+                  <UserPlus className="mr-2 h-4 w-4" />
+                  Manage Accounts
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Recent Activity */}

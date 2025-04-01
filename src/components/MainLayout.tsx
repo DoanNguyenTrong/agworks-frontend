@@ -5,7 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { 
   Home, Users, Grape, Map, ClipboardList, 
-  LogOut, Settings, Menu, X 
+  LogOut, Settings, Menu, X, Building, UserPlus, 
+  DollarSign, BarChart, FileText, Cog
 } from "lucide-react";
 import { 
   Sidebar, 
@@ -47,19 +48,23 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
       case "admin":
         return [
           { name: "Dashboard", path: "/admin", icon: Home },
-          { name: "Customers", path: "/admin/customers", icon: Users },
-          { name: "Workers", path: "/admin/workers", icon: Users }
+          { name: "Customers", path: "/admin/customers", icon: Building },
+          { name: "Workers", path: "/admin/workers", icon: Users },
+          { name: "Settings", path: "/admin/settings", icon: Cog }
         ];
       case "customer":
         return [
           { name: "Dashboard", path: "/customer", icon: Home },
           { name: "Sites", path: "/customer/sites", icon: Map },
-          { name: "Blocks", path: "/customer/blocks", icon: Grape }
+          { name: "Blocks", path: "/customer/blocks", icon: Grape },
+          { name: "Site Managers", path: "/customer/accounts", icon: UserPlus },
+          { name: "Settings", path: "/customer/settings", icon: Cog }
         ];
       case "siteManager":
         return [
           { name: "Dashboard", path: "/manager", icon: Home },
-          { name: "Work Orders", path: "/manager/orders", icon: ClipboardList }
+          { name: "Work Orders", path: "/manager/orders", icon: ClipboardList },
+          { name: "Settings", path: "/manager/settings", icon: Cog }
         ];
       case "worker":
         return [
@@ -123,12 +128,6 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
           </SidebarContent>
           <SidebarFooter className="border-t p-4">
             <div className="flex flex-col gap-2">
-              <Button variant="outline" size="sm" className="justify-start" asChild>
-                <Link to="/settings">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </Link>
-              </Button>
               <Button variant="ghost" size="sm" className="justify-start text-red-500" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
@@ -185,12 +184,6 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
                   ))}
                 </nav>
                 <div className="absolute bottom-4 left-4 right-4 space-y-2">
-                  <Button variant="outline" className="w-full justify-start" asChild>
-                    <Link to="/settings">
-                      <Settings className="mr-2 h-4 w-4" />
-                      Settings
-                    </Link>
-                  </Button>
                   <Button variant="ghost" className="w-full justify-start text-red-500" onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
