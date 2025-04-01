@@ -1,81 +1,70 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
-import { sites, blocks } from "@/lib/data";
-import { Site, Block } from "@/lib/types";
-
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
+import { CalendarIcon, Clock } from "lucide-react";
+import { sites, blocks, users } from "@/lib/data";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
+import { Block } from "@/lib/types";
 
+// Work order schema
 const workOrderSchema = z.object({
   siteId: z.string().min(1, "Site is required"),
   blockId: z.string().min(1, "Block is required"),
-  startDate: z.date({
-    required_error: "Start date is required"
+  workDate: z.date({
+    required_error: "Work date is required",
   }),
-  endDate: z.date({
-    required_error: "End date is required"
-  }).refine(date => date > new Date(), {
-    message: "End date must be in the future"
-  }),
+  startTime: z.string().min(1, "Start time is required"),
+  endTime: z.string().min(1, "End time is required"),
   workType: z.enum(["pruning", "shootThinning", "other"], {
-    required_error: "Work type is required"
+    required_error: "Work type is required",
   }),
-  neededWorkers: z.number().min(1, "At least 1 worker is required"),
-  expectedHours: z.number().min(1, "Expected hours must be at least 1"),
-  payRate: z.number().min(0.01, "Pay rate must be greater than 0"),
-  acres: z.number().optional(),
-  rows: z.number().optional(),
-  vines: z.number().optional(),
-  vinesPerRow: z.number().optional(), // Added this field to the schema
+  neededWorkers: z.coerce.number().min(1, "At least 1 worker is required"),
+  payRate: z.coerce.number().min(0.01, "Pay rate must be greater than 0"),
+  acres: z.coerce.number().optional(),
+  rows: z.coerce.number().optional(),
+  vines: z.coerce.number().optional(),
+  vinesPerRow: z.coerce.number().optional(),
   notes: z.string().optional(),
 });
 
-type WorkOrderFormValues = z.infer<typeof workOrderSchema>;
-
 export default function WorkOrderForm() {
-  const [selectedSite, setSelectedSite] = useState<Site | null>(null);
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
+  const [managedSites, setManagedSites] = useState<any[]>([]);
   const [availableBlocks, setAvailableBlocks] = useState<Block[]>([]);
-  const { toast } = useToast();
-
-  const form = useForm<WorkOrderFormValues>({
+  
+  // Get sites managed by this manager
+  useEffect(() => {
+    if (currentUser) {
+      const userSites = sites.filter(site => site.managerId === currentUser.id);
+      setManagedSites(userSites);
+    }
+  }, [currentUser]);
+  
+  // Get form control
+  const form = useForm<z.infer<typeof workOrderSchema>>({
     resolver: zodResolver(workOrderSchema),
     defaultValues: {
       siteId: "",
       blockId: "",
+      workDate: new Date(),
+      startTime: "08:00",
+      endTime: "17:00",
       workType: "pruning",
       neededWorkers: 1,
-      expectedHours: 8,
-      payRate: 0.75,
+      payRate: 0.50,
       acres: undefined,
       rows: undefined,
       vines: undefined,
@@ -83,48 +72,63 @@ export default function WorkOrderForm() {
       notes: "",
     },
   });
-
-  const handleSiteChange = (siteId: string) => {
-    const site = sites.find(s => s.id === siteId);
-    if (site) {
-      setSelectedSite(site);
-      const siteBlocks = blocks.filter(b => b.siteId === siteId);
+  
+  // Watch for siteId changes
+  const selectedSiteId = form.watch("siteId");
+  
+  // Update available blocks when site changes
+  useEffect(() => {
+    if (selectedSiteId) {
+      const siteBlocks = blocks.filter(block => block.siteId === selectedSiteId);
       setAvailableBlocks(siteBlocks);
-      form.setValue("siteId", siteId);
+      
+      // Reset block selection if current selection is not in the new site
+      const currentBlockId = form.getValues("blockId");
+      if (currentBlockId && !siteBlocks.some(block => block.id === currentBlockId)) {
+        form.setValue("blockId", "");
+      }
+    } else {
+      setAvailableBlocks([]);
       form.setValue("blockId", "");
     }
-  };
-
-  const handleBlockChange = (blockId: string) => {
-    const block = blocks.find(b => b.id === blockId);
-    if (block) {
-      form.setValue("blockId", blockId);
-      if (block.acres) form.setValue("acres", block.acres);
-      if (block.rows) form.setValue("rows", block.rows);
-      if (block.vines) form.setValue("vines", block.vines);
-      
-      // Calculate vines per row
-      if (block.vines && block.rows && block.rows > 0) {
-        const vinesPerRow = Math.round(block.vines / block.rows);
-        form.setValue("vinesPerRow", vinesPerRow);
+  }, [selectedSiteId, form]);
+  
+  // Watch for blockId changes
+  const selectedBlockId = form.watch("blockId");
+  
+  // Update block info when block changes
+  useEffect(() => {
+    if (selectedBlockId) {
+      const selectedBlock = blocks.find(block => block.id === selectedBlockId);
+      if (selectedBlock) {
+        form.setValue("acres", selectedBlock.acres);
+        form.setValue("rows", selectedBlock.rows);
+        form.setValue("vines", selectedBlock.vines);
+        
+        if (selectedBlock.rows && selectedBlock.vines) {
+          const vinesPerRow = Math.round(selectedBlock.vines / selectedBlock.rows);
+          form.setValue("vinesPerRow", vinesPerRow);
+        }
       }
     }
-  };
-
-  function onSubmit(data: WorkOrderFormValues) {
+  }, [selectedBlockId, form]);
+  
+  const onSubmit = (data: z.infer<typeof workOrderSchema>) => {
+    console.log("Work order data:", data);
+    
+    // Here you would typically make an API call to save the work order
     toast({
-      title: "Work Order Created",
-      description: "The work order has been created successfully."
+      title: "Work order created",
+      description: "Your work order has been created successfully.",
     });
-    console.log(data);
-    form.reset();
-    setSelectedSite(null);
-    setAvailableBlocks([]);
-  }
-
+    
+    // Redirect back to work orders list
+    navigate("/manager/orders");
+  };
+  
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Site Selection */}
           <FormField
@@ -132,15 +136,15 @@ export default function WorkOrderForm() {
             name="siteId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Site *</FormLabel>
-                <Select onValueChange={handleSiteChange} defaultValue={field.value}>
+                <FormLabel>Vineyard Site*</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a site" />
+                      <SelectValue placeholder="Select site" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {sites.map((site) => (
+                    {managedSites.map(site => (
                       <SelectItem key={site.id} value={site.id}>
                         {site.name}
                       </SelectItem>
@@ -148,28 +152,32 @@ export default function WorkOrderForm() {
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  {selectedSite?.address || "Select a site to view its address"}
+                  Select the vineyard site where work will be performed.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-
+          
           {/* Block Selection */}
           <FormField
             control={form.control}
             name="blockId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Block *</FormLabel>
-                <Select onValueChange={handleBlockChange} defaultValue={field.value} disabled={!selectedSite}>
+                <FormLabel>Block*</FormLabel>
+                <Select 
+                  onValueChange={field.onChange} 
+                  defaultValue={field.value}
+                  disabled={availableBlocks.length === 0}
+                >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a block" />
+                      <SelectValue placeholder={availableBlocks.length === 0 ? "Select a site first" : "Select block"} />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {availableBlocks.map((block) => (
+                    {availableBlocks.map(block => (
                       <SelectItem key={block.id} value={block.id}>
                         {block.name}
                       </SelectItem>
@@ -177,34 +185,33 @@ export default function WorkOrderForm() {
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  Select a block within the chosen site
+                  Select the specific block within the vineyard.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          {/* Start Date */}
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Work Date */}
           <FormField
             control={form.control}
-            name="startDate"
+            name="workDate"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Start Date *</FormLabel>
+                <FormLabel>Work Date*</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
                       <Button
                         variant={"outline"}
-                        className={cn(
-                          "pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                        )}
+                        className="w-full pl-3 text-left font-normal"
                       >
                         {field.value ? (
                           format(field.value, "PPP")
                         ) : (
-                          <span>Pick a start date</span>
+                          <span>Pick a date</span>
                         )}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                       </Button>
@@ -215,75 +222,77 @@ export default function WorkOrderForm() {
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
-                      disabled={(date) => date < new Date()}
                       initialFocus
-                      className={cn("p-3 pointer-events-auto")}
                     />
                   </PopoverContent>
                 </Popover>
                 <FormDescription>
-                  The date when work will begin
+                  The date when the work will be performed.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          {/* End Date */}
+          
+          {/* Start Time */}
           <FormField
             control={form.control}
-            name="endDate"
+            name="startTime"
             render={({ field }) => (
-              <FormItem className="flex flex-col">
-                <FormLabel>End Date *</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <FormControl>
-                      <Button
-                        variant={"outline"}
-                        className={cn(
-                          "pl-3 text-left font-normal",
-                          !field.value && "text-muted-foreground"
-                        )}
-                      >
-                        {field.value ? (
-                          format(field.value, "PPP")
-                        ) : (
-                          <span>Pick an end date</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value}
-                      onSelect={field.onChange}
-                      disabled={(date) => 
-                        date < new Date() || 
-                        (form.getValues("startDate") && date < form.getValues("startDate"))
-                      }
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
+              <FormItem>
+                <FormLabel>Start Time*</FormLabel>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      type="time" 
+                      className="pl-10"
                     />
-                  </PopoverContent>
-                </Popover>
+                  </FormControl>
+                </div>
                 <FormDescription>
-                  The expected completion date
+                  When workers should start for the day.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-
+          
+          {/* End Time */}
+          <FormField
+            control={form.control}
+            name="endTime"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>End Time*</FormLabel>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <FormControl>
+                    <Input 
+                      {...field} 
+                      type="time" 
+                      className="pl-10"
+                    />
+                  </FormControl>
+                </div>
+                <FormDescription>
+                  Expected end time for the day.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Work Type */}
           <FormField
             control={form.control}
             name="workType"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Work Type *</FormLabel>
+                <FormLabel>Work Type*</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
@@ -297,84 +306,52 @@ export default function WorkOrderForm() {
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  The type of work to be performed
+                  The type of work to be performed.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-
+          
           {/* Needed Workers */}
           <FormField
             control={form.control}
             name="neededWorkers"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Number of Workers Needed *</FormLabel>
+                <FormLabel>Needed Workers*</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                    min={1}
-                  />
+                  <Input type="number" min="1" {...field} />
                 </FormControl>
                 <FormDescription>
-                  How many workers are required for this job
+                  Number of workers needed for this job.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          {/* Expected Hours */}
-          <FormField
-            control={form.control}
-            name="expectedHours"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Expected Hours *</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                    min={1}
-                  />
-                </FormControl>
-                <FormDescription>
-                  Total expected hours for the job
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
+          
           {/* Pay Rate */}
           <FormField
             control={form.control}
             name="payRate"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Pay Rate ($ per piece) *</FormLabel>
+                <FormLabel>Pay Rate ($ per vine)*</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                    min={0.01}
-                  />
+                  <Input type="number" step="0.01" min="0.01" {...field} />
                 </FormControl>
                 <FormDescription>
-                  Amount paid per piece/task completed
+                  Payment rate per vine.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          {/* Optional Fields */}
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Block Details */}
           <FormField
             control={form.control}
             name="acres"
@@ -382,79 +359,56 @@ export default function WorkOrderForm() {
               <FormItem>
                 <FormLabel>Acres</FormLabel>
                 <FormControl>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    {...field}
-                    value={field.value || ""}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
-                    min={0}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="rows"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Number of Rows</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    {...field}
-                    value={field.value || ""}
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
-                    min={0}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="vines"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Number of Vines</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    {...field}
-                    value={field.value || ""}
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
-                    min={0}
-                  />
+                  <Input type="number" step="0.1" {...field} readOnly />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
           
-          {/* Vines per Row (calculated field) */}
-          <FormItem>
-            <FormLabel>Vines per Row (Average)</FormLabel>
-            <Input
-              type="number"
-              readOnly
-              value={
-                form.getValues("rows") && form.getValues("vines") && form.getValues("rows") > 0
-                  ? Math.round(form.getValues("vines") / form.getValues("rows"))
-                  : ""
-              }
-              className="bg-muted"
-            />
-            <FormDescription>
-              Automatically calculated
-            </FormDescription>
-          </FormItem>
+          <FormField
+            control={form.control}
+            name="rows"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Rows</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} readOnly />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="vines"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Vines</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} readOnly />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="vinesPerRow"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Vines Per Row</FormLabel>
+                <FormControl>
+                  <Input type="number" {...field} readOnly />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-
+        
         {/* Notes */}
         <FormField
           control={form.control}
@@ -463,9 +417,9 @@ export default function WorkOrderForm() {
             <FormItem>
               <FormLabel>Notes</FormLabel>
               <FormControl>
-                <Textarea
-                  placeholder="Add any additional details or instructions here..."
-                  className="min-h-[120px]"
+                <Textarea 
+                  placeholder="Add any special instructions or notes for workers here..." 
+                  className="min-h-32"
                   {...field}
                 />
               </FormControl>
@@ -473,10 +427,14 @@ export default function WorkOrderForm() {
             </FormItem>
           )}
         />
-
-        <div className="flex justify-end space-x-4">
-          <Button type="button" variant="outline">Cancel</Button>
-          <Button type="submit">Create Work Order</Button>
+        
+        <div className="flex justify-end gap-4 pt-4">
+          <Button type="button" variant="outline" onClick={() => navigate("/manager/orders")}>
+            Cancel
+          </Button>
+          <Button type="submit">
+            Create Work Order
+          </Button>
         </div>
       </form>
     </Form>

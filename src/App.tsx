@@ -29,6 +29,11 @@ import CustomerAccounts from "./pages/CustomerAccounts";
 import CustomerSettings from "./pages/CustomerSettings";
 import CreateWorkOrder from "./pages/CreateWorkOrder";
 import ManagerSettings from "./pages/ManagerSettings";
+import AdminCustomerView from "./pages/AdminCustomerView";
+import AdminCustomerEdit from "./pages/AdminCustomerEdit";
+import AdminWorkerView from "./pages/AdminWorkerView";
+import AdminWorkerEdit from "./pages/AdminWorkerEdit";
+import HelpPage from "./pages/HelpPage";
 
 const queryClient = new QueryClient();
 
@@ -96,6 +101,22 @@ const App = () => (
               } 
             />
             <Route 
+              path="/admin/customers/:id" 
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminCustomerView />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/customers/edit/:id" 
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminCustomerEdit />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/admin/workers" 
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
@@ -104,10 +125,34 @@ const App = () => (
               } 
             />
             <Route 
+              path="/admin/workers/:id" 
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminWorkerView />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/workers/edit/:id" 
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <AdminWorkerEdit />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
               path="/admin/settings" 
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <AdminSettings />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/help" 
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <HelpPage />
                 </ProtectedRoute>
               } 
             />
@@ -201,6 +246,14 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/customer/help" 
+              element={
+                <ProtectedRoute allowedRoles={["customer"]}>
+                  <HelpPage />
+                </ProtectedRoute>
+              } 
+            />
             
             {/* Site Manager Routes */}
             <Route 
@@ -243,6 +296,14 @@ const App = () => (
                 </ProtectedRoute>
               } 
             />
+            <Route 
+              path="/manager/help" 
+              element={
+                <ProtectedRoute allowedRoles={["siteManager"]}>
+                  <HelpPage />
+                </ProtectedRoute>
+              } 
+            />
             
             {/* Worker Routes */}
             <Route 
@@ -250,6 +311,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["worker"]}>
                   <WorkerDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/worker/help" 
+              element={
+                <ProtectedRoute allowedRoles={["worker"]}>
+                  <HelpPage />
                 </ProtectedRoute>
               } 
             />

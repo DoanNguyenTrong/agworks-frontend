@@ -47,14 +47,20 @@ export default function SiteForm() {
         form.reset({
           name: site.name,
           address: site.address,
-          managerId: site.managerId || "",
+          managerId: site.managerId || "none",
         });
       }
     }
   }, [isEditMode, id, form]);
   
   const onSubmit = (data: z.infer<typeof siteSchema>) => {
-    console.log("Form data:", data);
+    // Convert "none" value back to empty string or undefined for backend
+    const formattedData = {
+      ...data,
+      managerId: data.managerId === "none" ? undefined : data.managerId
+    };
+    
+    console.log("Form data:", formattedData);
     
     // In a real app, you would save this data to your backend
     toast({

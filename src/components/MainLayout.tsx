@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { 
   Home, Users, Grape, Map, ClipboardList, 
   LogOut, Settings, Menu, X, Building, UserPlus, 
-  DollarSign, BarChart, FileText, Cog
+  DollarSign, BarChart, FileText, Cog, HelpCircle, User
 } from "lucide-react";
 import { 
   Sidebar, 
@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { useState } from "react";
 
 interface MainLayoutProps {
@@ -50,7 +51,6 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
           { name: "Dashboard", path: "/admin", icon: Home },
           { name: "Customers", path: "/admin/customers", icon: Building },
           { name: "Workers", path: "/admin/workers", icon: Users },
-          { name: "Settings", path: "/admin/settings", icon: Cog }
         ];
       case "customer":
         return [
@@ -58,13 +58,11 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
           { name: "Sites", path: "/customer/sites", icon: Map },
           { name: "Blocks", path: "/customer/blocks", icon: Grape },
           { name: "Site Managers", path: "/customer/accounts", icon: UserPlus },
-          { name: "Settings", path: "/customer/settings", icon: Cog }
         ];
       case "siteManager":
         return [
           { name: "Dashboard", path: "/manager", icon: Home },
           { name: "Work Orders", path: "/manager/orders", icon: ClipboardList },
-          { name: "Settings", path: "/manager/settings", icon: Cog }
         ];
       case "worker":
         return [
@@ -73,6 +71,51 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
         ];
       default:
         return [];
+    }
+  };
+
+  const getSettingsPath = () => {
+    switch (currentUser.role) {
+      case "admin":
+        return "/admin/settings";
+      case "customer":
+        return "/customer/settings";
+      case "siteManager":
+        return "/manager/settings";
+      case "worker":
+        return "/worker/settings";
+      default:
+        return "/";
+    }
+  };
+  
+  const getHelpPath = () => {
+    switch (currentUser.role) {
+      case "admin":
+        return "/admin/help";
+      case "customer":
+        return "/customer/help";
+      case "siteManager":
+        return "/manager/help";
+      case "worker":
+        return "/worker/help";
+      default:
+        return "/";
+    }
+  };
+  
+  const getProfilePath = () => {
+    switch (currentUser.role) {
+      case "admin":
+        return "/admin/profile";
+      case "customer":
+        return "/customer/profile";
+      case "siteManager":
+        return "/manager/profile";
+      case "worker":
+        return "/worker/profile";
+      default:
+        return "/";
     }
   };
 
@@ -128,6 +171,25 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
           </SidebarContent>
           <SidebarFooter className="border-t p-4">
             <div className="flex flex-col gap-2">
+              <Button variant="ghost" size="sm" className="justify-start" asChild>
+                <Link to={getProfilePath()}>
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm" className="justify-start" asChild>
+                <Link to={getSettingsPath()}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm" className="justify-start" asChild>
+                <Link to={getHelpPath()}>
+                  <HelpCircle className="mr-2 h-4 w-4" />
+                  Help & Support
+                </Link>
+              </Button>
+              <Separator className="my-1" />
               <Button variant="ghost" size="sm" className="justify-start text-red-500" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
@@ -184,6 +246,40 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
                   ))}
                 </nav>
                 <div className="absolute bottom-4 left-4 right-4 space-y-2">
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start"
+                    onClick={() => {
+                      navigate(getProfilePath());
+                      setIsMobileNavOpen(false);
+                    }}
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start"
+                    onClick={() => {
+                      navigate(getSettingsPath());
+                      setIsMobileNavOpen(false);
+                    }}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start"
+                    onClick={() => {
+                      navigate(getHelpPath());
+                      setIsMobileNavOpen(false);
+                    }}
+                  >
+                    <HelpCircle className="mr-2 h-4 w-4" />
+                    Help & Support
+                  </Button>
+                  <Separator className="my-1" />
                   <Button variant="ghost" className="w-full justify-start text-red-500" onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
