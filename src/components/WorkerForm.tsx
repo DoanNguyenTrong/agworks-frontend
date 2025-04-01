@@ -15,13 +15,17 @@ const workerSchema = z.object({
   sendInvite: z.boolean().default(true),
 });
 
-interface WorkerFormProps {
+export type WorkerFormData = z.infer<typeof workerSchema>;
+
+export interface WorkerFormProps {
   onComplete?: () => void;
-  defaultValues?: z.infer<typeof workerSchema>;
+  onSubmit?: (data: WorkerFormData) => void;
+  defaultValues?: WorkerFormData;
+  isEditMode?: boolean;
 }
 
-export default function WorkerForm({ onComplete, defaultValues }: WorkerFormProps) {
-  const form = useForm<z.infer<typeof workerSchema>>({
+export default function WorkerForm({ onComplete, onSubmit, defaultValues, isEditMode = false }: WorkerFormProps) {
+  const form = useForm<WorkerFormData>({
     resolver: zodResolver(workerSchema),
     defaultValues: defaultValues || {
       name: "",
@@ -32,23 +36,29 @@ export default function WorkerForm({ onComplete, defaultValues }: WorkerFormProp
     },
   });
 
-  const onSubmit = (data: z.infer<typeof workerSchema>) => {
+  const handleSubmit = (data: WorkerFormData) => {
     console.log("Worker data:", data);
     
-    // In a real app, this would make an API call to create the worker
-    toast({
-      title: "Worker created",
-      description: `${data.name} has been added as a worker.`,
-    });
-    
-    if (onComplete) {
-      onComplete();
+    if (onSubmit) {
+      onSubmit(data);
+    } else {
+      // Default behavior if no onSubmit is provided
+      toast({
+        title: isEditMode ? "Worker updated" : "Worker created",
+        description: isEditMode 
+          ? `${data.name} has been updated.`
+          : `${data.name} has been added as a worker.`,
+      });
+      
+      if (onComplete) {
+        onComplete();
+      }
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="name"
@@ -96,52 +106,56 @@ export default function WorkerForm({ onComplete, defaultValues }: WorkerFormProp
           />
         </div>
         
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input {...field} type="password" />
-              </FormControl>
-              <FormDescription>
-                If left empty, a temporary password will be generated.
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="sendInvite"
-          render={({ field }) => (
-            <FormItem className="flex items-center gap-2">
-              <FormControl>
-                <input
-                  type="checkbox"
-                  checked={field.value}
-                  onChange={field.onChange}
-                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                />
-              </FormControl>
-              <div>
-                <FormLabel>Send invitation email</FormLabel>
+        {!isEditMode && (
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Password</FormLabel>
+                <FormControl>
+                  <Input {...field} type="password" />
+                </FormControl>
                 <FormDescription>
-                  Send an email with login instructions to the worker.
+                  If left empty, a temporary password will be generated.
                 </FormDescription>
-              </div>
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+        
+        {!isEditMode && (
+          <FormField
+            control={form.control}
+            name="sendInvite"
+            render={({ field }) => (
+              <FormItem className="flex items-center gap-2">
+                <FormControl>
+                  <input
+                    type="checkbox"
+                    checked={field.value}
+                    onChange={field.onChange}
+                    className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                </FormControl>
+                <div>
+                  <FormLabel>Send invitation email</FormLabel>
+                  <FormDescription>
+                    Send an email with login instructions to the worker.
+                  </FormDescription>
+                </div>
+              </FormItem>
+            )}
+          />
+        )}
         
         <div className="flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={onComplete}>
             Cancel
           </Button>
           <Button type="submit">
-            Create Worker
+            {isEditMode ? "Update Worker" : "Create Worker"}
           </Button>
         </div>
       </form>

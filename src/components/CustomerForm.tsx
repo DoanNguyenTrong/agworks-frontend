@@ -16,13 +16,17 @@ const customerSchema = z.object({
   address: z.string().optional(),
 });
 
-interface CustomerFormProps {
+export type CustomerFormData = z.infer<typeof customerSchema>;
+
+export interface CustomerFormProps {
   onComplete?: () => void;
-  defaultValues?: z.infer<typeof customerSchema>;
+  onSubmit?: (data: CustomerFormData) => void;
+  defaultValues?: CustomerFormData;
+  isEditMode?: boolean;
 }
 
-export default function CustomerForm({ onComplete, defaultValues }: CustomerFormProps) {
-  const form = useForm<z.infer<typeof customerSchema>>({
+export default function CustomerForm({ onComplete, onSubmit, defaultValues, isEditMode = false }: CustomerFormProps) {
+  const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerSchema),
     defaultValues: defaultValues || {
       name: "",
@@ -33,23 +37,29 @@ export default function CustomerForm({ onComplete, defaultValues }: CustomerForm
     },
   });
 
-  const onSubmit = (data: z.infer<typeof customerSchema>) => {
+  const handleSubmit = (data: CustomerFormData) => {
     console.log("Customer data:", data);
     
-    // In a real app, this would make an API call to create the customer
-    toast({
-      title: "Customer created",
-      description: `${data.companyName} has been added as a customer.`,
-    });
-    
-    if (onComplete) {
-      onComplete();
+    if (onSubmit) {
+      onSubmit(data);
+    } else {
+      // Default behavior if no onSubmit is provided
+      toast({
+        title: isEditMode ? "Customer updated" : "Customer created",
+        description: isEditMode 
+          ? `${data.companyName} has been updated.`
+          : `${data.companyName} has been added as a customer.`,
+      });
+      
+      if (onComplete) {
+        onComplete();
+      }
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
@@ -133,7 +143,7 @@ export default function CustomerForm({ onComplete, defaultValues }: CustomerForm
             Cancel
           </Button>
           <Button type="submit">
-            Create Customer
+            {isEditMode ? "Update Customer" : "Create Customer"}
           </Button>
         </div>
       </form>
