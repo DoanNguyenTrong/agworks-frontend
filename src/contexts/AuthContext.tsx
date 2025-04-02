@@ -230,6 +230,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           title: "Login successful",
           description: "Welcome back!",
         });
+
+        // Navigate based on role
+        window.location.href = `/${demoUser.role === 'siteManager' ? 'manager' : demoUser.role}`;
         return;
       }
       
@@ -273,6 +276,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           setCurrentUser(user);
           setSession(data.session);
+
+          toast({
+            title: "Login successful",
+            description: `Welcome back${profileData.name ? ', ' + profileData.name : ''}!`,
+          });
+
+          // Navigate based on the user's role
+          if (profileData.role === 'admin') {
+            window.location.href = '/admin';
+          } else if (profileData.role === 'customer') {
+            window.location.href = '/customer';
+          } else if (profileData.role === 'siteManager') {
+            window.location.href = '/manager';
+          } else if (profileData.role === 'worker') {
+            window.location.href = '/worker';
+          } else {
+            window.location.href = '/';
+          }
         }
       }
     } catch (error: any) {

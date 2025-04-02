@@ -9,22 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { InfoIcon } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { User } from "@/lib/types";
-
-// Define a type for the profile data from Supabase
-type ProfileData = {
-  id: string;
-  name: string;
-  role: string;
-  email: string;
-  created_at: string;
-  profile_image?: string | null;
-  address?: string | null;
-  phone?: string | null;
-  logo?: string | null;
-  company_name?: string | null;
-};
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -39,72 +23,8 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      // Sample credentials for demo purposes
-      const validCredentials = [
-        { email: "admin@example.com", password: "admin123" },
-        { email: "customer@example.com", password: "customer123" },
-        { email: "manager@example.com", password: "manager123" },
-        { email: "worker@example.com", password: "worker123" }
-      ];
-
-      // Check if using one of the demo credentials
-      const isDemoCredential = validCredentials.some(
-        (cred) => cred.email === email && cred.password === password
-      );
-
-      // If using demo credentials, use the context login method (uses localStorage)
-      if (isDemoCredential) {
-        await login(email, password);
-        toast({
-          title: "Login successful",
-          description: "Welcome to AgWorks! You're now logged in with demo credentials.",
-        });
-        navigate("/");
-        return;
-      }
-
-      // Otherwise, try to log in with Supabase
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      // If successful with Supabase, check for user profile
-      if (data.user) {
-        // Use explicit typing for the profiles query
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single<ProfileData>();
-
-        if (profileError && profileError.code !== 'PGRST116') {
-          console.error("Error fetching profile:", profileError);
-          // We'll still let them log in even if profile fetch fails
-        }
-
-        toast({
-          title: "Login successful",
-          description: `Welcome back${profileData?.name ? ', ' + profileData.name : ''}!`,
-        });
-
-        // Navigate based on the user's role with proper null checks
-        if (profileData?.role === 'admin') {
-          navigate('/admin');
-        } else if (profileData?.role === 'customer') {
-          navigate('/customer');
-        } else if (profileData?.role === 'siteManager') {
-          navigate('/manager');
-        } else if (profileData?.role === 'worker') {
-          navigate('/worker');
-        } else {
-          navigate('/');
-        }
-      }
+      await login(email, password);
+      // The success toast and navigation is handled in the AuthContext
     } catch (error: any) {
       console.error("Login error:", error);
       toast({
