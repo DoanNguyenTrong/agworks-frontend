@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Grape, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -58,7 +58,8 @@ const formSchema = z.object({
 
 export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const { signup } = useAuth();
+  const navigate = useNavigate();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -75,18 +76,23 @@ export default function Register() {
 
   const role = form.watch("role");
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      console.log(values);
-      toast({
-        title: "Registration Successful",
-        description: "Your account has been created. Please log in.",
+    try {
+      await signup(values.email, values.password, {
+        name: values.name,
+        role: values.role === "customer" ? "customer" : "worker",
+        companyName: values.companyName,
+        phone: values.phone
       });
+      
+      navigate("/login");
+    } catch (error) {
+      console.error("Signup error:", error);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   }
 
   return (

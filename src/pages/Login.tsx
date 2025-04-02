@@ -43,10 +43,7 @@ export default function Login() {
     setIsLoading(true);
     try {
       await login(values.email, values.password);
-      
-      // Navigate based on role (this is handled in the auth context)
-      // The protected route component will redirect appropriately
-      navigate("/");
+      // Navigation will be handled by the auth state change listener
     } catch (error) {
       console.error("Login failed:", error);
       setIsLoading(false);
