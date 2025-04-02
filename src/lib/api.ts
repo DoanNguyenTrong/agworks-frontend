@@ -7,7 +7,8 @@ export const fetchUsers = async (role?: string): Promise<User[]> => {
   let query = supabase.from('profiles').select('*');
   
   if (role) {
-    query = query.eq('role', role);
+    // Cast role to the correct type expected by Supabase
+    query = query.eq('role', role as "admin" | "customer" | "siteManager" | "worker");
   }
   
   const { data, error } = await query;
@@ -285,7 +286,8 @@ export const fetchWorkOrders = async (siteId?: string, status?: string): Promise
   }
   
   if (status) {
-    query = query.eq('status', status);
+    // Cast status to the correct type expected by Supabase
+    query = query.eq('status', status as "draft" | "published" | "inProgress" | "completed" | "cancelled");
   }
   
   const { data, error } = await query;
@@ -544,10 +546,13 @@ export const fetchWorkerTasks = async (orderId?: string, workerId?: string): Pro
 };
 
 export const createWorkerTask = async (taskData: Partial<WorkerTask>): Promise<string> => {
+  // Convert our interface status to DB status
+  const dbStatus: "registered" | "approved" | "working" | "worked" = "registered";
+  
   const dbData = {
     worker_id: taskData.workerId,
     order_id: taskData.orderId,
-    status: 'registered' // Convert from our interface status to DB status
+    status: dbStatus
   };
   
   const { data, error } = await supabase
@@ -569,6 +574,7 @@ export const createWorkerTask = async (taskData: Partial<WorkerTask>): Promise<s
 export const updateWorkerTask = async (id: string, status: 'pending' | 'approved' | 'rejected'): Promise<void> => {
   // Convert from our interface status to DB status
   let dbStatus: 'registered' | 'approved' | 'working' | 'worked';
+  
   switch (status) {
     case 'pending':
       dbStatus = 'registered';
@@ -584,7 +590,7 @@ export const updateWorkerTask = async (id: string, status: 'pending' | 'approved
   
   const updateData: any = { status: dbStatus };
   
-  // If marking as worked, also set completed_at
+  // If marking as approved with working status, also set completed_at
   if (dbStatus === 'worked') {
     updateData.completed_at = new Date().toISOString();
   }
