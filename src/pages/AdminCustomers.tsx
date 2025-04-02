@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,26 +20,106 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, PlusCircle, Trash, Edit, Eye } from "lucide-react";
-import { users } from "@/lib/data";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import CustomerForm from "@/components/CustomerForm";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 export default function AdminCustomers() {
+  const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
-  // Filter customers
-  const customers = users.filter(user => 
-    user.role === "customer" && 
-    (searchTerm === "" || 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.companyName?.toLowerCase().includes(searchTerm.toLowerCase()))
+  // Fetch customers from Supabase
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('role', 'customer');
+          
+        if (error) throw error;
+        
+        setCustomers(data || []);
+      } catch (error: any) {
+        console.error('Error fetching customers:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load customers",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchCustomers();
+  }, []);
+  
+  // Filter customers based on search term
+  const filteredCustomers = customers.filter(customer => 
+    searchTerm === "" || 
+    customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.company_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  
+  // Delete customer
+  const handleDeleteCustomer = async () => {
+    if (!customerToDelete) return;
+    
+    try {
+      setIsDeleting(true);
+      
+      // Delete customer from Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', customerToDelete);
+        
+      if (error) throw error;
+      
+      // Update local state
+      setCustomers(customers.filter(c => c.id !== customerToDelete));
+      
+      toast({
+        title: "Customer deleted",
+        description: "Customer has been removed successfully.",
+      });
+    } catch (error: any) {
+      console.error('Error deleting customer:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete customer",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setCustomerToDelete(null);
+    }
+  };
 
   return (
     <MainLayout pageTitle="Customer Management">
@@ -87,14 +167,20 @@ export default function AdminCustomers() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {customers.length > 0 ? (
-                customers.map((customer) => (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-6">
+                    Loading customers...
+                  </TableCell>
+                </TableRow>
+              ) : filteredCustomers.length > 0 ? (
+                filteredCustomers.map((customer) => (
                   <TableRow key={customer.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar>
                           <AvatarImage src={customer.logo} />
-                          <AvatarFallback>{customer.name.charAt(0)}</AvatarFallback>
+                          <AvatarFallback>{customer.name?.charAt(0) || 'C'}</AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="font-medium">{customer.name}</p>
@@ -102,11 +188,11 @@ export default function AdminCustomers() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{customer.companyName || "—"}</TableCell>
+                    <TableCell>{customer.company_name || "—"}</TableCell>
                     <TableCell>{customer.phone || "—"}</TableCell>
                     <TableCell>
-                      {/* Count sites from data */}
-                      2 Sites
+                      {/* We'll implement this functionality later */}
+                      {customer.siteCount || 0} Sites
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
@@ -120,12 +206,42 @@ export default function AdminCustomers() {
                             <Eye className="h-4 w-4" />
                           </Link>
                         </Button>
-                        <Button variant="outline" size="icon">
-                          <Edit className="h-4 w-4" />
+                        <Button variant="outline" size="icon" asChild>
+                          <Link to={`/admin/customers/edit/${customer.id}`}>
+                            <Edit className="h-4 w-4" />
+                          </Link>
                         </Button>
-                        <Button variant="outline" size="icon" className="text-red-500">
-                          <Trash className="h-4 w-4" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="icon" 
+                              className="text-red-500"
+                              onClick={() => setCustomerToDelete(customer.id)}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete {customer.company_name || customer.name}? 
+                                This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel onClick={() => setCustomerToDelete(null)}>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={handleDeleteCustomer}
+                                className="bg-red-500 hover:bg-red-600"
+                                disabled={isDeleting}
+                              >
+                                {isDeleting ? "Deleting..." : "Delete"}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </TableCell>
                   </TableRow>

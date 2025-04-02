@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit, Trash } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { sites, users } from "@/lib/data";
 import { User, Site } from "@/lib/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
@@ -18,24 +17,113 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function AdminCustomerView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [customer, setCustomer] = useState<User | null>(null);
+  const [customer, setCustomer] = useState<any | null>(null);
   const [customerSites, setCustomerSites] = useState<Site[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    if (id) {
-      const foundCustomer = users.find(user => user.id === id && user.role === "customer");
-      if (foundCustomer) {
-        setCustomer(foundCustomer);
-        // Get customer sites
-        const foundSites = sites.filter(site => site.customerId === id);
-        setCustomerSites(foundSites);
+    const fetchCustomerData = async () => {
+      if (!id) return;
+      
+      try {
+        setIsLoading(true);
+        
+        // Fetch customer data
+        const { data: customerData, error: customerError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', id)
+          .eq('role', 'customer')
+          .single();
+          
+        if (customerError) throw customerError;
+        
+        if (customerData) {
+          setCustomer(customerData);
+          
+          // Fetch customer sites
+          const { data: sitesData, error: sitesError } = await supabase
+            .from('sites')
+            .select('*')
+            .eq('customer_id', id);
+            
+          if (sitesError) throw sitesError;
+          
+          setCustomerSites(sitesData || []);
+        }
+      } catch (error: any) {
+        console.error('Error fetching customer data:', error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to load customer data",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
+    
+    fetchCustomerData();
   }, [id]);
+
+  const handleDeleteCustomer = async () => {
+    if (!customer) return;
+    
+    try {
+      setIsDeleting(true);
+      
+      // Delete customer from Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', customer.id);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Customer deleted",
+        description: "Customer has been removed successfully.",
+      });
+      
+      navigate("/admin/customers");
+    } catch (error: any) {
+      console.error('Error deleting customer:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete customer",
+        variant: "destructive",
+      });
+      setIsDeleting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <MainLayout pageTitle="Loading Customer Details">
+        <div className="flex justify-center items-center py-12">
+          <p>Loading customer information...</p>
+        </div>
+      </MainLayout>
+    );
+  }
 
   if (!customer) {
     return (
@@ -68,7 +156,7 @@ export default function AdminCustomerView() {
             <div className="flex flex-col items-center mb-6">
               <Avatar className="h-24 w-24 mb-4">
                 <AvatarImage src={customer.logo} />
-                <AvatarFallback className="text-2xl">{customer.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback className="text-2xl">{customer.name?.charAt(0) || 'C'}</AvatarFallback>
               </Avatar>
               <h2 className="text-xl font-bold">{customer.name}</h2>
               <p className="text-muted-foreground">{customer.email}</p>
@@ -79,7 +167,7 @@ export default function AdminCustomerView() {
             <div className="space-y-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Company Name</p>
-                <p>{customer.companyName || "—"}</p>
+                <p>{customer.company_name || "—"}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Phone</p>
@@ -91,7 +179,7 @@ export default function AdminCustomerView() {
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Created</p>
-                <p>{new Date(customer.createdAt).toLocaleDateString()}</p>
+                <p>{new Date(customer.created_at).toLocaleDateString()}</p>
               </div>
             </div>
 
@@ -102,10 +190,33 @@ export default function AdminCustomerView() {
                 <Edit className="h-4 w-4 mr-2" />
                 Edit
               </Button>
-              <Button variant="outline" size="sm" className="text-red-500">
-                <Trash className="h-4 w-4 mr-2" />
-                Delete
-              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="text-red-500">
+                    <Trash className="h-4 w-4 mr-2" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete {customer.company_name || customer.name}? 
+                      This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={handleDeleteCustomer}
+                      className="bg-red-500 hover:bg-red-600"
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? "Deleting..." : "Delete"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </CardContent>
         </Card>
@@ -131,30 +242,25 @@ export default function AdminCustomerView() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {customerSites.map(site => {
-                    const manager = site.managerId 
-                      ? users.find(user => user.id === site.managerId) 
-                      : null;
-                    
-                    return (
-                      <TableRow 
-                        key={site.id}
-                        onDoubleClick={() => navigate(`/admin/sites/${site.id}`)}
-                        className="cursor-pointer"
-                      >
-                        <TableCell>{site.name}</TableCell>
-                        <TableCell>{site.address}</TableCell>
-                        <TableCell>{manager ? manager.name : "—"}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="outline" size="icon" onClick={() => navigate(`/admin/sites/${site.id}`)}>
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
+                  {customerSites.map(site => (
+                    <TableRow 
+                      key={site.id}
+                      className="cursor-pointer"
+                    >
+                      <TableCell>{site.name}</TableCell>
+                      <TableCell>{site.address}</TableCell>
+                      <TableCell>
+                        {site.managerId ? "Assigned" : "—"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" size="icon" onClick={() => navigate(`/admin/sites/${site.id}`)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
             ) : (

@@ -5,38 +5,93 @@ import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { users } from "@/lib/data";
 import { toast } from "@/hooks/use-toast";
 import CustomerForm from "@/components/CustomerForm";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function AdminCustomerEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [customer, setCustomer] = useState<any | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    if (id) {
-      const foundCustomer = users.find(user => user.id === id && user.role === "customer");
-      if (foundCustomer) {
-        setCustomer(foundCustomer);
+    const fetchCustomer = async () => {
+      if (!id) return;
+      
+      try {
+        setIsLoading(true);
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', id)
+          .eq('role', 'customer')
+          .single();
+          
+        if (error) throw error;
+        
+        setCustomer(data);
+      } catch (error: any) {
+        console.error('Error fetching customer:', error);
+        toast({
+          title: "Error",
+          description: error.message || "Failed to load customer data",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
-    }
+    };
+    
+    fetchCustomer();
   }, [id]);
 
   const handleComplete = () => {
     navigate(`/admin/customers/${id}`);
   };
 
-  const handleSave = (data: any) => {
-    console.log("Updated customer data:", data);
-    
-    toast({
-      title: "Customer updated",
-      description: "Customer information has been updated successfully.",
-    });
-    
-    navigate(`/admin/customers/${id}`);
+  const handleSave = async (data: any) => {
+    try {
+      // Update customer in Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: data.name,
+          email: data.email,
+          company_name: data.companyName,
+          phone: data.phone,
+          address: data.address,
+        })
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Customer updated",
+        description: "Customer information has been updated successfully.",
+      });
+      
+      navigate(`/admin/customers/${id}`);
+    } catch (error: any) {
+      console.error('Error updating customer:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update customer",
+        variant: "destructive",
+      });
+    }
   };
+
+  if (isLoading) {
+    return (
+      <MainLayout pageTitle="Loading...">
+        <div className="flex justify-center items-center py-12">
+          <p>Loading customer information...</p>
+        </div>
+      </MainLayout>
+    );
+  }
 
   if (!customer && id) {
     return (
@@ -71,11 +126,12 @@ export default function AdminCustomerEdit() {
             defaultValues={{
               name: customer?.name || "",
               email: customer?.email || "",
-              companyName: customer?.companyName || "",
+              companyName: customer?.company_name || "",
               phone: customer?.phone || "",
               address: customer?.address || "",
             }}
             isEditMode={true}
+            customerId={id}
           />
         </CardContent>
       </Card>

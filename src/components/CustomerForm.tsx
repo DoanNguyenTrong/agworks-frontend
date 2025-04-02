@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const customerSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -23,9 +25,18 @@ export interface CustomerFormProps {
   onSubmit?: (data: CustomerFormData) => void;
   defaultValues?: CustomerFormData;
   isEditMode?: boolean;
+  customerId?: string;
 }
 
-export default function CustomerForm({ onComplete, onSubmit, defaultValues, isEditMode = false }: CustomerFormProps) {
+export default function CustomerForm({ 
+  onComplete, 
+  onSubmit, 
+  defaultValues, 
+  isEditMode = false,
+  customerId
+}: CustomerFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const form = useForm<CustomerFormData>({
     resolver: zodResolver(customerSchema),
     defaultValues: defaultValues || {
@@ -37,23 +48,74 @@ export default function CustomerForm({ onComplete, onSubmit, defaultValues, isEd
     },
   });
 
-  const handleSubmit = (data: CustomerFormData) => {
-    console.log("Customer data:", data);
+  const handleSubmit = async (data: CustomerFormData) => {
+    setIsSubmitting(true);
     
-    if (onSubmit) {
-      onSubmit(data);
-    } else {
-      // Default behavior if no onSubmit is provided
-      toast({
-        title: isEditMode ? "Customer updated" : "Customer created",
-        description: isEditMode 
-          ? `${data.companyName} has been updated.`
-          : `${data.companyName} has been added as a customer.`,
-      });
+    try {
+      if (onSubmit) {
+        onSubmit(data);
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Default handling if no onSubmit provided
+      if (isEditMode && customerId) {
+        // Update customer in Supabase
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            name: data.name,
+            email: data.email,
+            company_name: data.companyName,
+            phone: data.phone,
+            address: data.address,
+          })
+          .eq('id', customerId);
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Customer updated",
+          description: `${data.companyName} has been updated.`,
+        });
+      } else {
+        // Create new customer in Supabase
+        // For security, we'll use the admin-specific API endpoint
+        // since only admins should be able to create customers
+        
+        const { data: newCustomer, error } = await supabase.auth.admin.createUser({
+          email: data.email,
+          password: Math.random().toString(36).slice(-8), // Generate random password
+          email_confirm: true,
+          user_metadata: {
+            name: data.name,
+            company_name: data.companyName,
+            phone: data.phone,
+            address: data.address,
+            role: 'customer'
+          }
+        });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Customer created",
+          description: `${data.companyName} has been added as a customer.`,
+        });
+      }
       
       if (onComplete) {
         onComplete();
       }
+    } catch (error: any) {
+      console.error('Error handling customer:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save customer",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -142,8 +204,10 @@ export default function CustomerForm({ onComplete, onSubmit, defaultValues, isEd
           <Button type="button" variant="outline" onClick={onComplete}>
             Cancel
           </Button>
-          <Button type="submit">
-            {isEditMode ? "Update Customer" : "Create Customer"}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting 
+              ? (isEditMode ? "Updating..." : "Creating...") 
+              : (isEditMode ? "Update Customer" : "Create Customer")}
           </Button>
         </div>
       </form>
