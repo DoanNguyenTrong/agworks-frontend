@@ -5,38 +5,89 @@ import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { users } from "@/lib/data";
 import { toast } from "@/hooks/use-toast";
 import WorkerForm from "@/components/WorkerForm";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function AdminWorkerEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [worker, setWorker] = useState<any | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    if (id) {
-      const foundWorker = users.find(user => user.id === id && user.role === "worker");
-      if (foundWorker) {
-        setWorker(foundWorker);
+    const fetchWorker = async () => {
+      if (id) {
+        setIsLoading(true);
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', id)
+            .eq('role', 'worker')
+            .single();
+            
+          if (error) throw error;
+          
+          setWorker(data);
+        } catch (error: any) {
+          console.error('Error fetching worker:', error);
+          toast({
+            title: "Error",
+            description: "Failed to load worker details",
+            variant: "destructive",
+          });
+        } finally {
+          setIsLoading(false);
+        }
       }
-    }
+    };
+    
+    fetchWorker();
   }, [id]);
 
   const handleComplete = () => {
     navigate(`/admin/workers/${id}`);
   };
 
-  const handleSave = (data: any) => {
-    console.log("Updated worker data:", data);
-    
-    toast({
-      title: "Worker updated",
-      description: "Worker information has been updated successfully.",
-    });
-    
-    navigate(`/admin/workers/${id}`);
+  const handleSave = async (data: any) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+        })
+        .eq('id', id);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Worker updated",
+        description: "Worker information has been updated successfully.",
+      });
+      
+      navigate(`/admin/workers/${id}`);
+    } catch (error: any) {
+      console.error('Error updating worker:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update worker",
+        variant: "destructive",
+      });
+    }
   };
+
+  if (isLoading) {
+    return (
+      <MainLayout pageTitle="Loading...">
+        <div className="flex justify-center py-12">
+          <p>Loading worker details...</p>
+        </div>
+      </MainLayout>
+    );
+  }
 
   if (!worker && id) {
     return (
@@ -74,6 +125,7 @@ export default function AdminWorkerEdit() {
               phone: worker?.phone || "",
             }}
             isEditMode={true}
+            workerId={id}
           />
         </CardContent>
       </Card>

@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 
 const workerSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -23,9 +25,18 @@ export interface WorkerFormProps {
   onSubmit?: (data: WorkerFormData) => void;
   defaultValues?: WorkerFormData;
   isEditMode?: boolean;
+  workerId?: string;
 }
 
-export default function WorkerForm({ onComplete, onSubmit, defaultValues, isEditMode = false }: WorkerFormProps) {
+export default function WorkerForm({ 
+  onComplete, 
+  onSubmit, 
+  defaultValues, 
+  isEditMode = false,
+  workerId
+}: WorkerFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const form = useForm<WorkerFormData>({
     resolver: zodResolver(workerSchema),
     defaultValues: defaultValues || {
@@ -37,23 +48,87 @@ export default function WorkerForm({ onComplete, onSubmit, defaultValues, isEdit
     },
   });
 
-  const handleSubmit = (data: WorkerFormData) => {
-    console.log("Worker data:", data);
+  const handleSubmit = async (data: WorkerFormData) => {
+    setIsSubmitting(true);
     
-    if (onSubmit) {
-      onSubmit(data);
-    } else {
-      // Default behavior if no onSubmit is provided
-      toast({
-        title: isEditMode ? "Worker updated" : "Worker created",
-        description: isEditMode 
-          ? `${data.name} has been updated.`
-          : `${data.name} has been added as a worker.`,
-      });
+    try {
+      if (onSubmit) {
+        onSubmit(data);
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Default handling if no onSubmit is provided
+      if (isEditMode && workerId) {
+        // Update worker in Supabase
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+          })
+          .eq('id', workerId);
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Worker updated",
+          description: `${data.name} has been updated.`,
+        });
+      } else {
+        // Create new worker in Supabase using standard auth signup
+        const password = data.password || Math.random().toString(36).slice(-8) + '1A!'; // Generate a password if not provided
+        
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({
+          email: data.email,
+          password: password,
+          options: {
+            data: {
+              name: data.name,
+              phone: data.phone,
+              role: 'worker'
+            }
+          }
+        });
+        
+        if (signUpError) throw signUpError;
+        
+        // Ensure profile data is updated
+        if (authData.user) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: authData.user.id,
+              name: data.name,
+              email: data.email,
+              phone: data.phone,
+              role: 'worker'
+            });
+            
+          if (profileError) throw profileError;
+        }
+        
+        // TODO: If sendInvite is true, send an email with login instructions to the worker
+        
+        toast({
+          title: "Worker created",
+          description: `${data.name} has been added as a worker.${!data.password ? ' A random password was generated.' : ''}`,
+        });
+      }
       
       if (onComplete) {
         onComplete();
       }
+    } catch (error: any) {
+      console.error('Error handling worker:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save worker",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -153,8 +228,10 @@ export default function WorkerForm({ onComplete, onSubmit, defaultValues, isEdit
           <Button type="button" variant="outline" onClick={onComplete}>
             Cancel
           </Button>
-          <Button type="submit">
-            {isEditMode ? "Update Worker" : "Create Worker"}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting
+              ? (isEditMode ? "Updating..." : "Creating...")
+              : (isEditMode ? "Update Worker" : "Create Worker")}
           </Button>
         </div>
       </form>

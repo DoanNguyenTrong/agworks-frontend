@@ -16,6 +16,7 @@ const customerSchema = z.object({
   companyName: z.string().min(1, "Company name is required"),
   phone: z.string().optional(),
   address: z.string().optional(),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 export type CustomerFormData = z.infer<typeof customerSchema>;
@@ -45,6 +46,7 @@ export default function CustomerForm({
       companyName: "",
       phone: "",
       address: "",
+      password: "",
     },
   });
 
@@ -79,24 +81,39 @@ export default function CustomerForm({
           description: `${data.companyName} has been updated.`,
         });
       } else {
-        // Create new customer in Supabase
-        // For security, we'll use the admin-specific API endpoint
-        // since only admins should be able to create customers
-        
-        const { data: newCustomer, error } = await supabase.auth.admin.createUser({
+        // Create new customer in Supabase using standard auth signup
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({
           email: data.email,
-          password: '12345678', // Default password
-          email_confirm: true,
-          user_metadata: {
-            name: data.name,
-            company_name: data.companyName,
-            phone: data.phone,
-            address: data.address,
-            role: 'customer'
+          password: data.password,
+          options: {
+            data: {
+              name: data.name,
+              company_name: data.companyName,
+              phone: data.phone,
+              address: data.address,
+              role: 'customer'
+            }
           }
         });
         
-        if (error) throw error;
+        if (signUpError) throw signUpError;
+        
+        // Ensure profile data is updated
+        if (authData.user) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: authData.user.id,
+              name: data.name,
+              email: data.email,
+              company_name: data.companyName,
+              phone: data.phone,
+              address: data.address,
+              role: 'customer'
+            });
+            
+          if (profileError) throw profileError;
+        }
         
         toast({
           title: "Customer created",
@@ -181,6 +198,25 @@ export default function CustomerForm({
             )}
           />
         </div>
+        
+        {!isEditMode && (
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Initial Password*</FormLabel>
+                <FormControl>
+                  <Input {...field} type="password" />
+                </FormControl>
+                <FormDescription>
+                  Must be at least 8 characters. Customer can change this after logging in.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
         
         <FormField
           control={form.control}

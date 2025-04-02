@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,11 +15,21 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { 
   Select,
   SelectContent,
@@ -29,27 +39,116 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, PlusCircle, Trash, Edit, Eye } from "lucide-react";
-import { users, workerTasks } from "@/lib/data";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import WorkerForm from "@/components/WorkerForm";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 export default function AdminWorkers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [workers, setWorkers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [workerToDelete, setWorkerToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [completedTasks, setCompletedTasks] = useState<Record<string, number>>({});
   
-  // Filter workers
-  const workers = users.filter(user => {
-    if (user.role !== "worker") return false;
+  // Fetch workers from Supabase
+  useEffect(() => {
+    const fetchWorkers = async () => {
+      try {
+        setIsLoading(true);
+        
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('role', 'worker');
+          
+        if (error) throw error;
+        
+        setWorkers(data || []);
+        
+        // Fetch task counts for each worker
+        const { data: taskData, error: taskError } = await supabase
+          .from('worker_tasks')
+          .select('worker_id, status')
+          .eq('status', 'approved');
+          
+        if (taskError) throw taskError;
+        
+        const taskCounts: Record<string, number> = {};
+        
+        taskData?.forEach(task => {
+          if (task.worker_id) {
+            taskCounts[task.worker_id] = (taskCounts[task.worker_id] || 0) + 1;
+          }
+        });
+        
+        setCompletedTasks(taskCounts);
+      } catch (error: any) {
+        console.error('Error fetching workers:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load workers",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
+    fetchWorkers();
+  }, []);
+  
+  // Filter workers based on search term and status
+  const filteredWorkers = workers.filter(worker => {
     const matchesSearch = searchTerm === "" || 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      worker.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      worker.email?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return matchesSearch;
+    // For now, we'll consider all workers active
+    const matchesStatus = statusFilter === "all" || statusFilter === "active";
+    
+    return matchesSearch && matchesStatus;
   });
+  
+  // Delete worker
+  const handleDeleteWorker = async () => {
+    if (!workerToDelete) return;
+    
+    try {
+      setIsDeleting(true);
+      
+      // Delete worker from Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', workerToDelete);
+        
+      if (error) throw error;
+      
+      // Update local state
+      setWorkers(workers.filter(w => w.id !== workerToDelete));
+      
+      toast({
+        title: "Worker deleted",
+        description: "Worker has been removed successfully.",
+      });
+    } catch (error: any) {
+      console.error('Error deleting worker:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete worker",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setWorkerToDelete(null);
+    }
+  };
 
   return (
     <MainLayout pageTitle="Worker Management">
@@ -109,51 +208,81 @@ export default function AdminWorkers() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {workers.length > 0 ? (
-                workers.map((worker) => {
-                  // Count completed tasks
-                  const completedTasks = workerTasks.filter(task => 
-                    task.workerId === worker.id && task.status === "approved"
-                  ).length;
-                  
-                  return (
-                    <TableRow key={worker.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarFallback>{worker.name.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">{worker.name}</p>
-                            <p className="text-sm text-muted-foreground">{worker.email}</p>
-                          </div>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-6">
+                    Loading workers...
+                  </TableCell>
+                </TableRow>
+              ) : filteredWorkers.length > 0 ? (
+                filteredWorkers.map((worker) => (
+                  <TableRow key={worker.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={worker.profile_image} />
+                          <AvatarFallback>{worker.name?.charAt(0) || 'W'}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{worker.name}</p>
+                          <p className="text-sm text-muted-foreground">{worker.email}</p>
                         </div>
-                      </TableCell>
-                      <TableCell>{worker.phone || "—"}</TableCell>
-                      <TableCell>{completedTasks} tasks</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                          Active
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="icon" asChild>
-                            <Link to={`/admin/workers/${worker.id}`}>
-                              <Eye className="h-4 w-4" />
-                            </Link>
-                          </Button>
-                          <Button variant="outline" size="icon">
+                      </div>
+                    </TableCell>
+                    <TableCell>{worker.phone || "—"}</TableCell>
+                    <TableCell>{completedTasks[worker.id] || 0} tasks</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        Active
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" size="icon" asChild>
+                          <Link to={`/admin/workers/${worker.id}`}>
+                            <Eye className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                        <Button variant="outline" size="icon" asChild>
+                          <Link to={`/admin/workers/edit/${worker.id}`}>
                             <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="icon" className="text-red-500">
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
+                          </Link>
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="icon" 
+                              className="text-red-500"
+                              onClick={() => setWorkerToDelete(worker.id)}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete {worker.name}? 
+                                This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel onClick={() => setWorkerToDelete(null)}>Cancel</AlertDialogCancel>
+                              <AlertDialogAction 
+                                onClick={handleDeleteWorker}
+                                className="bg-red-500 hover:bg-red-600"
+                                disabled={isDeleting}
+                              >
+                                {isDeleting ? "Deleting..." : "Delete"}
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
               ) : (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-6">
