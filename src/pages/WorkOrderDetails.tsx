@@ -5,6 +5,14 @@ import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 import { ArrowLeft, Pencil, AlertTriangle, Calendar, Users, DollarSign, Timer } from "lucide-react";
 import { WorkOrder, WorkerTask, Block, Site } from "@/lib/types";
 import { fetchWorkOrderById, fetchWorkerTasks, fetchBlockById, fetchSiteById } from "@/lib/api";
