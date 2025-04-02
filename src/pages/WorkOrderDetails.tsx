@@ -53,7 +53,8 @@ export default function WorkOrderDetails() {
           }
           
           // Load tasks for this work order
-          const tasksData = await fetchWorkerTasks(orderData.id);
+          // Pass an object with orderId property instead of just a string
+          const tasksData = await fetchWorkerTasks({ orderId: orderData.id });
           setTasks(tasksData);
         }
       } catch (error) {

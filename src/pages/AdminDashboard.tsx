@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import MainLayout from "@/components/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,18 +38,15 @@ export default function AdminDashboard() {
     loadUsers();
   }, []);
   
-  // Filter users by search term
   const filteredUsers = users.filter(user => {
     const searchString = `${user.name} ${user.email} ${user.role} ${user.companyName || ""}`.toLowerCase();
     return searchString.includes(searchTerm.toLowerCase());
   });
   
-  // Customer and worker counts
   const customerCount = users.filter(user => user.role === "customer").length;
   const workerCount = users.filter(user => user.role === "worker").length;
   const siteManagerCount = users.filter(user => user.role === "siteManager").length;
   
-  // Get role badge color
   const getRoleBadge = (role: User["role"]) => {
     switch (role) {
       case "admin":
@@ -67,7 +63,6 @@ export default function AdminDashboard() {
   };
 
   const handleRowDoubleClick = (user: User) => {
-    // Navigate to user details page based on role
     if (user.role === "customer") {
       navigate(`/admin/customers/${user.id}`);
     } else if (user.role === "worker") {

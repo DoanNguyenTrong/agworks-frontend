@@ -1,4 +1,3 @@
-
 // Import supabase API helpers
 import { 
   supabase,
@@ -12,15 +11,18 @@ import {
 import { User, Site, Block, WorkOrder, WorkerApplication, WorkerTask, PaymentCalculation } from "@/lib/types";
 
 // Fetch all users with a specific role
-export async function fetchUsers(role: string): Promise<User[]> {
+export async function fetchUsers(role?: string): Promise<User[]> {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('role', role);
+    let query = supabase.from('profiles').select('*');
+    
+    if (role) {
+      query = query.eq('role', role);
+    }
+    
+    const { data, error } = await query;
     
     if (error) {
-      console.error(`Error fetching ${role} users:`, error);
+      console.error(`Error fetching ${role || 'all'} users:`, error);
       throw error;
     }
     
@@ -40,7 +42,7 @@ export async function fetchUsers(role: string): Promise<User[]> {
       logo: profile.logo,
     }));
   } catch (error) {
-    console.error(`Error in fetchUsers(${role}):`, error);
+    console.error(`Error in fetchUsers(${role || 'all'}):`, error);
     return [];
   }
 }
@@ -587,12 +589,27 @@ export async function updateWorkerApplicationStatus(
 }
 
 // Fetch worker tasks with optional filtering
-export async function fetchWorkerTasks(filters?: {
+export async function fetchWorkerTasks(orderId?: string | {
   workerId?: string;
   orderId?: string;
   status?: string;
 }): Promise<WorkerTask[]> {
   try {
+    let filters: {
+      workerId?: string;
+      orderId?: string;
+      status?: string;
+    } = {};
+    
+    // Handle the case where orderId is a string (for backward compatibility)
+    if (typeof orderId === 'string') {
+      filters = { orderId: orderId };
+    } 
+    // Handle the case where orderId is actually a filters object
+    else if (orderId && typeof orderId === 'object') {
+      filters = orderId;
+    }
+    
     const tasks = await workerTasksApi.getTasks(filters);
     
     // We need to join with profiles to get worker names
