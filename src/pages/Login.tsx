@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +60,7 @@ export default function Login() {
 
       // If successful with Supabase, check for user profile
       if (data.user) {
+        // Use the correct typing for profiles query
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
