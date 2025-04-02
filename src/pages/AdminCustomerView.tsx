@@ -67,7 +67,17 @@ export default function AdminCustomerView() {
             
           if (sitesError) throw sitesError;
           
-          setCustomerSites(sitesData || []);
+          // Map the data from Supabase to match our Site type
+          const mappedSites: Site[] = (sitesData || []).map(site => ({
+            id: site.id,
+            name: site.name,
+            address: site.address,
+            customerId: site.customer_id,
+            managerId: site.manager_id || undefined,
+            createdAt: site.created_at
+          }));
+          
+          setCustomerSites(mappedSites);
         }
       } catch (error: any) {
         console.error('Error fetching customer data:', error);
