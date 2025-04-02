@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { User, Site, Block, WorkOrder, WorkerApplication, WorkerTask } from "@/lib/types";
 
@@ -546,7 +545,7 @@ export const fetchWorkerTasks = async (orderId?: string, workerId?: string): Pro
 };
 
 export const createWorkerTask = async (taskData: Partial<WorkerTask>): Promise<string> => {
-  // Convert our interface status to DB status
+  // Define a valid status value explicitly to avoid type errors
   const dbStatus: "registered" | "approved" | "working" | "worked" = "registered";
   
   const dbData = {
