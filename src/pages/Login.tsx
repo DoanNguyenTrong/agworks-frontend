@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { InfoIcon } from "lucide-react";
-import { fetchUsers } from "@/lib/api";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -24,7 +23,7 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      // For demo purposes, we'll use hard-coded credentials
+      // Sample credentials for demo purposes
       const validCredentials = [
         { email: "admin@example.com", password: "admin123" },
         { email: "customer@example.com", password: "customer123" },
@@ -32,23 +31,62 @@ export default function Login() {
         { email: "worker@example.com", password: "worker123" }
       ];
 
-      const matchedCredential = validCredentials.find(
+      // Check if using one of the demo credentials
+      const isDemoCredential = validCredentials.some(
         (cred) => cred.email === email && cred.password === password
       );
 
-      if (matchedCredential) {
-        // Get the user data from our mock API
-        const users = await fetchUsers();
-        const user = users.find((u) => u.email === email);
-        
-        if (user) {
-          await login(email, password);
-          navigate("/");
-        } else {
-          throw new Error("User not found");
+      // If using demo credentials, use the context login method (uses localStorage)
+      if (isDemoCredential) {
+        await login(email, password);
+        toast({
+          title: "Login successful",
+          description: "Welcome to AgWorks! You're now logged in with demo credentials.",
+        });
+        navigate("/");
+        return;
+      }
+
+      // Otherwise, try to log in with Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // If successful with Supabase, check for user profile
+      if (data.user) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profileError && profileError.code !== 'PGRST116') {
+          console.error("Error fetching profile:", profileError);
+          // We'll still let them log in even if profile fetch fails
         }
-      } else {
-        throw new Error("Invalid email or password");
+
+        toast({
+          title: "Login successful",
+          description: `Welcome back${profileData?.name ? ', ' + profileData.name : ''}!`,
+        });
+
+        // Navigate based on the user's role
+        if (profileData?.role === 'admin') {
+          navigate('/admin');
+        } else if (profileData?.role === 'customer') {
+          navigate('/customer');
+        } else if (profileData?.role === 'siteManager') {
+          navigate('/manager');
+        } else if (profileData?.role === 'worker') {
+          navigate('/worker');
+        } else {
+          navigate('/');
+        }
       }
     } catch (error: any) {
       console.error("Login error:", error);

@@ -9,10 +9,13 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-// Create a local storage mock implementation until Supabase is fully setup
-import { User, Site, Block, WorkOrder, WorkerApplication, WorkerTask } from "@/lib/types";
-
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    storage: localStorage
+  }
+});
 
 // Create localStorage helper functions to use as fallback
 // These are temporary until the Supabase database is properly set up
