@@ -1,5 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
 import { User, Site, Block, WorkOrder, WorkerApplication, WorkerTask } from "@/lib/types";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 
 // User API functions
 export const fetchUsers = async (role?: string): Promise<User[]> => {
