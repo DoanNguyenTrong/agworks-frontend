@@ -21,6 +21,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const redirectBasedOnRole = (role: string) => {
+    switch (role) {
+      case "admin":
+        navigate("/admin");
+        break;
+      case "customer":
+        navigate("/customer");
+        break;
+      case "siteManager":
+        navigate("/manager");
+        break;
+      case "worker":
+        navigate("/worker");
+        break;
+      default:
+        navigate("/");
+        break;
+    }
+  };
+
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -86,26 +106,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       subscription.unsubscribe();
     };
   }, [toast, navigate]);
-
-  const redirectBasedOnRole = (role: string) => {
-    switch (role) {
-      case "admin":
-        navigate("/admin");
-        break;
-      case "customer":
-        navigate("/customer");
-        break;
-      case "siteManager":
-        navigate("/manager");
-        break;
-      case "worker":
-        navigate("/worker");
-        break;
-      default:
-        navigate("/");
-        break;
-    }
-  };
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
