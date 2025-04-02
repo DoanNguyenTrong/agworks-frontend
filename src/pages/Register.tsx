@@ -15,7 +15,7 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
-  const [role, setRole] = useState<User["role"]>("customer");
+  const [role, setRole] = useState<"customer" | "worker">("customer");
   const [companyName, setCompanyName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
@@ -44,14 +44,16 @@ export default function Register() {
       };
       
       await register(email, password, userData);
+      
+      // After registration, redirect to the login page
+      toast({
+        title: "Account created",
+        description: "Please login with your new account",
+      });
+      
       navigate("/login");
     } catch (error: any) {
       console.error("Registration error:", error);
-      toast({
-        title: "Registration failed",
-        description: error.message || "There was an error creating your account",
-        variant: "destructive",
-      });
     } finally {
       setIsLoading(false);
     }
@@ -94,7 +96,7 @@ export default function Register() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="role">I am a</Label>
-              <Select value={role} onValueChange={(value: User["role"]) => setRole(value)} required>
+              <Select value={role} onValueChange={(value: "customer" | "worker") => setRole(value)} required>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a role" />
                 </SelectTrigger>

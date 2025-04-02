@@ -122,13 +122,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       
       // Sign up the user with Supabase auth
+      // Store only basic data in auth.users metadata
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             name: userData.name,
-            role: userData.role,
           },
         },
       });
