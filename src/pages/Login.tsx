@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
+import { InfoIcon } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -48,6 +50,19 @@ export default function Login() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <Alert className="mb-4 bg-blue-50 border-blue-200">
+            <InfoIcon className="h-4 w-4 text-blue-500" />
+            <AlertDescription className="text-sm text-blue-700">
+              <strong>Sample Logins:</strong>
+              <ul className="mt-1 space-y-1">
+                <li>Admin: admin@example.com / admin123</li>
+                <li>Customer: customer@example.com / customer123</li>
+                <li>Manager: manager@example.com / manager123</li>
+                <li>Worker: worker@example.com / worker123</li>
+              </ul>
+            </AlertDescription>
+          </Alert>
+          
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>

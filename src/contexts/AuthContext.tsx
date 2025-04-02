@@ -2,8 +2,45 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
+
+// Sample user data
+const sampleUsers = [
+  {
+    id: "admin-id",
+    email: "admin@example.com",
+    name: "Admin User",
+    role: "admin",
+    password: "admin123",
+    createdAt: new Date().toISOString(),
+    companyName: "AgWorks Admin",
+  },
+  {
+    id: "customer-id",
+    email: "customer@example.com",
+    name: "Vineyard Owner",
+    role: "customer",
+    password: "customer123",
+    createdAt: new Date().toISOString(),
+    companyName: "Napa Valley Vineyards",
+  },
+  {
+    id: "manager-id",
+    email: "manager@example.com",
+    name: "Site Manager",
+    role: "siteManager",
+    password: "manager123",
+    createdAt: new Date().toISOString(),
+  },
+  {
+    id: "worker-id",
+    email: "worker@example.com",
+    name: "Field Worker",
+    role: "worker",
+    password: "worker123",
+    createdAt: new Date().toISOString(),
+  },
+];
 
 interface AuthContextType {
   currentUser: User | null;
@@ -19,88 +56,63 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
+  // Check if there's a stored user in localStorage
   useEffect(() => {
-    // Set up the auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
-        setSession(newSession);
-        if (newSession?.user) {
-          getUserProfile(newSession.user.id);
-        } else {
-          setCurrentUser(null);
-        }
-      }
-    );
-
-    // Get the current session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      if (currentSession?.user) {
-        getUserProfile(currentSession.user.id);
-      }
-      setIsLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  // Function to get the user profile from Supabase
-  const getUserProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        // Transform to match the User type
-        const formattedUser: User = {
-          id: data.id,
-          email: data.email,
-          name: data.name,
-          role: data.role,
-          createdAt: data.created_at,
-          companyName: data.company_name,
-          logo: data.logo,
-          phone: data.phone,
-          address: data.address,
-          profileImage: data.profile_image
-        };
-
-        setCurrentUser(formattedUser);
-      }
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      toast({
-        title: "Error fetching profile",
-        description: "There was an error loading your profile",
-        variant: "destructive",
-      });
+    const storedUser = localStorage.getItem("currentUser");
+    const storedSession = localStorage.getItem("session");
+    
+    if (storedUser) {
+      setCurrentUser(JSON.parse(storedUser));
     }
-  };
+    
+    if (storedSession) {
+      setSession(JSON.parse(storedSession));
+    }
+    
+    setIsLoading(false);
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        throw error;
+      
+      // Find user with matching email and password
+      const user = sampleUsers.find(u => u.email === email && u.password === password);
+      
+      if (!user) {
+        throw new Error("Invalid login credentials");
       }
-
+      
+      // Create a mock user and session
+      const mockUser: User = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role as "admin" | "customer" | "siteManager" | "worker",
+        createdAt: user.createdAt,
+        companyName: user.companyName,
+      };
+      
+      const mockSession = {
+        access_token: "mock-token",
+        refresh_token: "mock-refresh-token",
+        expires_at: Date.now() + 3600000,
+        user: {
+          id: user.id,
+          email: user.email,
+        }
+      };
+      
+      // Store in state and localStorage
+      setCurrentUser(mockUser);
+      setSession(mockSession as unknown as Session);
+      
+      localStorage.setItem("currentUser", JSON.stringify(mockUser));
+      localStorage.setItem("session", JSON.stringify(mockSession));
+      
       toast({
         title: "Login successful",
         description: "Welcome back!",
@@ -121,34 +133,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       
-      // Sign up the user with Supabase auth
-      // Store only basic data in auth.users metadata
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name: userData.name,
-            role: userData.role,
-          },
-        },
-      });
-
-      if (error) {
-        throw error;
+      // Check if email already exists
+      if (sampleUsers.some(u => u.email === email)) {
+        throw new Error("Email already registered");
       }
-
-      // If we have additional user data that needs to be stored, we'll rely on the 
-      // database trigger to create the profile, but we could update it here if needed
-      // with any additional fields that aren't captured by the trigger
-
-      if (userData.companyName && data.user) {
-        await supabase
-          .from('profiles')
-          .update({ company_name: userData.companyName })
-          .eq('id', data.user.id);
-      }
-
+      
+      // In a real app, this would create a new user in the database
       toast({
         title: "Registration successful",
         description: "Your account has been created. You can now log in.",
@@ -167,7 +157,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await supabase.auth.signOut();
+      // Clear stored user and session
+      localStorage.removeItem("currentUser");
+      localStorage.removeItem("session");
+      
+      setCurrentUser(null);
+      setSession(null);
+      
       toast({
         title: "Logged out",
         description: "You have been logged out successfully",
