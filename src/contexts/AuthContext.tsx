@@ -129,12 +129,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         options: {
           data: {
             name: userData.name,
+            role: userData.role,
           },
         },
       });
 
       if (error) {
         throw error;
+      }
+
+      // If we have additional user data that needs to be stored, we'll rely on the 
+      // database trigger to create the profile, but we could update it here if needed
+      // with any additional fields that aren't captured by the trigger
+
+      if (userData.companyName && data.user) {
+        await supabase
+          .from('profiles')
+          .update({ company_name: userData.companyName })
+          .eq('id', data.user.id);
       }
 
       toast({

@@ -37,7 +37,7 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      const userData = {
+      const userData: Partial<User> = {
         name,
         role,
         companyName: role === "customer" ? companyName : undefined
@@ -45,7 +45,6 @@ export default function Register() {
       
       await register(email, password, userData);
       
-      // After registration, redirect to the login page
       toast({
         title: "Account created",
         description: "Please login with your new account",
@@ -54,6 +53,11 @@ export default function Register() {
       navigate("/login");
     } catch (error: any) {
       console.error("Registration error:", error);
+      toast({
+        title: "Registration failed",
+        description: error.message || "There was an error creating your account",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
