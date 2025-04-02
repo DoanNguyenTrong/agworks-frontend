@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -14,8 +13,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { CalendarIcon, Clock } from "lucide-react";
 import { sites, blocks, users } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { toast } from "@/hooks/use-toast";
 import { Block } from "@/lib/types";
 
 // Work order schema
@@ -39,9 +36,13 @@ const workOrderSchema = z.object({
   notes: z.string().optional(),
 });
 
-export default function WorkOrderForm() {
+interface WorkOrderFormProps {
+  onSubmit: (data: z.infer<typeof workOrderSchema>) => void;
+  isSubmitting?: boolean;
+}
+
+export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOrderFormProps) {
   const { currentUser } = useAuth();
-  const navigate = useNavigate();
   const [managedSites, setManagedSites] = useState<any[]>([]);
   const [availableBlocks, setAvailableBlocks] = useState<Block[]>([]);
   
@@ -113,22 +114,13 @@ export default function WorkOrderForm() {
     }
   }, [selectedBlockId, form]);
   
-  const onSubmit = (data: z.infer<typeof workOrderSchema>) => {
-    console.log("Work order data:", data);
-    
-    // Here you would typically make an API call to save the work order
-    toast({
-      title: "Work order created",
-      description: "Your work order has been created successfully.",
-    });
-    
-    // Redirect back to work orders list
-    navigate("/manager/orders");
+  const handleFormSubmit = (data: z.infer<typeof workOrderSchema>) => {
+    onSubmit(data);
   };
   
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Site Selection */}
           <FormField
@@ -429,11 +421,11 @@ export default function WorkOrderForm() {
         />
         
         <div className="flex justify-end gap-4 pt-4">
-          <Button type="button" variant="outline" onClick={() => navigate("/manager/orders")}>
+          <Button type="button" variant="outline" onClick={() => window.history.back()}>
             Cancel
           </Button>
-          <Button type="submit">
-            Create Work Order
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Creating..." : "Create Work Order"}
           </Button>
         </div>
       </form>
