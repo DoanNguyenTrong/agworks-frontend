@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { InfoIcon } from "lucide-react";
+import { fetchUsers } from "@/lib/api";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -23,8 +24,32 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      await login(email, password);
-      navigate("/");
+      // For demo purposes, we'll use hard-coded credentials
+      const validCredentials = [
+        { email: "admin@example.com", password: "admin123" },
+        { email: "customer@example.com", password: "customer123" },
+        { email: "manager@example.com", password: "manager123" },
+        { email: "worker@example.com", password: "worker123" }
+      ];
+
+      const matchedCredential = validCredentials.find(
+        (cred) => cred.email === email && cred.password === password
+      );
+
+      if (matchedCredential) {
+        // Get the user data from our mock API
+        const users = await fetchUsers();
+        const user = users.find((u) => u.email === email);
+        
+        if (user) {
+          await login(email, password);
+          navigate("/");
+        } else {
+          throw new Error("User not found");
+        }
+      } else {
+        throw new Error("Invalid email or password");
+      }
     } catch (error: any) {
       console.error("Login error:", error);
       toast({
