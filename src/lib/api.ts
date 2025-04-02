@@ -590,8 +590,8 @@ export const updateWorkerTask = async (id: string, status: 'pending' | 'approved
   
   const updateData: any = { status: dbStatus };
   
-  // If marking as approved with working status, also set completed_at
-  if (status === 'approved' && dbStatus === 'approved') {
+  // If marking as approved, also set completed_at
+  if (status === 'approved') {
     updateData.completed_at = new Date().toISOString();
   }
   
