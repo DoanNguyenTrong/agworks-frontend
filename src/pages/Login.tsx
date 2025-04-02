@@ -1,109 +1,155 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import { InfoIcon } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Grape, Loader2 } from "lucide-react";
+
+const formSchema = z.object({
+  email: z.string().email({
+    message: "Please enter a valid email address",
+  }),
+  password: z.string().min(1, {
+    message: "Password is required",
+  }),
+});
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-
     try {
-      await login(email, password);
-      // The success toast and navigation is handled in the AuthContext
-    } catch (error: any) {
-      console.error("Login error:", error);
-      toast({
-        title: "Login failed",
-        description: error.message || "Invalid email or password",
-        variant: "destructive",
-      });
-    } finally {
+      await login(values.email, values.password);
+      
+      // Navigate based on role (this is handled in the auth context)
+      // The protected route component will redirect appropriately
+      navigate("/");
+    } catch (error) {
+      console.error("Login failed:", error);
       setIsLoading(false);
     }
-  };
+  }
+
+  // Example accounts for demo purposes
+  const demoAccounts = [
+    { role: "Admin", email: "admin@agworks.com", password: "password" },
+    { role: "Vineyard Owner", email: "customer@vineyard.com", password: "password" },
+    { role: "Site Manager", email: "manager@vineyard.com", password: "password" },
+    { role: "Worker", email: "worker1@example.com", password: "password" },
+  ];
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-2 text-center">
-          <div className="flex justify-center mb-6">
-            <img src="/logo.svg" alt="AgWorks Logo" className="h-12" />
-          </div>
-          <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-          <CardDescription>
-            Enter your email and password to sign in to your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Alert className="mb-4 bg-blue-50 border-blue-200">
-            <InfoIcon className="h-4 w-4 text-blue-500" />
-            <AlertDescription className="text-sm text-blue-700">
-              <strong>Sample Logins:</strong>
-              <ul className="mt-1 space-y-1">
-                <li>Admin: admin@example.com / admin123</li>
-                <li>Customer: customer@example.com / customer123</li>
-                <li>Manager: manager@example.com / manager123</li>
-                <li>Worker: worker@example.com / worker123</li>
-              </ul>
-            </AlertDescription>
-          </Alert>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="email@example.com"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-agworks-lightGreen/10 to-agworks-brown/10 p-4">
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          <div className="flex justify-center mb-2">
+            <div className="bg-primary p-2 rounded-full">
+              <Grape className="h-8 w-8 text-white" />
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Button variant="link" className="px-0 h-auto font-normal" size="sm">
-                  Forgot password?
-                </Button>
+          </div>
+          <h1 className="text-3xl font-bold">Welcome to AgWorks</h1>
+          <p className="text-muted-foreground mt-2">
+            Vineyard Labor Management Solution
+          </p>
+        </div>
+
+        <div className="bg-card border rounded-lg shadow-sm p-6">
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="youremail@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••••" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Logging in...
+                  </>
+                ) : (
+                  "Log in"
+                )}
+              </Button>
+            </form>
+          </Form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
               </div>
-              <Input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-card text-muted-foreground">
+                  Don't have an account?
+                </span>
+              </div>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing In..." : "Sign In"}
-            </Button>
-          </form>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <div className="text-sm text-muted-foreground">
-            Don't have an account?{" "}
-            <Link to="/register" className="text-primary font-medium">
-              Sign up
-            </Link>
+            <div className="mt-6">
+              <Button variant="outline" className="w-full" asChild>
+                <Link to="/register">Sign up</Link>
+              </Button>
+            </div>
           </div>
-        </CardFooter>
-      </Card>
+        </div>
+
+        <div className="bg-card border rounded-lg shadow-sm p-6 mt-6">
+          <h3 className="font-medium mb-3">Demo Accounts</h3>
+          <div className="space-y-3">
+            {demoAccounts.map((account, index) => (
+              <div key={index} className="text-sm">
+                <p className="font-medium">{account.role}</p>
+                <p className="text-muted-foreground">Email: {account.email}</p>
+                <p className="text-muted-foreground">Password: {account.password}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+
 import MainLayout from "@/components/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -12,41 +12,50 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, PlusCircle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, PlusCircle, Filter } from "lucide-react";
+import { useState } from "react";
+import { users, sites, workOrders } from "@/lib/data";
 import { User } from "@/lib/types";
 import { useNavigate } from "react-router-dom";
-import { fetchUsers } from "@/lib/api";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("all");
   
-  useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        const data = await fetchUsers();
-        setUsers(data);
-      } catch (error) {
-        console.error("Failed to load users:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadUsers();
-  }, []);
-  
+  // Filter users by search term and role
   const filteredUsers = users.filter(user => {
+    // Search filter
     const searchString = `${user.name} ${user.email} ${user.role} ${user.companyName || ""}`.toLowerCase();
-    return searchString.includes(searchTerm.toLowerCase());
+    if (!searchString.includes(searchTerm.toLowerCase())) return false;
+    
+    // Role filter
+    if (roleFilter !== "all" && user.role !== roleFilter) return false;
+    
+    // Date filter (mock implementation - would use actual dates in real app)
+    if (dateFilter === "recent") {
+      // Simulate filtering for users created in the last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      if (new Date(user.createdAt) < thirtyDaysAgo) return false;
+    } else if (dateFilter === "thisYear") {
+      // Simulate filtering for users created this year
+      const thisYear = new Date().getFullYear();
+      if (new Date(user.createdAt).getFullYear() !== thisYear) return false;
+    }
+    
+    return true;
   });
   
+  // Customer and worker counts
   const customerCount = users.filter(user => user.role === "customer").length;
   const workerCount = users.filter(user => user.role === "worker").length;
   const siteManagerCount = users.filter(user => user.role === "siteManager").length;
   
+  // Get role badge color
   const getRoleBadge = (role: User["role"]) => {
     switch (role) {
       case "admin":
@@ -63,6 +72,7 @@ export default function AdminDashboard() {
   };
 
   const handleRowDoubleClick = (user: User) => {
+    // Navigate to user details page based on role
     if (user.role === "customer") {
       navigate(`/admin/customers/${user.id}`);
     } else if (user.role === "worker") {
@@ -78,7 +88,25 @@ export default function AdminDashboard() {
             <CardTitle className="text-sm font-medium">Total Users</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{users.length}</div>
+            <div className="flex items-center justify-between">
+              <div className="text-2xl font-bold">{users.length}</div>
+              <Select 
+                defaultValue="all" 
+                onValueChange={(value) => setRoleFilter(value)}
+                value={roleFilter}
+              >
+                <SelectTrigger className="w-[130px] h-8">
+                  <SelectValue placeholder="Filter" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="customer">Vineyard Owners</SelectItem>
+                  <SelectItem value="siteManager">Site Managers</SelectItem>
+                  <SelectItem value="worker">Field Workers</SelectItem>
+                  <SelectItem value="admin">Admins</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
               Across all roles
             </p>
@@ -89,9 +117,25 @@ export default function AdminDashboard() {
             <CardTitle className="text-sm font-medium">Vineyard Owners</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{customerCount}</div>
+            <div className="flex items-center justify-between">
+              <div className="text-2xl font-bold">{customerCount}</div>
+              <Tabs 
+                defaultValue="all" 
+                className="w-[130px]"
+                onValueChange={(value) => {
+                  setRoleFilter(value === "all" ? "customer" : "customer");
+                  setDateFilter(value);
+                }}
+              >
+                <TabsList className="h-8">
+                  <TabsTrigger value="all" className="text-xs px-2">All</TabsTrigger>
+                  <TabsTrigger value="recent" className="text-xs px-2">Recent</TabsTrigger>
+                  <TabsTrigger value="thisYear" className="text-xs px-2">This Year</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
-              Managing vineyard sites
+              Managing {sites.length} sites
             </p>
           </CardContent>
         </Card>
@@ -100,7 +144,23 @@ export default function AdminDashboard() {
             <CardTitle className="text-sm font-medium">Site Managers</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{siteManagerCount}</div>
+            <div className="flex items-center justify-between">
+              <div className="text-2xl font-bold">{siteManagerCount}</div>
+              <Tabs 
+                defaultValue="all" 
+                className="w-[130px]"
+                onValueChange={(value) => {
+                  setRoleFilter(value === "all" ? "siteManager" : "siteManager");
+                  setDateFilter(value);
+                }}
+              >
+                <TabsList className="h-8">
+                  <TabsTrigger value="all" className="text-xs px-2">All</TabsTrigger>
+                  <TabsTrigger value="recent" className="text-xs px-2">Recent</TabsTrigger>
+                  <TabsTrigger value="thisYear" className="text-xs px-2">This Year</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
               Overseeing operations
             </p>
@@ -111,7 +171,23 @@ export default function AdminDashboard() {
             <CardTitle className="text-sm font-medium">Field Workers</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{workerCount}</div>
+            <div className="flex items-center justify-between">
+              <div className="text-2xl font-bold">{workerCount}</div>
+              <Tabs 
+                defaultValue="all" 
+                className="w-[130px]"
+                onValueChange={(value) => {
+                  setRoleFilter(value === "all" ? "worker" : "worker");
+                  setDateFilter(value);
+                }}
+              >
+                <TabsList className="h-8">
+                  <TabsTrigger value="all" className="text-xs px-2">All</TabsTrigger>
+                  <TabsTrigger value="recent" className="text-xs px-2">Recent</TabsTrigger>
+                  <TabsTrigger value="thisYear" className="text-xs px-2">This Year</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
             <p className="text-xs text-muted-foreground mt-1">
               Completing tasks
             </p>
@@ -121,51 +197,61 @@ export default function AdminDashboard() {
 
       <div className="flex flex-col md:flex-row justify-between items-start mb-6 gap-4">
         <h2 className="text-xl font-semibold">User Management</h2>
-        <div className="relative flex-1 md:flex-none">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search users..."
-            className="pl-8 w-full md:w-[250px]"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex items-center gap-4 w-full md:w-auto">
+          <div className="relative flex-1 md:flex-none">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search users..."
+              className="pl-8 w-full md:w-[250px]"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <Select 
+            defaultValue="all" 
+            onValueChange={(value) => setDateFilter(value)}
+            value={dateFilter}
+          >
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Filter by date" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="recent">Last 30 Days</SelectItem>
+              <SelectItem value="thisYear">This Year</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       <Card>
         <CardContent className="p-0">
-          {isLoading ? (
-            <div className="flex justify-center items-center h-40">
-              <p>Loading users...</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Created</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Company</TableHead>
+                <TableHead>Created</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredUsers.map((user) => (
+                <TableRow 
+                  key={user.id} 
+                  className="cursor-pointer"
+                  onDoubleClick={() => handleRowDoubleClick(user)}
+                >
+                  <TableCell className="font-medium">{user.name}</TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{getRoleBadge(user.role)}</TableCell>
+                  <TableCell>{user.companyName || "-"}</TableCell>
+                  <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow 
-                    key={user.id} 
-                    className="cursor-pointer"
-                    onDoubleClick={() => handleRowDoubleClick(user)}
-                  >
-                    <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>{getRoleBadge(user.role)}</TableCell>
-                    <TableCell>{user.companyName || "-"}</TableCell>
-                    <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+              ))}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
@@ -213,15 +299,21 @@ export default function AdminDashboard() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span>In Progress</span>
-                  <Badge>0</Badge>
+                  <Badge>
+                    {workOrders.filter(order => order.status === "inProgress").length}
+                  </Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Published</span>
-                  <Badge variant="secondary">0</Badge>
+                  <Badge variant="secondary">
+                    {workOrders.filter(order => order.status === "published").length}
+                  </Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Completed</span>
-                  <Badge className="bg-agworks-green">0</Badge>
+                  <Badge className="bg-agworks-green">
+                    {workOrders.filter(order => order.status === "completed").length}
+                  </Badge>
                 </div>
                 <div className="flex justify-between items-center mt-2">
                   <Button variant="outline" size="sm">

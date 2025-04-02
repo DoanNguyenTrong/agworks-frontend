@@ -39,12 +39,7 @@ const workOrderSchema = z.object({
   notes: z.string().optional(),
 });
 
-interface WorkOrderFormProps {
-  defaultStartDate?: Date;
-  defaultEndDate?: Date;
-}
-
-export default function WorkOrderForm({ defaultStartDate, defaultEndDate }: WorkOrderFormProps) {
+export default function WorkOrderForm() {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [managedSites, setManagedSites] = useState<any[]>([]);
@@ -58,12 +53,6 @@ export default function WorkOrderForm({ defaultStartDate, defaultEndDate }: Work
     }
   }, [currentUser]);
   
-  // Format time to HH:MM string
-  const formatTimeToString = (date?: Date): string => {
-    if (!date) return "08:00";
-    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-  };
-  
   // Get form control
   const form = useForm<z.infer<typeof workOrderSchema>>({
     resolver: zodResolver(workOrderSchema),
@@ -71,8 +60,8 @@ export default function WorkOrderForm({ defaultStartDate, defaultEndDate }: Work
       siteId: "",
       blockId: "",
       workDate: new Date(),
-      startTime: defaultStartDate ? formatTimeToString(defaultStartDate) : "08:00",
-      endTime: defaultEndDate ? formatTimeToString(defaultEndDate) : "17:00",
+      startTime: "08:00",
+      endTime: "17:00",
       workType: "pruning",
       neededWorkers: 1,
       payRate: 0.50,
