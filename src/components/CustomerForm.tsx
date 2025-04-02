@@ -85,7 +85,7 @@ export default function CustomerForm({
         
         const { data: newCustomer, error } = await supabase.auth.admin.createUser({
           email: data.email,
-          password: Math.random().toString(36).slice(-8), // Generate random password
+          password: '12345678', // Default password
           email_confirm: true,
           user_metadata: {
             name: data.name,
