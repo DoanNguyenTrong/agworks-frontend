@@ -4,13 +4,13 @@ import { User, Site, Block, WorkOrder, WorkerApplication, WorkerTask } from "@/l
 
 // User API functions
 export const fetchUsers = async (role?: string): Promise<User[]> => {
-  let query = supabase.from('profiles').select('*');
+  let query = supabase.from('profiles');
   
   if (role) {
     query = query.eq('role', role);
   }
   
-  const { data, error } = await query;
+  const { data, error } = await query.select('*');
   
   if (error) {
     console.error("Error fetching users:", error);
@@ -79,13 +79,13 @@ const formatUserResponse = (data: any): User => ({
 
 // Sites API functions
 export const fetchSites = async (customerId?: string): Promise<Site[]> => {
-  let query = supabase.from('sites').select('*');
+  let query = supabase.from('sites');
   
   if (customerId) {
     query = query.eq('customer_id', customerId);
   }
   
-  const { data, error } = await query;
+  const { data, error } = await query.select('*');
   
   if (error) {
     console.error("Error fetching sites:", error);
@@ -177,13 +177,13 @@ const formatSiteResponse = (data: any): Site => ({
 
 // Blocks API functions
 export const fetchBlocks = async (siteId?: string): Promise<Block[]> => {
-  let query = supabase.from('blocks').select('*');
+  let query = supabase.from('blocks');
   
   if (siteId) {
     query = query.eq('site_id', siteId);
   }
   
-  const { data, error } = await query;
+  const { data, error } = await query.select('*');
   
   if (error) {
     console.error("Error fetching blocks:", error);
@@ -278,7 +278,7 @@ const formatBlockResponse = (data: any): Block => ({
 
 // Work Order API functions
 export const fetchWorkOrders = async (siteId?: string, status?: string): Promise<WorkOrder[]> => {
-  let query = supabase.from('work_orders').select('*');
+  let query = supabase.from('work_orders');
   
   if (siteId) {
     query = query.eq('site_id', siteId);
@@ -288,7 +288,7 @@ export const fetchWorkOrders = async (siteId?: string, status?: string): Promise
     query = query.eq('status', status);
   }
   
-  const { data, error } = await query;
+  const { data, error } = await query.select('*');
   
   if (error) {
     console.error("Error fetching work orders:", error);
@@ -408,7 +408,7 @@ const formatWorkOrderResponse = (data: any): WorkOrder => ({
 
 // Worker Applications API
 export const fetchWorkerApplications = async (orderId?: string, workerId?: string): Promise<WorkerApplication[]> => {
-  let query = supabase.from('worker_applications').select('*');
+  let query = supabase.from('worker_applications');
   
   if (orderId) {
     query = query.eq('order_id', orderId);
@@ -418,16 +418,18 @@ export const fetchWorkerApplications = async (orderId?: string, workerId?: strin
     query = query.eq('worker_id', workerId);
   }
   
-  const { data, error } = await query;
+  const { data, error } = await query.select('*');
   
   if (error) {
     console.error("Error fetching applications:", error);
     throw error;
   }
   
+  if (!data) return [];
+
   const applications = await Promise.all(data.map(async (app) => {
     // Get worker name
-    const { data: worker } = await supabase
+    const { data: workerData } = await supabase
       .from('profiles')
       .select('name')
       .eq('id', app.worker_id)
@@ -436,7 +438,7 @@ export const fetchWorkerApplications = async (orderId?: string, workerId?: strin
     return {
       id: app.id,
       workerId: app.worker_id,
-      workerName: worker?.name || 'Unknown Worker',
+      workerName: workerData?.name || 'Unknown Worker',
       orderrId: app.order_id,
       status: app.status,
       createdAt: app.created_at
@@ -477,7 +479,7 @@ export const updateWorkerApplication = async (id: string, status: 'pending' | 'a
 
 // Worker Tasks API
 export const fetchWorkerTasks = async (orderId?: string, workerId?: string): Promise<WorkerTask[]> => {
-  let query = supabase.from('worker_tasks').select('*');
+  let query = supabase.from('worker_tasks');
   
   if (orderId) {
     query = query.eq('order_id', orderId);
@@ -487,23 +489,25 @@ export const fetchWorkerTasks = async (orderId?: string, workerId?: string): Pro
     query = query.eq('worker_id', workerId);
   }
   
-  const { data, error } = await query;
+  const { data, error } = await query.select('*');
   
   if (error) {
     console.error("Error fetching tasks:", error);
     throw error;
   }
   
+  if (!data) return [];
+
   const tasks = await Promise.all(data.map(async (task) => {
     // Get worker name
-    const { data: worker } = await supabase
+    const { data: workerData } = await supabase
       .from('profiles')
       .select('name')
       .eq('id', task.worker_id)
       .single();
       
     // Get task photos
-    const { data: photos } = await supabase
+    const { data: photosData } = await supabase
       .from('task_photos')
       .select('photo_url')
       .eq('task_id', task.id);
@@ -511,10 +515,10 @@ export const fetchWorkerTasks = async (orderId?: string, workerId?: string): Pro
     return {
       id: task.id,
       workerId: task.worker_id,
-      workerName: worker?.name || 'Unknown Worker',
+      workerName: workerData?.name || 'Unknown Worker',
       orderId: task.order_id,
-      imageUrl: photos?.[0]?.photo_url,
-      photoUrls: photos?.map(p => p.photo_url) || [],
+      imageUrl: photosData?.[0]?.photo_url,
+      photoUrls: photosData?.map(p => p.photo_url) || [],
       completedAt: task.completed_at || "",
       status: task.status
     };
@@ -540,6 +544,8 @@ export const createWorkerTask = async (taskData: Partial<WorkerTask>): Promise<s
     console.error("Error creating task:", error);
     throw error;
   }
+  
+  if (!data) throw new Error("Failed to create task");
   
   return data.id;
 };
