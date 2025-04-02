@@ -4,13 +4,13 @@ import { User, Site, Block, WorkOrder, WorkerApplication, WorkerTask } from "@/l
 
 // User API functions
 export const fetchUsers = async (role?: string): Promise<User[]> => {
-  let query = supabase.from('profiles');
+  let query = supabase.from('profiles').select('*');
   
   if (role) {
     query = query.eq('role', role);
   }
   
-  const { data, error } = await query.select('*');
+  const { data, error } = await query;
   
   if (error) {
     console.error("Error fetching users:", error);
@@ -79,13 +79,13 @@ const formatUserResponse = (data: any): User => ({
 
 // Sites API functions
 export const fetchSites = async (customerId?: string): Promise<Site[]> => {
-  let query = supabase.from('sites');
+  let query = supabase.from('sites').select('*');
   
   if (customerId) {
     query = query.eq('customer_id', customerId);
   }
   
-  const { data, error } = await query.select('*');
+  const { data, error } = await query;
   
   if (error) {
     console.error("Error fetching sites:", error);
@@ -177,13 +177,13 @@ const formatSiteResponse = (data: any): Site => ({
 
 // Blocks API functions
 export const fetchBlocks = async (siteId?: string): Promise<Block[]> => {
-  let query = supabase.from('blocks');
+  let query = supabase.from('blocks').select('*');
   
   if (siteId) {
     query = query.eq('site_id', siteId);
   }
   
-  const { data, error } = await query.select('*');
+  const { data, error } = await query;
   
   if (error) {
     console.error("Error fetching blocks:", error);
@@ -278,7 +278,7 @@ const formatBlockResponse = (data: any): Block => ({
 
 // Work Order API functions
 export const fetchWorkOrders = async (siteId?: string, status?: string): Promise<WorkOrder[]> => {
-  let query = supabase.from('work_orders');
+  let query = supabase.from('work_orders').select('*');
   
   if (siteId) {
     query = query.eq('site_id', siteId);
@@ -288,7 +288,7 @@ export const fetchWorkOrders = async (siteId?: string, status?: string): Promise
     query = query.eq('status', status);
   }
   
-  const { data, error } = await query.select('*');
+  const { data, error } = await query;
   
   if (error) {
     console.error("Error fetching work orders:", error);
@@ -408,7 +408,7 @@ const formatWorkOrderResponse = (data: any): WorkOrder => ({
 
 // Worker Applications API
 export const fetchWorkerApplications = async (orderId?: string, workerId?: string): Promise<WorkerApplication[]> => {
-  let query = supabase.from('worker_applications');
+  let query = supabase.from('worker_applications').select('*');
   
   if (orderId) {
     query = query.eq('order_id', orderId);
@@ -418,7 +418,7 @@ export const fetchWorkerApplications = async (orderId?: string, workerId?: strin
     query = query.eq('worker_id', workerId);
   }
   
-  const { data, error } = await query.select('*');
+  const { data, error } = await query;
   
   if (error) {
     console.error("Error fetching applications:", error);
@@ -479,7 +479,7 @@ export const updateWorkerApplication = async (id: string, status: 'pending' | 'a
 
 // Worker Tasks API
 export const fetchWorkerTasks = async (orderId?: string, workerId?: string): Promise<WorkerTask[]> => {
-  let query = supabase.from('worker_tasks');
+  let query = supabase.from('worker_tasks').select('*');
   
   if (orderId) {
     query = query.eq('order_id', orderId);
@@ -489,7 +489,7 @@ export const fetchWorkerTasks = async (orderId?: string, workerId?: string): Pro
     query = query.eq('worker_id', workerId);
   }
   
-  const { data, error } = await query.select('*');
+  const { data, error } = await query;
   
   if (error) {
     console.error("Error fetching tasks:", error);
@@ -512,6 +512,22 @@ export const fetchWorkerTasks = async (orderId?: string, workerId?: string): Pro
       .select('photo_url')
       .eq('task_id', task.id);
       
+    // Map the database status to our interface status
+    let adaptedStatus: "pending" | "approved" | "rejected";
+    switch (task.status) {
+      case 'registered':
+        adaptedStatus = 'pending';
+        break;
+      case 'approved':
+        adaptedStatus = 'approved';
+        break;
+      case 'working':
+      case 'worked':
+      default:
+        adaptedStatus = 'approved';
+        break;
+    }
+    
     return {
       id: task.id,
       workerId: task.worker_id,
@@ -520,7 +536,7 @@ export const fetchWorkerTasks = async (orderId?: string, workerId?: string): Pro
       imageUrl: photosData?.[0]?.photo_url,
       photoUrls: photosData?.map(p => p.photo_url) || [],
       completedAt: task.completed_at || "",
-      status: task.status
+      status: adaptedStatus
     };
   }));
   
@@ -531,7 +547,7 @@ export const createWorkerTask = async (taskData: Partial<WorkerTask>): Promise<s
   const dbData = {
     worker_id: taskData.workerId,
     order_id: taskData.orderId,
-    status: taskData.status || 'registered'
+    status: 'registered' // Convert from our interface status to DB status
   };
   
   const { data, error } = await supabase
@@ -550,11 +566,26 @@ export const createWorkerTask = async (taskData: Partial<WorkerTask>): Promise<s
   return data.id;
 };
 
-export const updateWorkerTask = async (id: string, status: 'registered' | 'approved' | 'working' | 'worked'): Promise<void> => {
-  const updateData: any = { status };
+export const updateWorkerTask = async (id: string, status: 'pending' | 'approved' | 'rejected'): Promise<void> => {
+  // Convert from our interface status to DB status
+  let dbStatus: 'registered' | 'approved' | 'working' | 'worked';
+  switch (status) {
+    case 'pending':
+      dbStatus = 'registered';
+      break;
+    case 'approved':
+      dbStatus = 'approved';
+      break;
+    case 'rejected':
+    default:
+      dbStatus = 'registered';
+      break;
+  }
+  
+  const updateData: any = { status: dbStatus };
   
   // If marking as worked, also set completed_at
-  if (status === 'worked') {
+  if (dbStatus === 'worked') {
     updateData.completed_at = new Date().toISOString();
   }
   
