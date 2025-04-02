@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Grape, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -30,6 +31,7 @@ export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -44,11 +46,22 @@ export default function Login() {
     try {
       await login(values.email, values.password);
       // Navigation will be handled by the auth state change listener
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login failed:", error);
+      toast({
+        title: "Login failed",
+        description: error.message || "Invalid email or password",
+        variant: "destructive",
+      });
       setIsLoading(false);
     }
   }
+
+  // Auto-fill a demo account when clicking on a demo account
+  const handleDemoAccountClick = (email: string, password: string) => {
+    form.setValue("email", email);
+    form.setValue("password", password);
+  };
 
   // Example accounts for demo purposes
   const demoAccounts = [
@@ -138,7 +151,11 @@ export default function Login() {
           <h3 className="font-medium mb-3">Demo Accounts</h3>
           <div className="space-y-3">
             {demoAccounts.map((account, index) => (
-              <div key={index} className="text-sm">
+              <div 
+                key={index} 
+                className="text-sm p-2 border rounded-md cursor-pointer hover:bg-accent/50 transition-colors"
+                onClick={() => handleDemoAccountClick(account.email, account.password)}
+              >
                 <p className="font-medium">{account.role}</p>
                 <p className="text-muted-foreground">Email: {account.email}</p>
                 <p className="text-muted-foreground">Password: {account.password}</p>

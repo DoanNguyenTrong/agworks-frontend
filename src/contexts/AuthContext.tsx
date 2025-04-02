@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { User } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Session } from "@supabase/supabase-js";
 
 interface AuthContextType {
   currentUser: User | null;
@@ -86,12 +87,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               description: "Failed to fetch user profile",
               variant: "destructive",
             });
+            // Important: Reset loading state even if there's an error
+            setIsLoading(false);
+          } finally {
+            setIsLoading(false);
           }
         } else {
           setCurrentUser(null);
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
       }
     );
 
@@ -100,6 +104,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!session) {
         setIsLoading(false);
       }
+    }).catch(error => {
+      console.error("Error getting session:", error);
+      setIsLoading(false);
     });
 
     return () => {
@@ -108,8 +115,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [toast, navigate]);
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
-    
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -129,9 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: error.message || "Invalid email or password",
         variant: "destructive",
       });
-      throw error;
-    } finally {
-      setIsLoading(false);
+      throw error; // Rethrow to handle in the component
     }
   };
 
