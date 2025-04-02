@@ -10,6 +10,21 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { InfoIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { User } from "@/lib/types";
+
+// Define a type for the profile data from Supabase
+type ProfileData = {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  created_at: string;
+  profile_image?: string | null;
+  address?: string | null;
+  phone?: string | null;
+  logo?: string | null;
+  company_name?: string | null;
+};
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -60,12 +75,12 @@ export default function Login() {
 
       // If successful with Supabase, check for user profile
       if (data.user) {
-        // Use the correct typing for profiles query
+        // Use explicit typing for the profiles query
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', data.user.id)
-          .single();
+          .single<ProfileData>();
 
         if (profileError && profileError.code !== 'PGRST116') {
           console.error("Error fetching profile:", profileError);
@@ -77,7 +92,7 @@ export default function Login() {
           description: `Welcome back${profileData?.name ? ', ' + profileData.name : ''}!`,
         });
 
-        // Navigate based on the user's role
+        // Navigate based on the user's role with proper null checks
         if (profileData?.role === 'admin') {
           navigate('/admin');
         } else if (profileData?.role === 'customer') {
