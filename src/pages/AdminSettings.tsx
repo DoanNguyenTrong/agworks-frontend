@@ -47,10 +47,15 @@ export default function AdminSettings() {
     resolver: zodResolver(emailSettingsSchema),
     defaultValues: settings.email,
   });
+
+  // Update forms when settings change
+  useEffect(() => {
+    generalForm.reset(settings.general);
+    emailForm.reset(settings.email);
+  }, [settings]);
   
   // Submit handlers
   const onGeneralSubmit = (data: z.infer<typeof generalSettingsSchema>) => {
-    console.log("General settings:", data);
     // Update the settings in our data management
     const updatedSettings = updateAdminSettings({
       general: data
@@ -65,7 +70,6 @@ export default function AdminSettings() {
   };
   
   const onEmailSubmit = (data: z.infer<typeof emailSettingsSchema>) => {
-    console.log("Email settings:", data);
     // Update the settings in our data management
     const updatedSettings = updateAdminSettings({
       email: data
@@ -434,32 +438,65 @@ export default function AdminSettings() {
               <div className="space-y-6">
                 <div className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <p className="text-base font-medium">Accounting System Integration</p>
+                    <p className="text-base font-medium">Google Maps</p>
                     <p className="text-sm text-muted-foreground">
-                      Connect to your accounting system for payroll export.
+                      Enable Google Maps integration for location services.
                     </p>
                   </div>
-                  <Button variant="outline">Configure</Button>
+                  <Switch 
+                    checked={settings.integrations.googleMaps}
+                    onCheckedChange={(checked) => {
+                      setSettings(prev => ({
+                        ...prev,
+                        integrations: {
+                          ...prev.integrations,
+                          googleMaps: checked
+                        }
+                      }));
+                    }}
+                  />
                 </div>
                 
                 <div className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <p className="text-base font-medium">Weather API</p>
+                    <p className="text-base font-medium">Twilio SMS</p>
                     <p className="text-sm text-muted-foreground">
-                      Integrate with weather data for planning.
+                      Enable Twilio SMS for mobile notifications.
                     </p>
                   </div>
-                  <Button variant="outline">Configure</Button>
+                  <Switch 
+                    checked={settings.integrations.twilioSMS}
+                    onCheckedChange={(checked) => {
+                      setSettings(prev => ({
+                        ...prev,
+                        integrations: {
+                          ...prev.integrations,
+                          twilioSMS: checked
+                        }
+                      }));
+                    }}
+                  />
                 </div>
                 
                 <div className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <p className="text-base font-medium">SMS Notifications</p>
+                    <p className="text-base font-medium">Stripe Payments</p>
                     <p className="text-sm text-muted-foreground">
-                      Configure SMS service for mobile notifications.
+                      Enable Stripe for payment processing.
                     </p>
                   </div>
-                  <Button variant="outline">Configure</Button>
+                  <Switch 
+                    checked={settings.integrations.stripePayments}
+                    onCheckedChange={(checked) => {
+                      setSettings(prev => ({
+                        ...prev,
+                        integrations: {
+                          ...prev.integrations,
+                          stripePayments: checked
+                        }
+                      }));
+                    }}
+                  />
                 </div>
               </div>
             </CardContent>

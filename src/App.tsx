@@ -19,6 +19,7 @@ import AdminWorkers from "./pages/AdminWorkers";
 import AdminWorkerView from "./pages/AdminWorkerView";
 import AdminWorkerEdit from "./pages/AdminWorkerEdit";
 import AdminSettings from "./pages/AdminSettings";
+import AdminHelp from "./pages/AdminHelp";
 
 // Customer pages
 import CustomerDashboard from "./pages/CustomerDashboard";
@@ -72,6 +73,7 @@ function App() {
             <Route path="workers/:id" element={<AdminWorkerView />} />
             <Route path="workers/edit/:id" element={<AdminWorkerEdit />} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="help" element={<AdminHelp />} />
           </Route>
 
           {/* Customer routes */}

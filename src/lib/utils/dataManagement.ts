@@ -1,5 +1,11 @@
+
 import { User, WorkOrder, Site, Block, WorkerApplication, WorkerTask, UserSettings, AdminSettings } from "@/lib/types";
 import { users, sites, blocks, workOrders, workerApplications, workerTasks, userSettings, adminSettings } from "@/lib/data";
+
+// Function to find user by ID
+export function findUserById(id: string): User | undefined {
+  return users.find(user => user.id === id);
+}
 
 // Function to add a new user
 export function addUser(userData: Omit<User, 'id' | 'createdAt'>): User {

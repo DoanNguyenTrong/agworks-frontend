@@ -70,17 +70,21 @@ export default function AdminCustomers() {
   });
   
   // Handle adding a new customer
-  const handleAddCustomer = (customerData: any) => {
+  const handleAddCustomer = (data: any) => {
     try {
+      if (!data || !data.email) {
+        throw new Error("Customer data is missing required fields");
+      }
+      
       // Add new customer using the data management utility
       const newCustomer = addUser({
-        email: customerData.email,
-        name: customerData.name,
+        email: data.email,
+        name: data.name,
         role: 'customer',
-        companyName: customerData.companyName,
-        phone: customerData.phone,
-        address: customerData.address,
-        logo: customerData.logo || '/placeholder.svg'
+        companyName: data.companyName,
+        phone: data.phone,
+        address: data.address,
+        logo: data.logo || '/placeholder.svg'
       });
       
       toast({

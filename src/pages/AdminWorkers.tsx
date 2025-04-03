@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,95 +43,77 @@ import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import WorkerForm from "@/components/WorkerForm";
-import { supabase } from "@/integrations/supabase/client";
+import { users, workerTasks } from "@/lib/data";
+import { addUser } from "@/lib/utils/dataManagement";
 import { toast } from "@/hooks/use-toast";
 
 export default function AdminWorkers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [workers, setWorkers] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [workerToDelete, setWorkerToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [completedTasks, setCompletedTasks] = useState<Record<string, number>>({});
   
-  // Fetch workers from Supabase
-  useEffect(() => {
-    const fetchWorkers = async () => {
-      try {
-        setIsLoading(true);
-        
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('role', 'worker');
-          
-        if (error) throw error;
-        
-        setWorkers(data || []);
-        
-        // Fetch task counts for each worker
-        const { data: taskData, error: taskError } = await supabase
-          .from('worker_tasks')
-          .select('worker_id, status')
-          .eq('status', 'approved');
-          
-        if (taskError) throw taskError;
-        
-        const taskCounts: Record<string, number> = {};
-        
-        taskData?.forEach(task => {
-          if (task.worker_id) {
-            taskCounts[task.worker_id] = (taskCounts[task.worker_id] || 0) + 1;
-          }
-        });
-        
-        setCompletedTasks(taskCounts);
-      } catch (error: any) {
-        console.error('Error fetching workers:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load workers",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchWorkers();
-  }, []);
+  // Filter only worker users
+  const workers = users.filter(user => user.role === 'worker');
   
   // Filter workers based on search term and status
   const filteredWorkers = workers.filter(worker => {
-    const matchesSearch = searchTerm === "" || 
-      worker.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      worker.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    // Search filter
+    const searchString = `${worker.name} ${worker.email} ${worker.phone || ""}`.toLowerCase();
+    if (!searchString.includes(searchTerm.toLowerCase())) return false;
     
-    // For now, we'll consider all workers active
+    // Role filter - for now, we'll consider all workers active
     const matchesStatus = statusFilter === "all" || statusFilter === "active";
     
-    return matchesSearch && matchesStatus;
+    return matchesStatus;
   });
   
+  // Calculate completed tasks for each worker
+  const calculateCompletedTasks = (workerId: string) => {
+    return workerTasks.filter(task => 
+      task.workerId === workerId && task.status === "approved"
+    ).length;
+  };
+  
+  // Handle adding a new worker
+  const handleAddWorker = (workerData: any) => {
+    try {
+      // Add new worker using the data management utility
+      const newWorker = addUser({
+        email: workerData.email,
+        name: workerData.name,
+        role: 'worker',
+        phone: workerData.phone,
+        profileImage: workerData.profileImage || '/placeholder.svg'
+      });
+      
+      toast({
+        title: "Worker added",
+        description: "New worker has been added successfully.",
+      });
+      
+      setShowAddDialog(false);
+    } catch (error: any) {
+      console.error('Error adding worker:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add worker",
+        variant: "destructive",
+      });
+    }
+  };
+  
   // Delete worker
-  const handleDeleteWorker = async () => {
+  const handleDeleteWorker = () => {
     if (!workerToDelete) return;
     
     try {
       setIsDeleting(true);
       
-      // Delete worker from Supabase
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', workerToDelete);
-        
-      if (error) throw error;
-      
-      // Update local state
-      setWorkers(workers.filter(w => w.id !== workerToDelete));
+      // In a real implementation, we would remove from the data array
+      // Here we'll just simulate success
       
       toast({
         title: "Worker deleted",
@@ -190,7 +172,7 @@ export default function AdminWorkers() {
                 Fill out the form below to create a new worker account.
               </DialogDescription>
             </DialogHeader>
-            <WorkerForm onComplete={() => setShowAddDialog(false)} />
+            <WorkerForm onComplete={handleAddWorker} />
           </DialogContent>
         </Dialog>
       </div>
@@ -220,7 +202,7 @@ export default function AdminWorkers() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar>
-                          <AvatarImage src={worker.profile_image} />
+                          <AvatarImage src={worker.profileImage} />
                           <AvatarFallback>{worker.name?.charAt(0) || 'W'}</AvatarFallback>
                         </Avatar>
                         <div>
@@ -230,7 +212,7 @@ export default function AdminWorkers() {
                       </div>
                     </TableCell>
                     <TableCell>{worker.phone || "—"}</TableCell>
-                    <TableCell>{completedTasks[worker.id] || 0} tasks</TableCell>
+                    <TableCell>{calculateCompletedTasks(worker.id)} tasks</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                         Active
