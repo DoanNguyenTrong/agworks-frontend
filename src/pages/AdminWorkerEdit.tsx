@@ -5,31 +5,33 @@ import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import WorkerForm from "@/components/WorkerForm";
-import { supabase } from "@/integrations/supabase/client";
+import { users } from "@/lib/data";
 
 export default function AdminWorkerEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [worker, setWorker] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
   
   useEffect(() => {
     const fetchWorker = async () => {
       if (id) {
         setIsLoading(true);
         try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', id)
-            .eq('role', 'worker')
-            .single();
-            
-          if (error) throw error;
+          // Simulate network delay
+          await new Promise(resolve => setTimeout(resolve, 500));
           
-          setWorker(data);
+          // Find worker with matching id and role
+          const foundWorker = users.find(u => u.id === id && u.role === "worker");
+          
+          if (!foundWorker) {
+            throw new Error("Worker not found");
+          }
+          
+          setWorker(foundWorker);
         } catch (error: any) {
           console.error('Error fetching worker:', error);
           toast({
@@ -44,7 +46,7 @@ export default function AdminWorkerEdit() {
     };
     
     fetchWorker();
-  }, [id]);
+  }, [id, toast]);
 
   const handleComplete = () => {
     navigate(`/admin/workers/${id}`);
@@ -52,16 +54,11 @@ export default function AdminWorkerEdit() {
 
   const handleSave = async (data: any) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-        })
-        .eq('id', id);
-        
-      if (error) throw error;
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // In a real app, we would update the worker in the database.
+      // Here we just show a success message.
       
       toast({
         title: "Worker updated",

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -45,7 +44,7 @@ export default function Login() {
     setIsLoading(true);
     try {
       await login(values.email, values.password);
-      // Navigation will be handled by the auth state change listener
+      // Navigation will be handled by the auth state change listener in AuthContext
     } catch (error: any) {
       console.error("Login failed:", error);
       toast({
