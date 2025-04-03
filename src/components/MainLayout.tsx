@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -46,25 +47,25 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
     switch (currentUser.role) {
       case "admin":
         return [
-          { name: "Dashboard", path: "/admin", icon: Home },
+          { name: "Dashboard", path: "/admin/dashboard", icon: Home },
           { name: "Customers", path: "/admin/customers", icon: Building },
           { name: "Workers", path: "/admin/workers", icon: Users },
         ];
       case "customer":
         return [
-          { name: "Dashboard", path: "/customer", icon: Home },
+          { name: "Dashboard", path: "/customer/dashboard", icon: Home },
           { name: "Sites", path: "/customer/sites", icon: Map },
           { name: "Blocks", path: "/customer/blocks", icon: Grape },
           { name: "Site Managers", path: "/customer/accounts", icon: UserPlus },
         ];
       case "siteManager":
         return [
-          { name: "Dashboard", path: "/manager", icon: Home },
+          { name: "Dashboard", path: "/manager/dashboard", icon: Home },
           { name: "Work Orders", path: "/manager/orders", icon: ClipboardList },
         ];
       case "worker":
         return [
-          { name: "Dashboard", path: "/worker", icon: Home },
+          { name: "Dashboard", path: "/worker/dashboard", icon: Home },
           { name: "My Tasks", path: "/worker/tasks", icon: ClipboardList }
         ];
       default:

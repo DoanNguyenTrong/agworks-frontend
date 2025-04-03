@@ -22,5 +22,9 @@ export const adminSettings: AdminSettings = {
     passwordExpiration: false,
     accountLockout: true
   },
-  integrations: {}
+  integrations: {
+    googleMaps: false,
+    twilioSMS: false,
+    stripePayments: false
+  }
 };
