@@ -13,8 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, PlusCircle, Filter } from "lucide-react";
+import { Search, PlusCircle } from "lucide-react";
 import { useState } from "react";
 import { users, sites, workOrders } from "@/lib/data";
 import { User } from "@/lib/types";
@@ -24,7 +23,6 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
-  const [dateFilter, setDateFilter] = useState("all");
   
   // Filter users by search term and role
   const filteredUsers = users.filter(user => {
@@ -34,18 +32,6 @@ export default function AdminDashboard() {
     
     // Role filter
     if (roleFilter !== "all" && user.role !== roleFilter) return false;
-    
-    // Date filter (mock implementation - would use actual dates in real app)
-    if (dateFilter === "recent") {
-      // Simulate filtering for users created in the last 30 days
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      if (new Date(user.createdAt) < thirtyDaysAgo) return false;
-    } else if (dateFilter === "thisYear") {
-      // Simulate filtering for users created this year
-      const thisYear = new Date().getFullYear();
-      if (new Date(user.createdAt).getFullYear() !== thisYear) return false;
-    }
     
     return true;
   });
@@ -90,22 +76,6 @@ export default function AdminDashboard() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div className="text-2xl font-bold">{users.length}</div>
-              <Select 
-                defaultValue="all" 
-                onValueChange={(value) => setRoleFilter(value)}
-                value={roleFilter}
-              >
-                <SelectTrigger className="w-[130px] h-8">
-                  <SelectValue placeholder="Filter" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="customer">Vineyard Owners</SelectItem>
-                  <SelectItem value="siteManager">Site Managers</SelectItem>
-                  <SelectItem value="worker">Field Workers</SelectItem>
-                  <SelectItem value="admin">Admins</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Across all roles
@@ -117,23 +87,7 @@ export default function AdminDashboard() {
             <CardTitle className="text-sm font-medium">Vineyard Owners</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold">{customerCount}</div>
-              <Tabs 
-                defaultValue="all" 
-                className="w-[130px]"
-                onValueChange={(value) => {
-                  setRoleFilter(value === "all" ? "customer" : "customer");
-                  setDateFilter(value);
-                }}
-              >
-                <TabsList className="h-8">
-                  <TabsTrigger value="all" className="text-xs px-2">All</TabsTrigger>
-                  <TabsTrigger value="recent" className="text-xs px-2">Recent</TabsTrigger>
-                  <TabsTrigger value="thisYear" className="text-xs px-2">This Year</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
+            <div className="text-2xl font-bold">{customerCount}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Managing {sites.length} sites
             </p>
@@ -144,23 +98,7 @@ export default function AdminDashboard() {
             <CardTitle className="text-sm font-medium">Site Managers</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold">{siteManagerCount}</div>
-              <Tabs 
-                defaultValue="all" 
-                className="w-[130px]"
-                onValueChange={(value) => {
-                  setRoleFilter(value === "all" ? "siteManager" : "siteManager");
-                  setDateFilter(value);
-                }}
-              >
-                <TabsList className="h-8">
-                  <TabsTrigger value="all" className="text-xs px-2">All</TabsTrigger>
-                  <TabsTrigger value="recent" className="text-xs px-2">Recent</TabsTrigger>
-                  <TabsTrigger value="thisYear" className="text-xs px-2">This Year</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
+            <div className="text-2xl font-bold">{siteManagerCount}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Overseeing operations
             </p>
@@ -171,23 +109,7 @@ export default function AdminDashboard() {
             <CardTitle className="text-sm font-medium">Field Workers</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold">{workerCount}</div>
-              <Tabs 
-                defaultValue="all" 
-                className="w-[130px]"
-                onValueChange={(value) => {
-                  setRoleFilter(value === "all" ? "worker" : "worker");
-                  setDateFilter(value);
-                }}
-              >
-                <TabsList className="h-8">
-                  <TabsTrigger value="all" className="text-xs px-2">All</TabsTrigger>
-                  <TabsTrigger value="recent" className="text-xs px-2">Recent</TabsTrigger>
-                  <TabsTrigger value="thisYear" className="text-xs px-2">This Year</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
+            <div className="text-2xl font-bold">{workerCount}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Completing tasks
             </p>
@@ -209,16 +131,18 @@ export default function AdminDashboard() {
           </div>
           <Select 
             defaultValue="all" 
-            onValueChange={(value) => setDateFilter(value)}
-            value={dateFilter}
+            onValueChange={(value) => setRoleFilter(value)}
+            value={roleFilter}
           >
             <SelectTrigger className="w-[130px]">
-              <SelectValue placeholder="Filter by date" />
+              <SelectValue placeholder="Filter by role" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Time</SelectItem>
-              <SelectItem value="recent">Last 30 Days</SelectItem>
-              <SelectItem value="thisYear">This Year</SelectItem>
+              <SelectItem value="all">All Roles</SelectItem>
+              <SelectItem value="customer">Vineyard Owners</SelectItem>
+              <SelectItem value="siteManager">Site Managers</SelectItem>
+              <SelectItem value="worker">Field Workers</SelectItem>
+              <SelectItem value="admin">Admins</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -281,7 +205,7 @@ export default function AdminDashboard() {
                   <Badge variant="outline">5 sites</Badge>
                 </div>
                 <div className="flex justify-between items-center mt-2">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={() => navigate('/admin/sites')}>
                     <PlusCircle className="mr-2 h-3 w-3" />
                     View All Sites
                   </Button>
@@ -316,7 +240,7 @@ export default function AdminDashboard() {
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center mt-2">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={() => navigate('/admin/orders')}>
                     <PlusCircle className="mr-2 h-3 w-3" />
                     View All Orders
                   </Button>

@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MainLayout from "@/components/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +10,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
+import { userSettings } from "@/lib/data";
 
 // Form schemas
 const generalSettingsSchema = z.object({
@@ -30,37 +30,56 @@ const emailSettingsSchema = z.object({
   senderName: z.string().min(1, "Sender name is required"),
 });
 
+// Admin settings data
+const adminSettingsData = {
+  general: {
+    systemName: "AgWorks",
+    supportEmail: "support@agworks.com",
+    logoUrl: "/logo.png",
+    enablePublicRegistration: true,
+    enableWorkerSelfRegistration: true,
+  },
+  email: {
+    smtpServer: "smtp.example.com",
+    smtpPort: "587",
+    smtpUsername: "username",
+    smtpPassword: "password",
+    senderEmail: "no-reply@agworks.com",
+    senderName: "AgWorks System",
+  },
+  security: {
+    twoFactorAuth: false,
+    passwordExpiration: false,
+    accountLockout: true
+  },
+  integrations: {}
+};
+
 export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState("general");
+  const [settings, setSettings] = useState(adminSettingsData);
   
   // General settings form
   const generalForm = useForm<z.infer<typeof generalSettingsSchema>>({
     resolver: zodResolver(generalSettingsSchema),
-    defaultValues: {
-      systemName: "AgWorks",
-      supportEmail: "support@agworks.com",
-      logoUrl: "/logo.png",
-      enablePublicRegistration: true,
-      enableWorkerSelfRegistration: true,
-    },
+    defaultValues: settings.general,
   });
 
   // Email settings form
   const emailForm = useForm<z.infer<typeof emailSettingsSchema>>({
     resolver: zodResolver(emailSettingsSchema),
-    defaultValues: {
-      smtpServer: "smtp.example.com",
-      smtpPort: "587",
-      smtpUsername: "username",
-      smtpPassword: "password",
-      senderEmail: "no-reply@agworks.com",
-      senderName: "AgWorks System",
-    },
+    defaultValues: settings.email,
   });
   
   // Submit handlers
   const onGeneralSubmit = (data: z.infer<typeof generalSettingsSchema>) => {
     console.log("General settings:", data);
+    // Update the settings in our mock data
+    setSettings(prev => ({
+      ...prev,
+      general: data
+    }));
+    
     toast({
       title: "Settings saved",
       description: "Your general settings have been saved successfully.",
@@ -69,9 +88,29 @@ export default function AdminSettings() {
   
   const onEmailSubmit = (data: z.infer<typeof emailSettingsSchema>) => {
     console.log("Email settings:", data);
+    // Update the settings in our mock data
+    setSettings(prev => ({
+      ...prev,
+      email: data
+    }));
+    
     toast({
       title: "Settings saved",
       description: "Your email settings have been saved successfully.",
+    });
+  };
+  
+  const handleSecuritySave = () => {
+    toast({
+      title: "Settings saved",
+      description: "Your security settings have been saved successfully.",
+    });
+  };
+  
+  const handleIntegrationsSave = () => {
+    toast({
+      title: "Settings saved",
+      description: "Your integration settings have been saved successfully.",
     });
   };
 
@@ -326,7 +365,18 @@ export default function AdminSettings() {
                       Require users to use two-factor authentication.
                     </p>
                   </div>
-                  <Switch />
+                  <Switch 
+                    checked={settings.security.twoFactorAuth}
+                    onCheckedChange={(checked) => {
+                      setSettings(prev => ({
+                        ...prev,
+                        security: {
+                          ...prev.security,
+                          twoFactorAuth: checked
+                        }
+                      }));
+                    }}
+                  />
                 </div>
                 
                 <div className="flex flex-row items-center justify-between rounded-lg border p-4">
@@ -336,7 +386,18 @@ export default function AdminSettings() {
                       Force users to change their password periodically.
                     </p>
                   </div>
-                  <Switch />
+                  <Switch 
+                    checked={settings.security.passwordExpiration}
+                    onCheckedChange={(checked) => {
+                      setSettings(prev => ({
+                        ...prev,
+                        security: {
+                          ...prev.security,
+                          passwordExpiration: checked
+                        }
+                      }));
+                    }}
+                  />
                 </div>
                 
                 <div className="flex flex-row items-center justify-between rounded-lg border p-4">
@@ -346,12 +407,23 @@ export default function AdminSettings() {
                       Lock accounts after multiple failed login attempts.
                     </p>
                   </div>
-                  <Switch defaultChecked />
+                  <Switch 
+                    checked={settings.security.accountLockout}
+                    onCheckedChange={(checked) => {
+                      setSettings(prev => ({
+                        ...prev,
+                        security: {
+                          ...prev.security,
+                          accountLockout: checked
+                        }
+                      }));
+                    }}
+                  />
                 </div>
               </div>
             </CardContent>
             <CardFooter className="flex justify-end">
-              <Button>Save Changes</Button>
+              <Button onClick={handleSecuritySave}>Save Changes</Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -399,7 +471,7 @@ export default function AdminSettings() {
               </div>
             </CardContent>
             <CardFooter className="flex justify-end">
-              <Button>Save Changes</Button>
+              <Button onClick={handleIntegrationsSave}>Save Changes</Button>
             </CardFooter>
           </Card>
         </TabsContent>

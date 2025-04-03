@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,71 +38,76 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import CustomerForm from "@/components/CustomerForm";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { users, sites } from "@/lib/data";
+import { addUser } from "@/lib/utils/dataManagement";
 
 export default function AdminCustomers() {
   const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [customers, setCustomers] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   
-  // Fetch customers from Supabase
-  useEffect(() => {
-    const fetchCustomers = async () => {
-      try {
-        setIsLoading(true);
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('role', 'customer');
-          
-        if (error) throw error;
-        
-        setCustomers(data || []);
-      } catch (error: any) {
-        console.error('Error fetching customers:', error);
-        toast({
-          title: "Error",
-          description: "Failed to load customers",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchCustomers();
-  }, []);
+  // Filter only customer users
+  const customers = users.filter(user => user.role === 'customer');
   
   // Filter customers based on search term
   const filteredCustomers = customers.filter(customer => 
     searchTerm === "" || 
     customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.company_name?.toLowerCase().includes(searchTerm.toLowerCase())
+    customer.companyName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
+  // Calculate site count for each customer
+  const customerSiteCounts = customers.map(customer => {
+    const siteCount = sites.filter(site => site.customerId === customer.id).length;
+    return {
+      customerId: customer.id,
+      siteCount
+    };
+  });
+  
+  // Handle adding a new customer
+  const handleAddCustomer = (customerData: any) => {
+    try {
+      // Add new customer using the data management utility
+      const newCustomer = addUser({
+        email: customerData.email,
+        name: customerData.name,
+        role: 'customer',
+        companyName: customerData.companyName,
+        phone: customerData.phone,
+        address: customerData.address,
+        logo: customerData.logo || '/placeholder.svg'
+      });
+      
+      toast({
+        title: "Customer added",
+        description: "New customer has been added successfully.",
+      });
+      
+      setShowAddDialog(false);
+    } catch (error: any) {
+      console.error('Error adding customer:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add customer",
+        variant: "destructive",
+      });
+    }
+  };
+  
   // Delete customer
-  const handleDeleteCustomer = async () => {
+  const handleDeleteCustomer = () => {
     if (!customerToDelete) return;
     
     try {
       setIsDeleting(true);
       
-      // Delete customer from Supabase
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', customerToDelete);
-        
-      if (error) throw error;
-      
-      // Update local state
-      setCustomers(customers.filter(c => c.id !== customerToDelete));
+      // In a real implementation, we would remove from the data array
+      // Here we'll just simulate success
       
       toast({
         title: "Customer deleted",
@@ -148,7 +153,7 @@ export default function AdminCustomers() {
                 Fill out the form below to create a new customer account.
               </DialogDescription>
             </DialogHeader>
-            <CustomerForm onComplete={() => setShowAddDialog(false)} />
+            <CustomerForm onComplete={handleAddCustomer} />
           </DialogContent>
         </Dialog>
       </div>
@@ -167,13 +172,7 @@ export default function AdminCustomers() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-6">
-                    Loading customers...
-                  </TableCell>
-                </TableRow>
-              ) : filteredCustomers.length > 0 ? (
+              {filteredCustomers.length > 0 ? (
                 filteredCustomers.map((customer) => (
                   <TableRow key={customer.id}>
                     <TableCell>
@@ -188,11 +187,10 @@ export default function AdminCustomers() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{customer.company_name || "—"}</TableCell>
+                    <TableCell>{customer.companyName || "—"}</TableCell>
                     <TableCell>{customer.phone || "—"}</TableCell>
                     <TableCell>
-                      {/* We'll implement this functionality later */}
-                      {customer.siteCount || 0} Sites
+                      {customerSiteCounts.find(c => c.customerId === customer.id)?.siteCount || 0} Sites
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
@@ -226,7 +224,7 @@ export default function AdminCustomers() {
                             <AlertDialogHeader>
                               <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Are you sure you want to delete {customer.company_name || customer.name}? 
+                                Are you sure you want to delete {customer.companyName || customer.name}? 
                                 This action cannot be undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>

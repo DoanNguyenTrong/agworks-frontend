@@ -1,334 +1,124 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { Toaster } from "./components/ui/toaster";
 
+// Public pages
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
+
+// Admin pages
 import AdminDashboard from "./pages/AdminDashboard";
-import CustomerDashboard from "./pages/CustomerDashboard";
-import SiteManagerDashboard from "./pages/SiteManagerDashboard";
-import WorkerDashboard from "./pages/WorkerDashboard";
-import SiteManagementPage from "./pages/SiteManagementPage";
-import BlockManagementPage from "./pages/BlockManagementPage";
-import WorkOrderManagement from "./pages/WorkOrderManagement";
-import WorkOrderDetails from "./pages/WorkOrderDetails";
 import AdminCustomers from "./pages/AdminCustomers";
-import AdminWorkers from "./pages/AdminWorkers";
-import AdminSettings from "./pages/AdminSettings";
-import SiteForm from "./pages/SiteForm";
-import SiteDetails from "./pages/SiteDetails";
-import BlockForm from "./pages/BlockForm";
-import BlockDetails from "./pages/BlockDetails";
-import CustomerAccounts from "./pages/CustomerAccounts";
-import CustomerSettings from "./pages/CustomerSettings";
-import CreateWorkOrder from "./pages/CreateWorkOrder";
-import ManagerSettings from "./pages/ManagerSettings";
 import AdminCustomerView from "./pages/AdminCustomerView";
 import AdminCustomerEdit from "./pages/AdminCustomerEdit";
+import AdminWorkers from "./pages/AdminWorkers";
 import AdminWorkerView from "./pages/AdminWorkerView";
 import AdminWorkerEdit from "./pages/AdminWorkerEdit";
-import HelpPage from "./pages/HelpPage";
+import AdminSettings from "./pages/AdminSettings";
+
+// Customer pages
+import CustomerDashboard from "./pages/CustomerDashboard";
+import CustomerAccounts from "./pages/CustomerAccounts";
+import CustomerSettings from "./pages/CustomerSettings";
 import CustomerManagerEdit from "./pages/CustomerManagerEdit";
+import SiteManagement from "./pages/SiteManagement";
+import SiteManagementPage from "./pages/SiteManagementPage";
+import SiteDetails from "./pages/SiteDetails";
+import SiteForm from "./pages/SiteForm";
+import BlockManagement from "./pages/BlockManagement";
+import BlockManagementPage from "./pages/BlockManagementPage";
+import BlockDetails from "./pages/BlockDetails";
+import BlockForm from "./pages/BlockForm";
+
+// Site Manager pages
+import SiteManagerDashboard from "./pages/SiteManagerDashboard";
+import ManagerSettings from "./pages/ManagerSettings";
+import CreateWorkOrder from "./pages/CreateWorkOrder";
+import WorkOrderManagement from "./pages/WorkOrderManagement";
+import WorkOrderDetails from "./pages/WorkOrderDetails";
+
+// Worker pages
+import WorkerDashboard from "./pages/WorkerDashboard";
 import WorkerTasks from "./pages/WorkerTasks";
 import WorkerTaskDetails from "./pages/WorkerTaskDetails";
 import WorkerSettings from "./pages/WorkerSettings";
 import WorkerHelp from "./pages/WorkerHelp";
 
-const queryClient = new QueryClient();
+// Shared pages
+import HelpPage from "./pages/HelpPage";
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <BrowserRouter>
+function App() {
+  return (
+    <Router>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            
-            <Route 
-              path="/admin" 
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/admin/customers" 
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <AdminCustomers />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/admin/customers/:id" 
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <AdminCustomerView />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/admin/customers/edit/:id" 
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <AdminCustomerEdit />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/admin/workers" 
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <AdminWorkers />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/admin/workers/:id" 
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <AdminWorkerView />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/admin/workers/edit/:id" 
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <AdminWorkerEdit />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/admin/settings" 
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <AdminSettings />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/admin/help" 
-              element={
-                <ProtectedRoute allowedRoles={["admin"]}>
-                  <HelpPage />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/customer" 
-              element={
-                <ProtectedRoute allowedRoles={["customer"]}>
-                  <CustomerDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/customer/sites" 
-              element={
-                <ProtectedRoute allowedRoles={["customer"]}>
-                  <SiteManagementPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/customer/sites/new" 
-              element={
-                <ProtectedRoute allowedRoles={["customer"]}>
-                  <SiteForm />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/customer/sites/edit/:id" 
-              element={
-                <ProtectedRoute allowedRoles={["customer"]}>
-                  <SiteForm />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/customer/sites/:id" 
-              element={
-                <ProtectedRoute allowedRoles={["customer"]}>
-                  <SiteDetails />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/customer/blocks" 
-              element={
-                <ProtectedRoute allowedRoles={["customer"]}>
-                  <BlockManagementPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/customer/blocks/new" 
-              element={
-                <ProtectedRoute allowedRoles={["customer"]}>
-                  <BlockForm />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/customer/blocks/edit/:id" 
-              element={
-                <ProtectedRoute allowedRoles={["customer"]}>
-                  <BlockForm />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/customer/blocks/:id" 
-              element={
-                <ProtectedRoute allowedRoles={["customer"]}>
-                  <BlockDetails />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/customer/accounts" 
-              element={
-                <ProtectedRoute allowedRoles={["customer"]}>
-                  <CustomerAccounts />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/customer/managers/edit/:id" 
-              element={
-                <ProtectedRoute allowedRoles={["customer"]}>
-                  <CustomerManagerEdit />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/customer/settings" 
-              element={
-                <ProtectedRoute allowedRoles={["customer"]}>
-                  <CustomerSettings />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/customer/help" 
-              element={
-                <ProtectedRoute allowedRoles={["customer"]}>
-                  <HelpPage />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/manager" 
-              element={
-                <ProtectedRoute allowedRoles={["siteManager"]}>
-                  <SiteManagerDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/manager/orders" 
-              element={
-                <ProtectedRoute allowedRoles={["siteManager"]}>
-                  <WorkOrderManagement />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/manager/orders/new" 
-              element={
-                <ProtectedRoute allowedRoles={["siteManager"]}>
-                  <CreateWorkOrder />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/manager/orders/:id" 
-              element={
-                <ProtectedRoute allowedRoles={["siteManager"]}>
-                  <WorkOrderDetails />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/manager/settings" 
-              element={
-                <ProtectedRoute allowedRoles={["siteManager"]}>
-                  <ManagerSettings />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/manager/help" 
-              element={
-                <ProtectedRoute allowedRoles={["siteManager"]}>
-                  <HelpPage />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route 
-              path="/worker" 
-              element={
-                <ProtectedRoute allowedRoles={["worker"]}>
-                  <WorkerDashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/worker/tasks" 
-              element={
-                <ProtectedRoute allowedRoles={["worker"]}>
-                  <WorkerTasks />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/worker/tasks/:id" 
-              element={
-                <ProtectedRoute allowedRoles={["worker"]}>
-                  <WorkerTaskDetails />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/worker/settings" 
-              element={
-                <ProtectedRoute allowedRoles={["worker"]}>
-                  <WorkerSettings />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/worker/help" 
-              element={
-                <ProtectedRoute allowedRoles={["worker"]}>
-                  <WorkerHelp />
-                </ProtectedRoute>
-              } 
-            />
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </TooltipProvider>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* Admin routes */}
+          <Route path="/admin/*" element={<ProtectedRoute allowedRoles={["admin"]} />}>
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="customers" element={<AdminCustomers />} />
+            <Route path="customers/:id" element={<AdminCustomerView />} />
+            <Route path="customers/edit/:id" element={<AdminCustomerEdit />} />
+            <Route path="workers" element={<AdminWorkers />} />
+            <Route path="workers/:id" element={<AdminWorkerView />} />
+            <Route path="workers/edit/:id" element={<AdminWorkerEdit />} />
+            <Route path="settings" element={<AdminSettings />} />
+          </Route>
+
+          {/* Customer routes */}
+          <Route path="/customer/*" element={<ProtectedRoute allowedRoles={["customer"]} />}>
+            <Route path="dashboard" element={<CustomerDashboard />} />
+            <Route path="accounts" element={<CustomerAccounts />} />
+            <Route path="managers/edit/:id" element={<CustomerManagerEdit />} />
+            <Route path="settings" element={<CustomerSettings />} />
+            <Route path="sites" element={<SiteManagement />} />
+            <Route path="sites/manage" element={<SiteManagementPage />} />
+            <Route path="sites/:id" element={<SiteDetails />} />
+            <Route path="sites/new" element={<SiteForm />} />
+            <Route path="sites/edit/:id" element={<SiteForm />} />
+            <Route path="blocks" element={<BlockManagement />} />
+            <Route path="blocks/manage" element={<BlockManagementPage />} />
+            <Route path="blocks/:id" element={<BlockDetails />} />
+            <Route path="blocks/new" element={<BlockForm />} />
+            <Route path="blocks/edit/:id" element={<BlockForm />} />
+          </Route>
+
+          {/* Site Manager routes */}
+          <Route path="/manager/*" element={<ProtectedRoute allowedRoles={["siteManager"]} />}>
+            <Route path="dashboard" element={<SiteManagerDashboard />} />
+            <Route path="settings" element={<ManagerSettings />} />
+            <Route path="orders/new" element={<CreateWorkOrder />} />
+            <Route path="orders" element={<WorkOrderManagement />} />
+            <Route path="orders/:id" element={<WorkOrderDetails />} />
+          </Route>
+
+          {/* Worker routes */}
+          <Route path="/worker/*" element={<ProtectedRoute allowedRoles={["worker"]} />}>
+            <Route path="dashboard" element={<WorkerDashboard />} />
+            <Route path="tasks" element={<WorkerTasks />} />
+            <Route path="tasks/:taskId" element={<WorkerTaskDetails />} />
+            <Route path="settings" element={<WorkerSettings />} />
+            <Route path="help" element={<WorkerHelp />} />
+          </Route>
+
+          {/* Shared routes */}
+          <Route path="/help" element={<HelpPage />} />
+
+          {/* 404 route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Toaster />
       </AuthProvider>
-    </BrowserRouter>
-  </QueryClientProvider>
-);
+    </Router>
+  );
+}
 
 export default App;

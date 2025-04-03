@@ -73,7 +73,7 @@ export interface WorkerApplication {
   id: string;
   workerId: string;
   workerName: string;
-  orderrId: string; // Note: this seems to have a typo, should probably be "orderId"
+  orderId: string; // Fixed typo from orderrId to orderId
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
 }
@@ -88,4 +88,15 @@ export interface WorkerTask {
   imageUrl: string;
   completedAt: string;
   status: 'pending' | 'approved' | 'rejected';
+}
+
+// User Settings type
+export interface UserSettings {
+  userId: string;
+  theme: 'light' | 'dark' | 'system';
+  emailNotifications: boolean;
+  smsNotifications: boolean;
+  language: string;
+  createdAt: string;
+  updatedAt: string;
 }

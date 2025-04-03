@@ -2,83 +2,113 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/MainLayout";
-import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Search, Eye, Clock } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { workerApplications, workOrders, workerTasks, sites, blocks } from "@/lib/data";
+import { workerTasks, workOrders } from "@/lib/data";
 import { format } from "date-fns";
 
 export default function WorkerTasks() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Get approved applications for current worker
-  const myApplications = currentUser
-    ? workerApplications.filter(app => app.workerId === currentUser.id)
-    : [];
-
-  // Get tasks for current worker
-  const myTasks = currentUser
-    ? workerTasks.filter(task => task.workerId === currentUser.id)
-    : [];
-
-  // Filter tasks by search term
+  const [statusFilter, setStatusFilter] = useState("all");
+  
+  // Get tasks for the current worker
+  const myTasks = workerTasks.filter(task => task.workerId === currentUser?.id);
+  
+  // Filter tasks by search term and status
   const filteredTasks = myTasks.filter(task => {
-    const order = workOrders.find(order => order.id === task.orderId);
-    const searchString = `${order?.workType || ""} ${order?.address || ""}`.toLowerCase();
-    return searchString.includes(searchTerm.toLowerCase());
-  });
-
-  const handleRowDoubleClick = (id: string) => {
-    navigate(`/worker/tasks/${id}`);
-  };
-
-  // Get tasks grouped by order
-  const getOrderStatus = (orderId: string) => {
-    const application = myApplications.find(app => app.orderrId === orderId);
-    if (!application) return "registered";
-    
-    const order = workOrders.find(order => order.id === orderId);
-    if (!order) return "registered";
-    
-    if (application.status === "approved") {
-      if (order.status === "inProgress") return "working";
-      if (order.status === "completed") return "worked";
+    // Status filter
+    if (statusFilter !== "all" && task.status !== statusFilter) {
+      return false;
     }
     
-    return application.status;
+    // Search filter (by work order ID for demo)
+    if (searchTerm !== "") {
+      const order = workOrders.find(order => order.id === task.orderId);
+      const searchString = `${task.id} ${order?.workType || ""}`.toLowerCase();
+      if (!searchString.includes(searchTerm.toLowerCase())) {
+        return false;
+      }
+    }
+    
+    return true;
+  });
+  
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "pending":
+        return <Badge variant="outline">Pending</Badge>;
+      case "approved":
+        return <Badge className="bg-agworks-green">Approved</Badge>;
+      case "rejected":
+        return <Badge variant="destructive">Rejected</Badge>;
+      default:
+        return null;
+    }
+  };
+  
+  const handleRowClick = (taskId: string) => {
+    navigate(`/worker/tasks/${taskId}`);
   };
 
   return (
     <MainLayout pageTitle="My Tasks">
-      <div className="flex justify-between items-center mb-6">
-        <div className="relative w-full md:w-[300px]">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+        <div className="relative w-full md:w-64">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search tasks..."
-            className="pl-9"
+            className="pl-8"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
+        
+        <div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="md:w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="approved">Approved</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
-
+      
       <Card>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Work Type</TableHead>
-                <TableHead>Location</TableHead>
+                <TableHead>Task ID</TableHead>
+                <TableHead>Work Order</TableHead>
+                <TableHead>Task Type</TableHead>
+                <TableHead>Date Completed</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Photos</TableHead>
-                <TableHead>Earnings</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -86,49 +116,27 @@ export default function WorkerTasks() {
               {filteredTasks.length > 0 ? (
                 filteredTasks.map((task) => {
                   const order = workOrders.find(order => order.id === task.orderId);
-                  const status = getOrderStatus(task.orderId);
-                  const photoCount = task.photoUrls ? task.photoUrls.length : 0;
-                  const earnings = order ? (photoCount * order.payRate).toFixed(2) : "0.00";
-                  
                   return (
                     <TableRow 
-                      key={task.id}
-                      onDoubleClick={() => handleRowDoubleClick(task.id)}
+                      key={task.id} 
                       className="cursor-pointer"
+                      onClick={() => handleRowClick(task.id)}
                     >
+                      <TableCell className="font-medium">{task.id}</TableCell>
+                      <TableCell>{task.orderId}</TableCell>
                       <TableCell>
-                        {task.completedAt ? format(new Date(task.completedAt), "MMM d, yyyy") : "N/A"}
+                        {order?.workType 
+                          ? order.workType.charAt(0).toUpperCase() + order.workType.slice(1) 
+                          : "Unknown"}
                       </TableCell>
-                      <TableCell className="capitalize">
-                        {order?.workType || "Unknown"}
-                      </TableCell>
-                      <TableCell>
-                        {order?.address || "Unknown location"}
-                      </TableCell>
-                      <TableCell>
-                        <Badge 
-                          variant={
-                            status === "worked" ? "success" : 
-                            status === "working" ? "default" :
-                            status === "approved" ? "outline" : 
-                            "secondary"
-                          }
-                        >
-                          {status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{photoCount}</TableCell>
-                      <TableCell>${earnings}</TableCell>
+                      <TableCell>{format(new Date(task.completedAt), "MMM d, yyyy")}</TableCell>
+                      <TableCell>{getStatusBadge(task.status)}</TableCell>
                       <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/worker/tasks/${task.id}`);
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
+                        <Button variant="ghost" size="sm" onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/worker/tasks/${task.id}`);
+                        }}>
+                          View
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -136,11 +144,8 @@ export default function WorkerTasks() {
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8">
-                    <div className="flex flex-col items-center gap-2">
-                      <Clock className="h-10 w-10 text-muted-foreground" />
-                      <p className="text-muted-foreground">No tasks found</p>
-                    </div>
+                  <TableCell colSpan={6} className="h-24 text-center">
+                    No tasks found
                   </TableCell>
                 </TableRow>
               )}

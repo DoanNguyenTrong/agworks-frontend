@@ -20,13 +20,14 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { PlusCircle, Search } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { sites, workOrders, blocks } from "@/lib/data";
 import { WorkOrder } from "@/lib/types";
 import { format } from "date-fns";
 
 export default function WorkOrderManagement() {
+  const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -66,6 +67,10 @@ export default function WorkOrderManagement() {
       default:
         return null;
     }
+  };
+
+  const handleOrderClick = (orderId: string) => {
+    navigate(`/manager/orders/${orderId}`);
   };
 
   return (
@@ -123,7 +128,7 @@ export default function WorkOrderManagement() {
               filteredOrders.map((order) => {
                 const block = blocks.find(b => b.id === order.blockId);
                 return (
-                  <TableRow key={order.id}>
+                  <TableRow key={order.id} className="cursor-pointer" onClick={() => handleOrderClick(order.id)}>
                     <TableCell className="font-medium">{order.id}</TableCell>
                     <TableCell>{block?.name || "Unknown Block"}</TableCell>
                     <TableCell>
