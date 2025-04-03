@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import MainLayout from "@/components/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,7 +11,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
-import { userSettings } from "@/lib/data";
+import { adminSettings } from "@/lib/data";
+import { updateAdminSettings } from "@/lib/utils/dataManagement";
 
 // Form schemas
 const generalSettingsSchema = z.object({
@@ -30,34 +32,9 @@ const emailSettingsSchema = z.object({
   senderName: z.string().min(1, "Sender name is required"),
 });
 
-// Admin settings data
-const adminSettingsData = {
-  general: {
-    systemName: "AgWorks",
-    supportEmail: "support@agworks.com",
-    logoUrl: "/logo.png",
-    enablePublicRegistration: true,
-    enableWorkerSelfRegistration: true,
-  },
-  email: {
-    smtpServer: "smtp.example.com",
-    smtpPort: "587",
-    smtpUsername: "username",
-    smtpPassword: "password",
-    senderEmail: "no-reply@agworks.com",
-    senderName: "AgWorks System",
-  },
-  security: {
-    twoFactorAuth: false,
-    passwordExpiration: false,
-    accountLockout: true
-  },
-  integrations: {}
-};
-
 export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState("general");
-  const [settings, setSettings] = useState(adminSettingsData);
+  const [settings, setSettings] = useState(adminSettings);
   
   // General settings form
   const generalForm = useForm<z.infer<typeof generalSettingsSchema>>({
@@ -74,11 +51,12 @@ export default function AdminSettings() {
   // Submit handlers
   const onGeneralSubmit = (data: z.infer<typeof generalSettingsSchema>) => {
     console.log("General settings:", data);
-    // Update the settings in our mock data
-    setSettings(prev => ({
-      ...prev,
+    // Update the settings in our data management
+    const updatedSettings = updateAdminSettings({
       general: data
-    }));
+    });
+    
+    setSettings(updatedSettings);
     
     toast({
       title: "Settings saved",
@@ -88,11 +66,12 @@ export default function AdminSettings() {
   
   const onEmailSubmit = (data: z.infer<typeof emailSettingsSchema>) => {
     console.log("Email settings:", data);
-    // Update the settings in our mock data
-    setSettings(prev => ({
-      ...prev,
+    // Update the settings in our data management
+    const updatedSettings = updateAdminSettings({
       email: data
-    }));
+    });
+    
+    setSettings(updatedSettings);
     
     toast({
       title: "Settings saved",
@@ -101,6 +80,13 @@ export default function AdminSettings() {
   };
   
   const handleSecuritySave = () => {
+    // Update the settings in our data management
+    const updatedSettings = updateAdminSettings({
+      security: settings.security
+    });
+    
+    setSettings(updatedSettings);
+    
     toast({
       title: "Settings saved",
       description: "Your security settings have been saved successfully.",
@@ -108,6 +94,13 @@ export default function AdminSettings() {
   };
   
   const handleIntegrationsSave = () => {
+    // Update the settings in our data management  
+    const updatedSettings = updateAdminSettings({
+      integrations: settings.integrations
+    });
+    
+    setSettings(updatedSettings);
+    
     toast({
       title: "Settings saved",
       description: "Your integration settings have been saved successfully.",

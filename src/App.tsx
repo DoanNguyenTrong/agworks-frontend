@@ -62,51 +62,51 @@ function App() {
           <Route path="/register" element={<Register />} />
 
           {/* Admin routes */}
-          <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]} />}>
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="customers" element={<AdminCustomers />} />
-            <Route path="customers/:id" element={<AdminCustomerView />} />
-            <Route path="customers/edit/:id" element={<AdminCustomerEdit />} />
-            <Route path="workers" element={<AdminWorkers />} />
-            <Route path="workers/:id" element={<AdminWorkerView />} />
-            <Route path="workers/edit/:id" element={<AdminWorkerEdit />} />
-            <Route path="settings" element={<AdminSettings />} />
+          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/customers" element={<AdminCustomers />} />
+            <Route path="/admin/customers/:id" element={<AdminCustomerView />} />
+            <Route path="/admin/customers/edit/:id" element={<AdminCustomerEdit />} />
+            <Route path="/admin/workers" element={<AdminWorkers />} />
+            <Route path="/admin/workers/:id" element={<AdminWorkerView />} />
+            <Route path="/admin/workers/edit/:id" element={<AdminWorkerEdit />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
           </Route>
 
           {/* Customer routes */}
-          <Route path="/customer" element={<ProtectedRoute allowedRoles={["customer"]} />}>
-            <Route path="dashboard" element={<CustomerDashboard />} />
-            <Route path="accounts" element={<CustomerAccounts />} />
-            <Route path="managers/edit/:id" element={<CustomerManagerEdit />} />
-            <Route path="settings" element={<CustomerSettings />} />
-            <Route path="sites" element={<SiteManagement />} />
-            <Route path="sites/manage" element={<SiteManagementPage />} />
-            <Route path="sites/:id" element={<SiteDetails />} />
-            <Route path="sites/new" element={<SiteForm />} />
-            <Route path="sites/edit/:id" element={<SiteForm />} />
-            <Route path="blocks" element={<BlockManagement />} />
-            <Route path="blocks/manage" element={<BlockManagementPage />} />
-            <Route path="blocks/:id" element={<BlockDetails />} />
-            <Route path="blocks/new" element={<BlockForm />} />
-            <Route path="blocks/edit/:id" element={<BlockForm />} />
+          <Route element={<ProtectedRoute allowedRoles={["customer"]} />}>
+            <Route path="/customer/dashboard" element={<CustomerDashboard />} />
+            <Route path="/customer/accounts" element={<CustomerAccounts />} />
+            <Route path="/customer/managers/edit/:id" element={<CustomerManagerEdit />} />
+            <Route path="/customer/settings" element={<CustomerSettings />} />
+            <Route path="/customer/sites" element={<SiteManagement />} />
+            <Route path="/customer/sites/manage" element={<SiteManagementPage />} />
+            <Route path="/customer/sites/:id" element={<SiteDetails />} />
+            <Route path="/customer/sites/new" element={<SiteForm />} />
+            <Route path="/customer/sites/edit/:id" element={<SiteForm />} />
+            <Route path="/customer/blocks" element={<BlockManagement />} />
+            <Route path="/customer/blocks/manage" element={<BlockManagementPage />} />
+            <Route path="/customer/blocks/:id" element={<BlockDetails />} />
+            <Route path="/customer/blocks/new" element={<BlockForm />} />
+            <Route path="/customer/blocks/edit/:id" element={<BlockForm />} />
           </Route>
 
           {/* Site Manager routes */}
-          <Route path="/manager" element={<ProtectedRoute allowedRoles={["siteManager"]} />}>
-            <Route path="dashboard" element={<SiteManagerDashboard />} />
-            <Route path="settings" element={<ManagerSettings />} />
-            <Route path="orders/new" element={<CreateWorkOrder />} />
-            <Route path="orders" element={<WorkOrderManagement />} />
-            <Route path="orders/:id" element={<WorkOrderDetails />} />
+          <Route element={<ProtectedRoute allowedRoles={["siteManager"]} />}>
+            <Route path="/manager/dashboard" element={<SiteManagerDashboard />} />
+            <Route path="/manager/settings" element={<ManagerSettings />} />
+            <Route path="/manager/orders/new" element={<CreateWorkOrder />} />
+            <Route path="/manager/orders" element={<WorkOrderManagement />} />
+            <Route path="/manager/orders/:id" element={<WorkOrderDetails />} />
           </Route>
 
           {/* Worker routes */}
-          <Route path="/worker" element={<ProtectedRoute allowedRoles={["worker"]} />}>
-            <Route path="dashboard" element={<WorkerDashboard />} />
-            <Route path="tasks" element={<WorkerTasks />} />
-            <Route path="tasks/:taskId" element={<WorkerTaskDetails />} />
-            <Route path="settings" element={<WorkerSettings />} />
-            <Route path="help" element={<WorkerHelp />} />
+          <Route element={<ProtectedRoute allowedRoles={["worker"]} />}>
+            <Route path="/worker/dashboard" element={<WorkerDashboard />} />
+            <Route path="/worker/tasks" element={<WorkerTasks />} />
+            <Route path="/worker/tasks/:taskId" element={<WorkerTaskDetails />} />
+            <Route path="/worker/settings" element={<WorkerSettings />} />
+            <Route path="/worker/help" element={<WorkerHelp />} />
           </Route>
 
           {/* Shared routes */}

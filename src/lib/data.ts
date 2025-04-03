@@ -9,6 +9,7 @@ import { workerTasks } from './data/workerTasks';
 import { siteManagers } from './data/siteManagers';
 import { getPaymentCalculations } from './data/paymentCalculations';
 import { userSettings } from './data/userSettings';
+import { adminSettings } from './data/adminSettings';
 
 export {
   users,
@@ -19,5 +20,6 @@ export {
   workerTasks,
   siteManagers,
   getPaymentCalculations,
-  userSettings
+  userSettings,
+  adminSettings
 };

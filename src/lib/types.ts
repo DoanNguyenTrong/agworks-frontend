@@ -1,4 +1,3 @@
-
 // Site Manager type
 export interface SiteManager {
   id: string;
@@ -99,4 +98,29 @@ export interface UserSettings {
   language: string;
   createdAt: string;
   updatedAt: string;
+}
+
+// Admin Settings type
+export interface AdminSettings {
+  general: {
+    systemName: string;
+    supportEmail: string;
+    logoUrl: string;
+    enablePublicRegistration: boolean;
+    enableWorkerSelfRegistration: boolean;
+  };
+  email: {
+    smtpServer: string;
+    smtpPort: string;
+    smtpUsername: string;
+    smtpPassword: string;
+    senderEmail: string;
+    senderName: string;
+  };
+  security: {
+    twoFactorAuth: boolean;
+    passwordExpiration: boolean;
+    accountLockout: boolean;
+  };
+  integrations: Record<string, any>;
 }

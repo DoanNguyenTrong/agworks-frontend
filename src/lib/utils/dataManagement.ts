@@ -1,6 +1,5 @@
-
-import { User, WorkOrder, Site, Block, WorkerApplication, WorkerTask, UserSettings } from "@/lib/types";
-import { users, sites, blocks, workOrders, workerApplications, workerTasks, userSettings } from "@/lib/data";
+import { User, WorkOrder, Site, Block, WorkerApplication, WorkerTask, UserSettings, AdminSettings } from "@/lib/types";
+import { users, sites, blocks, workOrders, workerApplications, workerTasks, userSettings, adminSettings } from "@/lib/data";
 
 // Function to add a new user
 export function addUser(userData: Omit<User, 'id' | 'createdAt'>): User {
@@ -106,4 +105,42 @@ export function updateUserSettings(userId: string, settingsData: Partial<Omit<Us
     console.log("Added new user settings:", newSettings);
     return newSettings;
   }
+}
+
+// Function to update admin settings
+export function updateAdminSettings(settingsData: Partial<AdminSettings>): AdminSettings {
+  const updatedSettings = {
+    ...adminSettings
+  };
+  
+  if (settingsData.general) {
+    updatedSettings.general = {
+      ...updatedSettings.general,
+      ...settingsData.general
+    };
+  }
+  
+  if (settingsData.email) {
+    updatedSettings.email = {
+      ...updatedSettings.email,
+      ...settingsData.email
+    };
+  }
+  
+  if (settingsData.security) {
+    updatedSettings.security = {
+      ...updatedSettings.security,
+      ...settingsData.security
+    };
+  }
+  
+  if (settingsData.integrations) {
+    updatedSettings.integrations = {
+      ...updatedSettings.integrations,
+      ...settingsData.integrations
+    };
+  }
+  
+  console.log("Updated admin settings:", updatedSettings);
+  return updatedSettings;
 }
