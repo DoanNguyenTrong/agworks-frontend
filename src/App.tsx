@@ -62,7 +62,7 @@ function App() {
           <Route path="/register" element={<Register />} />
 
           {/* Admin routes */}
-          <Route path="/admin/*" element={<ProtectedRoute allowedRoles={["admin"]} />}>
+          <Route path="/admin" element={<ProtectedRoute allowedRoles={["admin"]} />}>
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="customers" element={<AdminCustomers />} />
             <Route path="customers/:id" element={<AdminCustomerView />} />
@@ -74,7 +74,7 @@ function App() {
           </Route>
 
           {/* Customer routes */}
-          <Route path="/customer/*" element={<ProtectedRoute allowedRoles={["customer"]} />}>
+          <Route path="/customer" element={<ProtectedRoute allowedRoles={["customer"]} />}>
             <Route path="dashboard" element={<CustomerDashboard />} />
             <Route path="accounts" element={<CustomerAccounts />} />
             <Route path="managers/edit/:id" element={<CustomerManagerEdit />} />
@@ -92,7 +92,7 @@ function App() {
           </Route>
 
           {/* Site Manager routes */}
-          <Route path="/manager/*" element={<ProtectedRoute allowedRoles={["siteManager"]} />}>
+          <Route path="/manager" element={<ProtectedRoute allowedRoles={["siteManager"]} />}>
             <Route path="dashboard" element={<SiteManagerDashboard />} />
             <Route path="settings" element={<ManagerSettings />} />
             <Route path="orders/new" element={<CreateWorkOrder />} />
@@ -101,7 +101,7 @@ function App() {
           </Route>
 
           {/* Worker routes */}
-          <Route path="/worker/*" element={<ProtectedRoute allowedRoles={["worker"]} />}>
+          <Route path="/worker" element={<ProtectedRoute allowedRoles={["worker"]} />}>
             <Route path="dashboard" element={<WorkerDashboard />} />
             <Route path="tasks" element={<WorkerTasks />} />
             <Route path="tasks/:taskId" element={<WorkerTaskDetails />} />

@@ -1,13 +1,12 @@
 
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface ProtectedRouteProps { 
-  children: React.ReactNode;
   allowedRoles?: string[];
 }
 
-export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
+export const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
   const { currentUser, isLoading } = useAuth();
   
   if (isLoading) {
@@ -21,15 +20,15 @@ export const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) 
   if (allowedRoles && !allowedRoles.includes(currentUser.role)) {
     // Redirect based on role
     if (currentUser.role === "admin") {
-      return <Navigate to="/admin" />;
+      return <Navigate to="/admin/dashboard" />;
     } else if (currentUser.role === "customer") {
-      return <Navigate to="/customer" />;
+      return <Navigate to="/customer/dashboard" />;
     } else if (currentUser.role === "siteManager") {
-      return <Navigate to="/manager" />;
+      return <Navigate to="/manager/dashboard" />;
     } else {
-      return <Navigate to="/worker" />;
+      return <Navigate to="/worker/dashboard" />;
     }
   }
   
-  return <>{children}</>;
+  return <Outlet />;
 };
