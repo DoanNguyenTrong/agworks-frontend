@@ -8,11 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import WorkerForm from "@/components/WorkerForm";
 import { users } from "@/lib/data";
+import { User } from "@/lib/types";
 
 export default function AdminWorkerEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [worker, setWorker] = useState<any | null>(null);
+  const [worker, setWorker] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
@@ -22,7 +23,7 @@ export default function AdminWorkerEdit() {
         setIsLoading(true);
         try {
           // Simulate network delay
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise(resolve => setTimeout(resolve, 300));
           
           // Find worker with matching id and role
           const foundWorker = users.find(u => u.id === id && u.role === "worker");
@@ -120,6 +121,7 @@ export default function AdminWorkerEdit() {
               name: worker?.name || "",
               email: worker?.email || "",
               phone: worker?.phone || "",
+              sendInvite: false,
             }}
             isEditMode={true}
             workerId={id}

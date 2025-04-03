@@ -22,7 +22,7 @@ export default function AdminWorkerView() {
   const [completedTasks, setCompletedTasks] = useState<any[]>([]);
   
   useEffect(() => {
-    const loadWorker = () => {
+    const loadWorker = async () => {
       try {
         setIsLoading(true);
         
@@ -43,11 +43,11 @@ export default function AdminWorkerView() {
         const tasks = workerTasks.filter(task => task.workerId === id);
         setCompletedTasks(tasks);
         
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error loading worker:", error);
         toast({
           title: "Error",
-          description: "Failed to load worker details",
+          description: error.message || "Failed to load worker details",
           variant: "destructive",
         });
       } finally {

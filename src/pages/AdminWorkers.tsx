@@ -42,10 +42,11 @@ import { Search, PlusCircle, Trash, Edit, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import WorkerForm from "@/components/WorkerForm";
+import WorkerForm, { WorkerFormData } from "@/components/WorkerForm";
 import { users, workerTasks } from "@/lib/data";
 import { addUser } from "@/lib/utils/dataManagement";
 import { toast } from "@/hooks/use-toast";
+import { User } from "@/lib/types";
 
 export default function AdminWorkers() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -54,12 +55,10 @@ export default function AdminWorkers() {
   const [isLoading, setIsLoading] = useState(false);
   const [workerToDelete, setWorkerToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  
-  // Filter only worker users
-  const workers = users.filter(user => user.role === 'worker');
+  const [workersList, setWorkersList] = useState<User[]>(users.filter(user => user.role === 'worker'));
   
   // Filter workers based on search term and status
-  const filteredWorkers = workers.filter(worker => {
+  const filteredWorkers = workersList.filter(worker => {
     // Search filter
     const searchString = `${worker.name} ${worker.email} ${worker.phone || ""}`.toLowerCase();
     if (!searchString.includes(searchTerm.toLowerCase())) return false;
@@ -78,7 +77,7 @@ export default function AdminWorkers() {
   };
   
   // Handle adding a new worker
-  const handleAddWorker = (workerData: any) => {
+  const handleAddWorker = (workerData: WorkerFormData) => {
     try {
       // Add new worker using the data management utility
       const newWorker = addUser({
@@ -86,8 +85,11 @@ export default function AdminWorkers() {
         name: workerData.name,
         role: 'worker',
         phone: workerData.phone,
-        profileImage: workerData.profileImage || '/placeholder.svg'
+        profileImage: '/placeholder.svg'
       });
+      
+      // Add the new worker to the local state
+      setWorkersList([...workersList, newWorker]);
       
       toast({
         title: "Worker added",
@@ -113,7 +115,8 @@ export default function AdminWorkers() {
       setIsDeleting(true);
       
       // In a real implementation, we would remove from the data array
-      // Here we'll just simulate success
+      // For now, we'll just remove from our local state
+      setWorkersList(workersList.filter(worker => worker.id !== workerToDelete));
       
       toast({
         title: "Worker deleted",
@@ -172,7 +175,10 @@ export default function AdminWorkers() {
                 Fill out the form below to create a new worker account.
               </DialogDescription>
             </DialogHeader>
-            <WorkerForm onComplete={handleAddWorker} />
+            <WorkerForm 
+              onComplete={() => setShowAddDialog(false)}
+              onSubmit={handleAddWorker}
+            />
           </DialogContent>
         </Dialog>
       </div>

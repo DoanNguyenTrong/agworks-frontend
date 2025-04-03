@@ -7,12 +7,14 @@ import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import CustomerForm from "@/components/CustomerForm";
-import { supabase } from "@/integrations/supabase/client";
+import { User } from "@/lib/types";
+import { users } from "@/lib/data";
+import { findUserById } from "@/lib/utils/dataManagement";
 
 export default function AdminCustomerEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [customer, setCustomer] = useState<any | null>(null);
+  const [customer, setCustomer] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
@@ -22,16 +24,14 @@ export default function AdminCustomerEdit() {
       try {
         setIsLoading(true);
         
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', id)
-          .eq('role', 'customer')
-          .single();
-          
-        if (error) throw error;
+        // Find customer by ID from the local data
+        const customerData = findUserById(id);
         
-        setCustomer(data);
+        if (!customerData || customerData.role !== 'customer') {
+          throw new Error("Customer not found");
+        }
+        
+        setCustomer(customerData);
       } catch (error: any) {
         console.error('Error fetching customer:', error);
         toast({
@@ -53,19 +53,8 @@ export default function AdminCustomerEdit() {
 
   const handleSave = async (data: any) => {
     try {
-      // Update customer in Supabase
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          name: data.name,
-          email: data.email,
-          company_name: data.companyName,
-          phone: data.phone,
-          address: data.address,
-        })
-        .eq('id', id);
-        
-      if (error) throw error;
+      // In a real implementation, we would update the customer data
+      // For now, just simulate success
       
       toast({
         title: "Customer updated",
@@ -126,7 +115,7 @@ export default function AdminCustomerEdit() {
             defaultValues={{
               name: customer?.name || "",
               email: customer?.email || "",
-              companyName: customer?.company_name || "",
+              companyName: customer?.companyName || "",
               phone: customer?.phone || "",
               address: customer?.address || "",
             }}

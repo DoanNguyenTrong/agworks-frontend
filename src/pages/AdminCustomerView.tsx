@@ -17,7 +17,6 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -30,11 +29,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { users, sites } from "@/lib/data";
+import { findUserById } from "@/lib/utils/dataManagement";
 
 export default function AdminCustomerView() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [customer, setCustomer] = useState<any | null>(null);
+  const [customer, setCustomer] = useState<User | null>(null);
   const [customerSites, setCustomerSites] = useState<Site[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -46,39 +47,19 @@ export default function AdminCustomerView() {
       try {
         setIsLoading(true);
         
-        // Fetch customer data
-        const { data: customerData, error: customerError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', id)
-          .eq('role', 'customer')
-          .single();
-          
-        if (customerError) throw customerError;
+        // Fetch customer from local data
+        const customerData = findUserById(id);
         
-        if (customerData) {
-          setCustomer(customerData);
-          
-          // Fetch customer sites
-          const { data: sitesData, error: sitesError } = await supabase
-            .from('sites')
-            .select('*')
-            .eq('customer_id', id);
-            
-          if (sitesError) throw sitesError;
-          
-          // Map the data from Supabase to match our Site type
-          const mappedSites: Site[] = (sitesData || []).map(site => ({
-            id: site.id,
-            name: site.name,
-            address: site.address,
-            customerId: site.customer_id,
-            managerId: site.manager_id || undefined,
-            createdAt: site.created_at
-          }));
-          
-          setCustomerSites(mappedSites);
+        if (!customerData || customerData.role !== 'customer') {
+          throw new Error("Customer not found");
         }
+        
+        setCustomer(customerData);
+        
+        // Fetch customer sites from local data
+        const customerSites = sites.filter(site => site.customerId === id);
+        setCustomerSites(customerSites);
+        
       } catch (error: any) {
         console.error('Error fetching customer data:', error);
         toast({
@@ -100,13 +81,8 @@ export default function AdminCustomerView() {
     try {
       setIsDeleting(true);
       
-      // Delete customer from Supabase
-      const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', customer.id);
-        
-      if (error) throw error;
+      // In a real implementation, we would remove the customer from the array
+      // For now, just simulate a successful deletion
       
       toast({
         title: "Customer deleted",
@@ -177,7 +153,7 @@ export default function AdminCustomerView() {
             <div className="space-y-4">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Company Name</p>
-                <p>{customer.company_name || "—"}</p>
+                <p>{customer.companyName || "—"}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Phone</p>
@@ -189,7 +165,7 @@ export default function AdminCustomerView() {
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Created</p>
-                <p>{new Date(customer.created_at).toLocaleDateString()}</p>
+                <p>{new Date(customer.createdAt).toLocaleDateString()}</p>
               </div>
             </div>
 
@@ -211,7 +187,7 @@ export default function AdminCustomerView() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to delete {customer.company_name || customer.name}? 
+                      Are you sure you want to delete {customer.companyName || customer.name}? 
                       This action cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
