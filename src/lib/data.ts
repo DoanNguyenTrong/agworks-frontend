@@ -6,6 +6,8 @@ import { blocks } from './data/blocks';
 import { workOrders } from './data/workOrders';
 import { workerApplications } from './data/workerApplications';
 import { workerTasks } from './data/workerTasks';
+import { siteManagers } from './data/siteManagers';
+import { getPaymentCalculations } from './data/paymentCalculations';
 
 export {
   users,
@@ -13,5 +15,7 @@ export {
   blocks,
   workOrders,
   workerApplications,
-  workerTasks
+  workerTasks,
+  siteManagers,
+  getPaymentCalculations
 };

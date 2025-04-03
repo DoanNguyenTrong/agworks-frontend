@@ -8,6 +8,7 @@ export const workerTasks: WorkerTask[] = [
     workerName: "John Worker",
     orderId: "order-1",
     photoUrls: ["/placeholder.svg", "/placeholder.svg"],
+    imageUrl: "/placeholder.svg",
     completedAt: "2023-06-17T15:00:00Z",
     status: "approved"
   },
@@ -17,6 +18,7 @@ export const workerTasks: WorkerTask[] = [
     workerName: "Jane Worker",
     orderId: "order-1",
     photoUrls: ["/placeholder.svg"],
+    imageUrl: "/placeholder.svg",
     completedAt: "2023-06-18T14:00:00Z",
     status: "approved"
   },
@@ -26,6 +28,7 @@ export const workerTasks: WorkerTask[] = [
     workerName: "John Worker",
     orderId: "order-2",
     photoUrls: ["/placeholder.svg"],
+    imageUrl: "/placeholder.svg",
     completedAt: "2023-07-02T16:00:00Z",
     status: "pending"
   },
@@ -34,6 +37,8 @@ export const workerTasks: WorkerTask[] = [
     workerId: "user-5",
     workerName: "Jane Worker",
     orderId: "order-2",
+    photoUrls: [],
+    imageUrl: "/placeholder.svg",
     completedAt: "2023-07-03T15:00:00Z",
     status: "rejected"
   }

@@ -1,80 +1,11 @@
 
-export interface User {
+// Add the SiteManager type if it doesn't exist
+export interface SiteManager {
   id: string;
+  name: string;
   email: string;
-  name: string;
-  role: "admin" | "customer" | "siteManager" | "worker";
-  createdAt: string;
-  companyName?: string;
-  logo?: string;
-  phone?: string;
-  address?: string;
-  profileImage?: string;
-}
-
-export interface Site {
-  id: string;
-  name: string;
-  address: string;
+  phone?: string | null;
   customerId: string;
-  managerId?: string;
+  profileImage: string | null;
   createdAt: string;
-}
-
-export interface Block {
-  id: string;
-  name: string;
-  siteId: string;
-  acres?: number;
-  rows?: number;
-  vines?: number;
-  createdAt: string;
-}
-
-export interface WorkOrder {
-  id: string;
-  siteId: string;
-  blockId: string;
-  address: string;
-  startDate: string;
-  endDate: string;
-  workType: "pruning" | "shootThinning" | "other";
-  neededWorkers: number;
-  expectedHours: number;
-  payRate: number;
-  acres?: number;
-  rows?: number;
-  vines?: number;
-  vinesPerRow?: number;
-  notes?: string;
-  status: "draft" | "published" | "inProgress" | "completed" | "cancelled";
-  createdAt: string;
-  createdBy: string;
-}
-
-export interface WorkerApplication {
-  id: string;
-  workerId: string;
-  workerName: string;
-  orderrId: string;
-  status: "pending" | "approved" | "rejected";
-  createdAt: string;
-}
-
-export interface WorkerTask {
-  id: string;
-  workerId: string;
-  workerName: string;
-  orderId: string;
-  imageUrl?: string;
-  photoUrls?: string[];
-  completedAt: string;
-  status: "pending" | "approved" | "rejected";
-}
-
-export interface PaymentCalculation {
-  workerId: string;
-  workerName: string;
-  taskCount: number;
-  totalAmount: number;
 }
