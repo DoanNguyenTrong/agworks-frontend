@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, PlusCircle, Trash, Edit, Eye } from "lucide-react";
+import { Search, PlusCircle, Trash, Edit, Eye, KeyRound } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +42,7 @@ import { toast } from "@/hooks/use-toast";
 import { users, sites } from "@/lib/data";
 import { addUser } from "@/lib/utils/dataManagement";
 import { User } from "@/lib/types";
+import AccountResetDialog from "@/components/AccountResetDialog";
 
 export default function AdminCustomers() {
   const { currentUser } = useAuth();
@@ -49,6 +51,8 @@ export default function AdminCustomers() {
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [customersList, setCustomersList] = useState<User[]>(users.filter(user => user.role === 'customer'));
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
   // Filter customers based on search term
   const filteredCustomers = customersList.filter(customer => 
@@ -129,6 +133,12 @@ export default function AdminCustomers() {
       setIsDeleting(false);
       setCustomerToDelete(null);
     }
+  };
+  
+  // Handle account reset
+  const handleOpenResetDialog = (customer: User) => {
+    setSelectedUser(customer);
+    setShowResetDialog(true);
   };
 
   return (
@@ -217,6 +227,13 @@ export default function AdminCustomers() {
                             <Edit className="h-4 w-4" />
                           </Link>
                         </Button>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          onClick={() => handleOpenResetDialog(customer)}
+                        >
+                          <KeyRound className="h-4 w-4" />
+                        </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button 
@@ -263,6 +280,16 @@ export default function AdminCustomers() {
           </Table>
         </CardContent>
       </Card>
+      
+      {selectedUser && (
+        <AccountResetDialog
+          open={showResetDialog}
+          onOpenChange={setShowResetDialog}
+          userName={selectedUser.name}
+          userEmail={selectedUser.email}
+          userId={selectedUser.id}
+        />
+      )}
     </MainLayout>
   );
 }

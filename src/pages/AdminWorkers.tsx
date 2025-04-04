@@ -38,7 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, PlusCircle, Trash, Edit, Eye } from "lucide-react";
+import { Search, PlusCircle, Trash, Edit, Eye, KeyRound } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +47,7 @@ import { users, workerTasks } from "@/lib/data";
 import { addUser } from "@/lib/utils/dataManagement";
 import { toast } from "@/hooks/use-toast";
 import { User } from "@/lib/types";
+import AccountResetDialog from "@/components/AccountResetDialog";
 
 export default function AdminWorkers() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -56,6 +57,8 @@ export default function AdminWorkers() {
   const [workerToDelete, setWorkerToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [workersList, setWorkersList] = useState<User[]>(users.filter(user => user.role === 'worker'));
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   
   // Filter workers based on search term and status
   const filteredWorkers = workersList.filter(worker => {
@@ -133,6 +136,12 @@ export default function AdminWorkers() {
       setIsDeleting(false);
       setWorkerToDelete(null);
     }
+  };
+  
+  // Handle account reset
+  const handleOpenResetDialog = (worker: User) => {
+    setSelectedUser(worker);
+    setShowResetDialog(true);
   };
 
   return (
@@ -236,6 +245,13 @@ export default function AdminWorkers() {
                             <Edit className="h-4 w-4" />
                           </Link>
                         </Button>
+                        <Button 
+                          variant="outline" 
+                          size="icon" 
+                          onClick={() => handleOpenResetDialog(worker)}
+                        >
+                          <KeyRound className="h-4 w-4" />
+                        </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button 
@@ -282,6 +298,16 @@ export default function AdminWorkers() {
           </Table>
         </CardContent>
       </Card>
+      
+      {selectedUser && (
+        <AccountResetDialog
+          open={showResetDialog}
+          onOpenChange={setShowResetDialog}
+          userName={selectedUser.name}
+          userEmail={selectedUser.email}
+          userId={selectedUser.id}
+        />
+      )}
     </MainLayout>
   );
 }

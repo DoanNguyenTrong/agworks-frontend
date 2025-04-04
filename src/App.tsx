@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -53,6 +52,7 @@ import WorkerHelp from "./pages/WorkerHelp";
 
 // Shared pages
 import HelpPage from "./pages/HelpPage";
+import SiteManagerHelp from "@/pages/SiteManagerHelp";
 
 function App() {
   return (
@@ -121,6 +121,16 @@ function App() {
 
           {/* Shared routes */}
           <Route path="/help" element={<HelpPage />} />
+
+          {/* Site Manager Help route */}
+          <Route
+            path="/manager/help"
+            element={
+              <ProtectedRoute allowedRoles={["siteManager"]}>
+                <SiteManagerHelp />
+              </ProtectedRoute>
+            }
+          />
 
           {/* 404 route */}
           <Route path="*" element={<NotFound />} />
