@@ -10,8 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChevronLeft, Mail, Phone, Calendar, Edit } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import WorkerPerformance from "@/components/WorkerPerformance";
-import { toast } from "@/hooks/use-toast";
-import { users, workerTasks } from "@/lib/data";
+import { useToast } from "@/hooks/use-toast";
+import { workerTasks } from "@/lib/data";
 import { User } from "@/lib/types";
 import { findUserById } from "@/lib/utils/dataManagement";
 
@@ -20,6 +20,7 @@ export default function AdminWorkerView() {
   const [worker, setWorker] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [completedTasks, setCompletedTasks] = useState<any[]>([]);
+  const { toast } = useToast();
   
   useEffect(() => {
     const loadWorker = async () => {
@@ -40,7 +41,7 @@ export default function AdminWorkerView() {
         setWorker(workerData);
         
         // Get completed tasks for this worker
-        const tasks = workerTasks.filter(task => task.workerId === id);
+        const tasks = workerTasks.filter(task => task.workerId === id) || [];
         setCompletedTasks(tasks);
         
       } catch (error: any) {
@@ -56,7 +57,7 @@ export default function AdminWorkerView() {
     };
     
     loadWorker();
-  }, [id]);
+  }, [id, toast]);
 
   if (isLoading) {
     return (
@@ -170,7 +171,7 @@ export default function AdminWorkerView() {
             <CardDescription>Latest tasks completed by this worker</CardDescription>
           </CardHeader>
           <CardContent>
-            {completedTasks.length > 0 ? (
+            {Array.isArray(completedTasks) && completedTasks.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow>

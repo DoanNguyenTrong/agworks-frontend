@@ -5,10 +5,9 @@ import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import CustomerForm from "@/components/CustomerForm";
 import { User } from "@/lib/types";
-import { users } from "@/lib/data";
 import { findUserById } from "@/lib/utils/dataManagement";
 
 export default function AdminCustomerEdit() {
@@ -16,6 +15,7 @@ export default function AdminCustomerEdit() {
   const navigate = useNavigate();
   const [customer, setCustomer] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
   
   useEffect(() => {
     const fetchCustomer = async () => {
@@ -45,7 +45,7 @@ export default function AdminCustomerEdit() {
     };
     
     fetchCustomer();
-  }, [id]);
+  }, [id, toast]);
 
   const handleComplete = () => {
     navigate(`/admin/customers/${id}`);

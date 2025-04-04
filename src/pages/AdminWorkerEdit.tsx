@@ -7,8 +7,8 @@ import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import WorkerForm from "@/components/WorkerForm";
-import { users } from "@/lib/data";
 import { User } from "@/lib/types";
+import { findUserById } from "@/lib/utils/dataManagement";
 
 export default function AdminWorkerEdit() {
   const { id } = useParams<{ id: string }>();
@@ -19,30 +19,28 @@ export default function AdminWorkerEdit() {
   
   useEffect(() => {
     const fetchWorker = async () => {
-      if (id) {
+      if (!id) return;
+      
+      try {
         setIsLoading(true);
-        try {
-          // Simulate network delay
-          await new Promise(resolve => setTimeout(resolve, 300));
-          
-          // Find worker with matching id and role
-          const foundWorker = users.find(u => u.id === id && u.role === "worker");
-          
-          if (!foundWorker) {
-            throw new Error("Worker not found");
-          }
-          
-          setWorker(foundWorker);
-        } catch (error: any) {
-          console.error('Error fetching worker:', error);
-          toast({
-            title: "Error",
-            description: "Failed to load worker details",
-            variant: "destructive",
-          });
-        } finally {
-          setIsLoading(false);
+        
+        // Find worker by ID using the utility function
+        const foundWorker = findUserById(id);
+        
+        if (!foundWorker || foundWorker.role !== "worker") {
+          throw new Error("Worker not found");
         }
+        
+        setWorker(foundWorker);
+      } catch (error: any) {
+        console.error('Error fetching worker:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load worker details",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
     };
     
