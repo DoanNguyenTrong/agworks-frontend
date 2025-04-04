@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import MainLayout from "@/components/MainLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -171,7 +172,7 @@ export default function SiteManagement() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="none">No manager assigned</SelectItem>
+                          <SelectItem value="no-manager">No manager assigned</SelectItem>
                           {siteManagers.map((manager) => (
                             <SelectItem key={manager.id} value={manager.id}>
                               {manager.name}

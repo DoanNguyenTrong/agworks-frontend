@@ -126,7 +126,7 @@ export default function SiteEditPage() {
                     <SelectValue placeholder="Select a manager" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">No manager assigned</SelectItem>
+                    <SelectItem value="none">No manager assigned</SelectItem>
                     {siteManagers.map((manager) => (
                       <SelectItem key={manager.id} value={manager.id}>
                         {manager.name}
