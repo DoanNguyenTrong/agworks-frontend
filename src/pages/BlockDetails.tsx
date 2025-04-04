@@ -6,9 +6,21 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Edit, Trash } from "lucide-react";
-import { blocks, sites, workOrders } from "@/lib/data";
+import { blocks as allBlocks, sites, workOrders } from "@/lib/data";
 import { Block } from "@/lib/types";
 import { format } from "date-fns";
+import { toast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function BlockDetails() {
   const { id } = useParams<{ id: string }>();
@@ -16,10 +28,11 @@ export default function BlockDetails() {
   const [block, setBlock] = useState<Block | null>(null);
   const [site, setSite] = useState<any>(null);
   const [activeOrders, setActiveOrders] = useState<any[]>([]);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   useEffect(() => {
     if (id) {
-      const foundBlock = blocks.find(b => b.id === id);
+      const foundBlock = allBlocks.find(b => b.id === id);
       if (foundBlock) {
         setBlock(foundBlock);
         
@@ -38,6 +51,18 @@ export default function BlockDetails() {
       }
     }
   }, [id]);
+  
+  const handleDeleteBlock = () => {
+    if (!block) return;
+    
+    // In a real app, this would call an API
+    toast({
+      title: "Block deleted",
+      description: `${block.name} has been deleted.`,
+    });
+    
+    navigate('/customer/blocks');
+  };
   
   if (!block || !site) {
     return (
@@ -66,10 +91,33 @@ export default function BlockDetails() {
               <Edit className="h-4 w-4 mr-2" />
               Edit Block
             </Button>
-            <Button variant="destructive">
-              <Trash className="h-4 w-4 mr-2" />
-              Delete
-            </Button>
+            
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">
+                  <Trash className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will permanently delete {block.name}.
+                    This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={handleDeleteBlock} 
+                    className="bg-red-500 hover:bg-red-600"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </div>

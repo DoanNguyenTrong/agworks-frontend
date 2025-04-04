@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,7 @@ import {
 import { PlusCircle, Search, Grape, Edit, Eye, Trash } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { sites, blocks } from "@/lib/data";
+import { sites, blocks as allBlocks } from "@/lib/data";
 import { Block } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
 import { addBlock } from "@/lib/utils/dataManagement";
@@ -74,22 +73,15 @@ export default function BlockManagementPage() {
   const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [siteFilter, setSiteFilter] = useState<string>("all");
-  const [blockToDelete, setBlockToDelete] = useState<Block | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [customerBlocks, setCustomerBlocks] = useState<Block[]>([]);
+  const [blocks, setBlocks] = useState(allBlocks);
   
   // Get customer sites and blocks
   const customerSites = sites.filter(site => site.customerId === currentUser?.id);
   const siteIds = customerSites.map(site => site.id);
   
-  // Initialize blocks
-  useState(() => {
-    const initialBlocks = blocks.filter(block => siteIds.includes(block.siteId));
-    setCustomerBlocks(initialBlocks);
-  });
-  
   // Filter blocks
-  let filteredBlocks = customerBlocks.filter(block => siteIds.includes(block.siteId));
+  let filteredBlocks = blocks.filter(block => siteIds.includes(block.siteId));
   
   // Apply site filter
   if (siteFilter !== "all") {
@@ -125,7 +117,7 @@ export default function BlockManagementPage() {
     });
     
     // Update local state
-    setCustomerBlocks(prev => [...prev, newBlock]);
+    setBlocks(prev => [...prev, newBlock]);
     
     toast({
       title: "Block created",
@@ -136,19 +128,14 @@ export default function BlockManagementPage() {
     form.reset();
   }
 
-  const handleDeleteBlock = () => {
-    if (!blockToDelete) return;
-    
-    // In a real app, this would delete via API
-    // For now, we'll just update local state
-    setCustomerBlocks(prev => prev.filter(block => block.id !== blockToDelete.id));
+  const handleDeleteBlock = (blockToDelete: Block) => {
+    // Update local state by removing the block
+    setBlocks(prev => prev.filter(block => block.id !== blockToDelete.id));
     
     toast({
       title: "Block deleted",
       description: `${blockToDelete.name} has been deleted.`,
     });
-    
-    setBlockToDelete(null);
   };
 
   return (
@@ -366,12 +353,9 @@ export default function BlockManagementPage() {
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel onClick={() => setBlockToDelete(null)}>Cancel</AlertDialogCancel>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction 
-                                onClick={() => {
-                                  setBlockToDelete(block);
-                                  handleDeleteBlock();
-                                }} 
+                                onClick={() => handleDeleteBlock(block)} 
                                 className="bg-red-500 hover:bg-red-600"
                               >
                                 Delete

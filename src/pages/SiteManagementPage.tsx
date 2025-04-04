@@ -15,7 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PlusCircle, Search, Map, Edit, Eye, Trash } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { sites, blocks, users } from "@/lib/data";
+import { sites as allSites, blocks, users } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -34,6 +34,7 @@ export default function SiteManagementPage() {
   const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [siteToDelete, setSiteToDelete] = useState<any>(null);
+  const [sites, setSites] = useState(allSites);
   const navigate = useNavigate();
   
   // Filter sites by current customer
@@ -44,16 +45,14 @@ export default function SiteManagementPage() {
       site.address.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
-  const handleDeleteSite = () => {
-    if (!siteToDelete) return;
-    
+  const handleDeleteSite = (siteToDelete: any) => {
     // In a real app, this would be an API call
+    setSites(prevSites => prevSites.filter(site => site.id !== siteToDelete.id));
+    
     toast({
       title: "Site deleted",
       description: `${siteToDelete.name} has been deleted.`,
     });
-    
-    setSiteToDelete(null);
   };
 
   return (
@@ -151,7 +150,6 @@ export default function SiteManagementPage() {
                                 variant="ghost" 
                                 size="icon" 
                                 className="text-red-500"
-                                onClick={() => setSiteToDelete(site)}
                               >
                                 <Trash className="h-4 w-4" />
                               </Button>
@@ -165,8 +163,11 @@ export default function SiteManagementPage() {
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel onClick={() => setSiteToDelete(null)}>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleDeleteSite} className="bg-red-500 hover:bg-red-600">
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction 
+                                  onClick={() => handleDeleteSite(site)} 
+                                  className="bg-red-500 hover:bg-red-600"
+                                >
                                   Delete
                                 </AlertDialogAction>
                               </AlertDialogFooter>

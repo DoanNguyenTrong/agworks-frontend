@@ -20,7 +20,6 @@ export default function CustomerAccounts() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [managerToDelete, setManagerToDelete] = useState<User | null>(null);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [selectedManager, setSelectedManager] = useState<User | null>(null);
   const [siteManagers, setSiteManagers] = useState<User[]>(
@@ -54,9 +53,7 @@ export default function CustomerAccounts() {
     setIsDialogOpen(false);
   };
 
-  const handleDelete = () => {
-    if (!managerToDelete) return;
-    
+  const handleDelete = (managerToDelete: User) => {
     // Update local state by removing the manager
     setSiteManagers(prev => prev.filter(manager => manager.id !== managerToDelete.id));
     
@@ -64,8 +61,6 @@ export default function CustomerAccounts() {
       title: "Site manager deleted",
       description: `${managerToDelete.name} has been removed as a site manager.`,
     });
-    
-    setManagerToDelete(null);
   };
 
   const handleRowDoubleClick = (id: string) => {
@@ -166,7 +161,6 @@ export default function CustomerAccounts() {
                               size="icon"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setManagerToDelete(manager);
                               }}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
@@ -181,8 +175,8 @@ export default function CustomerAccounts() {
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel onClick={() => setManagerToDelete(null)}>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={handleDelete}>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(manager)}>
                                 Delete
                               </AlertDialogAction>
                             </AlertDialogFooter>
