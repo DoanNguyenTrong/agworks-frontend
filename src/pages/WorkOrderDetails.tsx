@@ -6,7 +6,7 @@ import WorkOrderTabs from "@/components/WorkOrderTabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Pencil, AlertTriangle } from "lucide-react";
-import { workOrders, blocks, sites, workerTasks } from "@/lib/data";
+import { workOrders, blocks, sites, workerTasks, getPaymentCalculations } from "@/lib/data";
 import { WorkOrder, WorkerTask } from "@/lib/types";
 
 export default function WorkOrderDetails() {
@@ -16,6 +16,7 @@ export default function WorkOrderDetails() {
   const [tasks, setTasks] = useState<WorkerTask[]>([]);
   const [blockName, setBlockName] = useState("");
   const [siteName, setSiteName] = useState("");
+  const [payments, setPayments] = useState<any[]>([]);
   
   useEffect(() => {
     // Get work order data
@@ -37,6 +38,12 @@ export default function WorkOrderDetails() {
       // Get tasks for this work order
       const orderTasks = workerTasks.filter(t => t.orderId === order.id);
       setTasks(orderTasks);
+      
+      // Get payment calculations
+      if (id) {
+        const paymentData = getPaymentCalculations(id);
+        setPayments(paymentData);
+      }
     }
   }, [id]);
   
@@ -114,7 +121,7 @@ export default function WorkOrderDetails() {
         </div>
       </div>
       
-      <WorkOrderTabs workOrder={workOrder} tasks={tasks} />
+      <WorkOrderTabs workOrder={workOrder} tasks={tasks} payments={payments} />
     </MainLayout>
   );
 }

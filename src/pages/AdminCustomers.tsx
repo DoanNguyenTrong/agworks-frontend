@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -35,11 +36,12 @@ import { Search, PlusCircle, Trash, Edit, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import CustomerForm from "@/components/CustomerForm";
+import CustomerForm, { CustomerFormData } from "@/components/CustomerForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { users, sites } from "@/lib/data";
 import { addUser } from "@/lib/utils/dataManagement";
+import { User } from "@/lib/types";
 
 export default function AdminCustomers() {
   const { currentUser } = useAuth();
@@ -47,12 +49,10 @@ export default function AdminCustomers() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  
-  // Filter only customer users
-  const customers = users.filter(user => user.role === 'customer');
+  const [customersList, setCustomersList] = useState<User[]>(users.filter(user => user.role === 'customer'));
   
   // Filter customers based on search term
-  const filteredCustomers = customers.filter(customer => 
+  const filteredCustomers = customersList.filter(customer => 
     searchTerm === "" || 
     customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -60,7 +60,7 @@ export default function AdminCustomers() {
   );
   
   // Calculate site count for each customer
-  const customerSiteCounts = customers.map(customer => {
+  const customerSiteCounts = customersList.map(customer => {
     const siteCount = sites.filter(site => site.customerId === customer.id).length;
     return {
       customerId: customer.id,
@@ -69,7 +69,7 @@ export default function AdminCustomers() {
   });
   
   // Handle adding a new customer
-  const handleAddCustomer = (data: any) => {
+  const handleAddCustomer = (data: CustomerFormData) => {
     try {
       if (!data || !data.email) {
         throw new Error("Customer data is missing required fields");
@@ -85,6 +85,9 @@ export default function AdminCustomers() {
         address: data.address,
         logo: data.logo || '/placeholder.svg'
       });
+      
+      // Add the new customer to our local state
+      setCustomersList([...customersList, newCustomer]);
       
       toast({
         title: "Customer added",
@@ -110,7 +113,8 @@ export default function AdminCustomers() {
       setIsDeleting(true);
       
       // In a real implementation, we would remove from the data array
-      // Here we'll just simulate success
+      // For the mock implementation, just update our local state
+      setCustomersList(customersList.filter(customer => customer.id !== customerToDelete));
       
       toast({
         title: "Customer deleted",
@@ -156,7 +160,10 @@ export default function AdminCustomers() {
                 Fill out the form below to create a new customer account.
               </DialogDescription>
             </DialogHeader>
-            <CustomerForm onComplete={handleAddCustomer} />
+            <CustomerForm 
+              onComplete={() => setShowAddDialog(false)} 
+              onSubmit={handleAddCustomer}
+            />
           </DialogContent>
         </Dialog>
       </div>

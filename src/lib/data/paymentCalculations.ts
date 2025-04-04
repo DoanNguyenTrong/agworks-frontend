@@ -8,6 +8,9 @@ interface PaymentCalculation {
   workerName: string;
   taskCount: number;
   totalAmount: number;
+  totalHours: number;
+  status: 'pending' | 'paid';
+  paymentDate?: string;
 }
 
 export const getPaymentCalculations = (orderId: string): PaymentCalculation[] => {
@@ -37,11 +40,18 @@ export const getPaymentCalculations = (orderId: string): PaymentCalculation[] =>
   const payments: PaymentCalculation[] = [];
   
   workerMap.forEach((data, workerId) => {
+    // Calculate estimated hours (in a real app, this would come from time tracking)
+    const estimatedHoursPerTask = workOrder?.expectedHours ? (workOrder.expectedHours / workOrder.neededWorkers) : 4;
+    const totalHours = data.tasks * estimatedHoursPerTask;
+    
     payments.push({
       workerId,
       workerName: data.name,
       taskCount: data.tasks,
-      totalAmount: data.tasks * payRate
+      totalHours: totalHours, // Add hours worked
+      totalAmount: Math.round(totalHours * payRate * 100) / 100, // Round to 2 decimal places
+      status: workOrder?.status === 'completed' ? 'paid' : 'pending', // Add payment status
+      paymentDate: workOrder?.status === 'completed' ? new Date().toISOString() : undefined
     });
   });
   

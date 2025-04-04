@@ -20,12 +20,14 @@ import AdminWorkerView from "./pages/AdminWorkerView";
 import AdminWorkerEdit from "./pages/AdminWorkerEdit";
 import AdminSettings from "./pages/AdminSettings";
 import AdminHelp from "./pages/AdminHelp";
+import AdminProfile from "./pages/AdminProfile";
 
 // Customer pages
 import CustomerDashboard from "./pages/CustomerDashboard";
 import CustomerAccounts from "./pages/CustomerAccounts";
 import CustomerSettings from "./pages/CustomerSettings";
 import CustomerManagerEdit from "./pages/CustomerManagerEdit";
+import CustomerHelp from "./pages/CustomerHelp";
 import SiteManagement from "./pages/SiteManagement";
 import SiteManagementPage from "./pages/SiteManagementPage";
 import SiteDetails from "./pages/SiteDetails";
@@ -73,6 +75,7 @@ function App() {
             <Route path="workers/:id" element={<AdminWorkerView />} />
             <Route path="workers/edit/:id" element={<AdminWorkerEdit />} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="profile" element={<AdminProfile />} />
             <Route path="help" element={<AdminHelp />} />
           </Route>
 
@@ -83,6 +86,7 @@ function App() {
             <Route path="accounts" element={<CustomerAccounts />} />
             <Route path="managers/edit/:id" element={<CustomerManagerEdit />} />
             <Route path="settings" element={<CustomerSettings />} />
+            <Route path="help" element={<CustomerHelp />} />
             <Route path="sites" element={<SiteManagement />} />
             <Route path="sites/manage" element={<SiteManagementPage />} />
             <Route path="sites/:id" element={<SiteDetails />} />

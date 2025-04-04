@@ -6,7 +6,6 @@ import { blocks } from './data/blocks';
 import { workOrders } from './data/workOrders';
 import { workerApplications } from './data/workerApplications';
 import { workerTasks } from './data/workerTasks';
-import { siteManagers } from './data/siteManagers';
 import { getPaymentCalculations } from './data/paymentCalculations';
 import { userSettings } from './data/userSettings';
 import { adminSettings } from './data/adminSettings';
@@ -18,7 +17,6 @@ export {
   workOrders,
   workerApplications,
   workerTasks,
-  siteManagers,
   getPaymentCalculations,
   userSettings,
   adminSettings

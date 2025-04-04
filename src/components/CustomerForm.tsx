@@ -16,7 +16,7 @@ const customerSchema = z.object({
   companyName: z.string().min(1, "Company name is required"),
   phone: z.string().optional(),
   address: z.string().optional(),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters").optional(),
 });
 
 export type CustomerFormData = z.infer<typeof customerSchema>;
@@ -27,6 +27,7 @@ export interface CustomerFormProps {
   defaultValues?: CustomerFormData;
   isEditMode?: boolean;
   customerId?: string;
+  allowPasswordEdit?: boolean;
 }
 
 export default function CustomerForm({ 
@@ -34,7 +35,8 @@ export default function CustomerForm({
   onSubmit, 
   defaultValues, 
   isEditMode = false,
-  customerId
+  customerId,
+  allowPasswordEdit = false
 }: CustomerFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -76,6 +78,16 @@ export default function CustomerForm({
         
         if (error) throw error;
         
+        // Update password if provided and allowed
+        if (data.password && allowPasswordEdit) {
+          const { error: passwordError } = await supabase.auth.admin.updateUserById(
+            customerId,
+            { password: data.password }
+          );
+          
+          if (passwordError) throw passwordError;
+        }
+        
         toast({
           title: "Customer updated",
           description: `${data.companyName} has been updated.`,
@@ -84,7 +96,7 @@ export default function CustomerForm({
         // Create new customer in Supabase using standard auth signup
         const { data: authData, error: signUpError } = await supabase.auth.signUp({
           email: data.email,
-          password: data.password,
+          password: data.password || '',
           options: {
             data: {
               name: data.name,
@@ -133,13 +145,6 @@ export default function CustomerForm({
       });
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  // Create a wrapper function for the cancel button that doesn't pass any parameters to onComplete
-  const handleCancel = () => {
-    if (onComplete) {
-      onComplete();
     }
   };
 
@@ -206,18 +211,18 @@ export default function CustomerForm({
           />
         </div>
         
-        {!isEditMode && (
+        {(!isEditMode || (isEditMode && allowPasswordEdit)) && (
           <FormField
             control={form.control}
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Initial Password*</FormLabel>
+                <FormLabel>{isEditMode ? "New Password" : "Initial Password"}{!isEditMode && '*'}</FormLabel>
                 <FormControl>
                   <Input {...field} type="password" />
                 </FormControl>
                 <FormDescription>
-                  Must be at least 8 characters. Customer can change this after logging in.
+                  {isEditMode ? "Leave blank to keep current password" : "Must be at least 8 characters. Customer can change this after logging in."}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -244,7 +249,7 @@ export default function CustomerForm({
         />
         
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={handleCancel}>
+          <Button type="button" variant="outline" onClick={() => onComplete && onComplete()}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
