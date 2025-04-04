@@ -122,7 +122,7 @@ export default function CustomerForm({
       }
       
       if (onComplete) {
-        onComplete();
+        onComplete(data);
       }
     } catch (error: any) {
       console.error('Error handling customer:', error);
@@ -133,6 +133,13 @@ export default function CustomerForm({
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Create a wrapper function for the cancel button that doesn't pass any parameters to onComplete
+  const handleCancel = () => {
+    if (onComplete) {
+      onComplete();
     }
   };
 
@@ -237,7 +244,7 @@ export default function CustomerForm({
         />
         
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={onComplete}>
+          <Button type="button" variant="outline" onClick={handleCancel}>
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
