@@ -6,15 +6,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, UserCircle } from "lucide-react";
+import { ArrowLeft, UserCircle, KeyRound, Mail } from "lucide-react";
 import { users } from "@/lib/data";
 import { toast } from "@/hooks/use-toast";
+import AccountResetDialog from "@/components/AccountResetDialog";
 
 export default function CustomerManagerEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [manager, setManager] = useState<any>(null);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
   
   // Form state
   const [name, setName] = useState("");
@@ -130,6 +132,18 @@ export default function CustomerManagerEdit() {
               </div>
             </div>
             
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              <Button 
+                type="button" 
+                variant="outline"
+                onClick={() => setResetDialogOpen(true)}
+                className="flex items-center justify-center"
+              >
+                <KeyRound className="h-4 w-4 mr-2" />
+                Reset Account
+              </Button>
+            </div>
+            
             <div className="flex justify-end gap-3">
               <Button 
                 type="button" 
@@ -143,6 +157,14 @@ export default function CustomerManagerEdit() {
           </form>
         </CardContent>
       </Card>
+      
+      <AccountResetDialog
+        open={resetDialogOpen}
+        onOpenChange={setResetDialogOpen}
+        userName={manager.name}
+        userEmail={manager.email}
+        userId={manager.id}
+      />
     </MainLayout>
   );
 }

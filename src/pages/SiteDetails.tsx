@@ -169,11 +169,19 @@ export default function SiteDetails() {
                         {block.rows ? `${block.rows} rows` : ""}
                       </p>
                     </div>
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link to={`/customer/blocks/${block.id}`}>
-                        View
-                      </Link>
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link to={`/customer/blocks/edit/${block.id}`}>
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Link>
+                      </Button>
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link to={`/customer/blocks/${block.id}`}>
+                          View
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>

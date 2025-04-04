@@ -17,10 +17,23 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { sites, blocks, users } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
+import { toast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function SiteManagementPage() {
   const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
+  const [siteToDelete, setSiteToDelete] = useState<any>(null);
   
   // Filter sites by current customer
   const customerSites = sites.filter(site => 
@@ -29,6 +42,18 @@ export default function SiteManagementPage() {
       site.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
       site.address.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+
+  const handleDeleteSite = () => {
+    if (!siteToDelete) return;
+    
+    // In a real app, this would be an API call
+    toast({
+      title: "Site deleted",
+      description: `${siteToDelete.name} has been deleted.`,
+    });
+    
+    setSiteToDelete(null);
+  };
 
   return (
     <MainLayout pageTitle="Site Management">
@@ -119,9 +144,33 @@ export default function SiteManagementPage() {
                               <Edit className="h-4 w-4" />
                             </Link>
                           </Button>
-                          <Button variant="ghost" size="icon" className="text-red-500">
-                            <Trash className="h-4 w-4" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="text-red-500"
+                                onClick={() => setSiteToDelete(site)}
+                              >
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will permanently delete {site.name} and all associated blocks.
+                                  This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel onClick={() => setSiteToDelete(null)}>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDeleteSite} className="bg-red-500 hover:bg-red-600">
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </TableCell>
                     </TableRow>

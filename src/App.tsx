@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -31,10 +32,12 @@ import SiteManagement from "./pages/SiteManagement";
 import SiteManagementPage from "./pages/SiteManagementPage";
 import SiteDetails from "./pages/SiteDetails";
 import SiteForm from "./pages/SiteForm";
+import SiteEditPage from "./pages/SiteEditPage";
 import BlockManagement from "./pages/BlockManagement";
 import BlockManagementPage from "./pages/BlockManagementPage";
 import BlockDetails from "./pages/BlockDetails";
 import BlockForm from "./pages/BlockForm";
+import BlockEditPage from "./pages/BlockEditPage";
 
 // Site Manager pages
 import SiteManagerDashboard from "./pages/SiteManagerDashboard";
@@ -91,12 +94,12 @@ function App() {
             <Route path="sites/manage" element={<SiteManagementPage />} />
             <Route path="sites/:id" element={<SiteDetails />} />
             <Route path="sites/new" element={<SiteForm />} />
-            <Route path="sites/edit/:id" element={<SiteForm />} />
+            <Route path="sites/edit/:id" element={<SiteEditPage />} />
             <Route path="blocks" element={<BlockManagement />} />
             <Route path="blocks/manage" element={<BlockManagementPage />} />
             <Route path="blocks/:id" element={<BlockDetails />} />
             <Route path="blocks/new" element={<BlockForm />} />
-            <Route path="blocks/edit/:id" element={<BlockForm />} />
+            <Route path="blocks/edit/:id" element={<BlockEditPage />} />
           </Route>
 
           {/* Site Manager routes */}
