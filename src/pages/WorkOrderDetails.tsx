@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "@/components/MainLayout";
@@ -7,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Pencil, AlertTriangle } from "lucide-react";
 import { workOrders, blocks, sites, workerTasks, getPaymentCalculations } from "@/lib/data";
 import { WorkOrder, WorkerTask } from "@/lib/types";
-import WorkOrderTabsUpdated from "@/components/WorkOrderTabsUpdated";
 
 export default function WorkOrderDetails() {
   const { id } = useParams<{ id: string }>();
@@ -98,12 +98,12 @@ export default function WorkOrderDetails() {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-semibold">
-                {workOrder?.workType.charAt(0).toUpperCase() + workOrder?.workType.slice(1)} - {blockName}
+                {workOrder.workType.charAt(0).toUpperCase() + workOrder.workType.slice(1)} - {blockName}
               </h2>
-              {workOrder && getStatusBadge(workOrder.status)}
+              {getStatusBadge(workOrder.status)}
             </div>
             <p className="text-muted-foreground">
-              {siteName} • Order #{workOrder?.id}
+              {siteName} • Order #{workOrder.id}
             </p>
           </div>
           
@@ -113,15 +113,15 @@ export default function WorkOrderDetails() {
               Edit
             </Button>
             <Button>
-              {workOrder?.status === "draft" ? "Publish" : 
-               workOrder?.status === "published" ? "Start Work" : 
-               workOrder?.status === "inProgress" ? "Complete" : "Reopen"}
+              {workOrder.status === "draft" ? "Publish" : 
+               workOrder.status === "published" ? "Start Work" : 
+               workOrder.status === "inProgress" ? "Complete" : "Reopen"}
             </Button>
           </div>
         </div>
       </div>
       
-      {workOrder && <WorkOrderTabsUpdated workOrder={workOrder} tasks={tasks} payments={payments} />}
+      <WorkOrderTabs workOrder={workOrder} tasks={tasks} />
     </MainLayout>
   );
 }
