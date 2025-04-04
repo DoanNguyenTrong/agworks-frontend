@@ -157,7 +157,8 @@ export default function AdminCustomers() {
                 Fill out the form below to create a new customer account.
               </DialogDescription>
             </DialogHeader>
-            <CustomerForm onComplete={handleAddCustomer} />
+            {/* Fixed the onComplete prop to match the expected function signature */}
+            <CustomerForm onComplete={(data) => handleAddCustomer(data)} />
           </DialogContent>
         </Dialog>
       </div>

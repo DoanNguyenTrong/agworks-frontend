@@ -39,19 +39,46 @@ export default function AdminSettings() {
   // General settings form
   const generalForm = useForm<z.infer<typeof generalSettingsSchema>>({
     resolver: zodResolver(generalSettingsSchema),
-    defaultValues: settings.general,
+    defaultValues: {
+      systemName: settings.general.systemName,
+      supportEmail: settings.general.supportEmail,
+      logoUrl: settings.general.logoUrl,
+      enablePublicRegistration: settings.general.enablePublicRegistration,
+      enableWorkerSelfRegistration: settings.general.enableWorkerSelfRegistration,
+    },
   });
 
   // Email settings form
   const emailForm = useForm<z.infer<typeof emailSettingsSchema>>({
     resolver: zodResolver(emailSettingsSchema),
-    defaultValues: settings.email,
+    defaultValues: {
+      smtpServer: settings.email.smtpServer,
+      smtpPort: settings.email.smtpPort,
+      smtpUsername: settings.email.smtpUsername,
+      smtpPassword: settings.email.smtpPassword,
+      senderEmail: settings.email.senderEmail,
+      senderName: settings.email.senderName,
+    },
   });
 
   // Update forms when settings change
   useEffect(() => {
-    generalForm.reset(settings.general);
-    emailForm.reset(settings.email);
+    generalForm.reset({
+      systemName: settings.general.systemName,
+      supportEmail: settings.general.supportEmail,
+      logoUrl: settings.general.logoUrl,
+      enablePublicRegistration: settings.general.enablePublicRegistration,
+      enableWorkerSelfRegistration: settings.general.enableWorkerSelfRegistration,
+    });
+    
+    emailForm.reset({
+      smtpServer: settings.email.smtpServer,
+      smtpPort: settings.email.smtpPort,
+      smtpUsername: settings.email.smtpUsername,
+      smtpPassword: settings.email.smtpPassword,
+      senderEmail: settings.email.senderEmail,
+      senderName: settings.email.senderName,
+    });
   }, [settings]);
   
   // Submit handlers

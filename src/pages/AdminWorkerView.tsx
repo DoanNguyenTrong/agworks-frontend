@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import MainLayout from "@/components/MainLayout";
@@ -83,13 +82,7 @@ export default function AdminWorkerView() {
   }
 
   return (
-    <MainLayout
-      pageTitle="Worker Details"
-      breadcrumbs={[
-        { title: "Workers", href: "/admin/workers" },
-        { title: worker.name || "Worker Details" }
-      ]}
-    >
+    <MainLayout pageTitle="Worker Details">
       <Button variant="ghost" asChild className="mb-6">
         <Link to="/admin/workers">
           <ChevronLeft className="mr-2 h-4 w-4" />
@@ -160,7 +153,8 @@ export default function AdminWorkerView() {
             <CardDescription>Task completion metrics and efficiency data</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            <WorkerPerformance workerId={worker.id} />
+            {/* Pass id directly instead of workerId as it may not be defined in prop types */}
+            <WorkerPerformance id={worker.id} />
           </CardContent>
         </Card>
 

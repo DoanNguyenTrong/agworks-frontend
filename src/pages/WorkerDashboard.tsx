@@ -26,9 +26,9 @@ export default function WorkerDashboard() {
     ? workerApplications.filter(app => app.workerId === currentUser.id)
     : [];
   
-  // Get approved jobs
+  // Get approved jobs - Fixed orderrId to orderId
   const approvedJobs = applications.filter(app => app.status === "approved");
-  const approvedOrderIds = approvedJobs.map(job => job.orderrId);
+  const approvedOrderIds = approvedJobs.map(job => job.orderId);
   const workerOrders = workOrders.filter(order => 
     approvedOrderIds.includes(order.id) && 
     order.status === "inProgress"
@@ -201,7 +201,8 @@ export default function WorkerDashboard() {
             {applications
               .filter(app => app.status === "pending")
               .map(app => {
-                const order = workOrders.find(o => o.id === app.orderrId);
+                // Fixed orderrId to orderId
+                const order = workOrders.find(o => o.id === app.orderId);
                 if (!order) return null;
                 
                 const site = sites.find(site => site.id === order.siteId);

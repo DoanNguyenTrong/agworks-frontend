@@ -47,9 +47,9 @@ export default function SiteManagerDashboard() {
         const siteOrders = workOrders.filter(order => order.siteId === managedSite.id);
         const orderIds = siteOrders.map(order => order.id);
         
-        // Pending applications
+        // Pending applications - Fixed orderrId to orderId
         const pending = workerApplications.filter(
-          app => orderIds.includes(app.orderrId) && app.status === "pending"
+          app => orderIds.includes(app.orderId) && app.status === "pending"
         ).length;
         setPendingApplications(pending);
         
@@ -301,7 +301,7 @@ export default function SiteManagerDashboard() {
                           <p className="text-sm text-muted-foreground">
                             {
                               workerApplications.filter(
-                                app => app.orderrId === order.id && app.status === "approved"
+                                app => app.orderId === order.id && app.status === "approved"
                               ).length
                             } / {order.neededWorkers} assigned
                           </p>
