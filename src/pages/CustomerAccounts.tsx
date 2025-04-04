@@ -8,16 +8,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Mail, Phone, Trash2, Edit } from "lucide-react";
+import { Plus, Search, Mail, Phone, Trash2, Edit, KeyRound } from "lucide-react";
 import ManagerForm from "@/components/ManagerForm";
 import { toast } from "@/hooks/use-toast";
 import { users } from "@/lib/data";
+import AccountResetDialog from "@/components/AccountResetDialog";
 
 export default function CustomerAccounts() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [managerToDelete, setManagerToDelete] = useState<any>(null);
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [selectedManager, setSelectedManager] = useState<any>(null);
 
   // Filter site managers from users
   const siteManagers = users.filter(user => user.role === "siteManager");
@@ -50,6 +53,11 @@ export default function CustomerAccounts() {
 
   const handleRowDoubleClick = (id: string) => {
     navigate(`/customer/managers/edit/${id}`);
+  };
+
+  const handleResetAccount = (manager: any) => {
+    setSelectedManager(manager);
+    setShowResetDialog(true);
   };
 
   return (
@@ -124,6 +132,16 @@ export default function CustomerAccounts() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleResetAccount(manager);
+                          }}
+                        >
+                          <KeyRound className="h-4 w-4" />
+                        </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button 
@@ -180,6 +198,16 @@ export default function CustomerAccounts() {
           />
         </DialogContent>
       </Dialog>
+
+      {selectedManager && (
+        <AccountResetDialog
+          open={showResetDialog}
+          onOpenChange={setShowResetDialog}
+          userName={selectedManager.name}
+          userEmail={selectedManager.email}
+          userId={selectedManager.id}
+        />
+      )}
     </MainLayout>
   );
 }

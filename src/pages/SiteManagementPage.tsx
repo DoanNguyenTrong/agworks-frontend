@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { PlusCircle, Search, Map, Edit, Eye, Trash } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { sites, blocks, users } from "@/lib/data";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,7 @@ export default function SiteManagementPage() {
   const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [siteToDelete, setSiteToDelete] = useState<any>(null);
+  const navigate = useNavigate();
   
   // Filter sites by current customer
   const customerSites = sites.filter(site => 

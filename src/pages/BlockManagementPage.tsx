@@ -19,14 +19,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PlusCircle, Search, Grape, Edit, Eye, Trash } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { sites, blocks } from "@/lib/data";
+import { toast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function BlockManagementPage() {
   const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [siteFilter, setSiteFilter] = useState<string>("all");
+  const [blockToDelete, setBlockToDelete] = useState<any>(null);
+  const navigate = useNavigate();
   
   // Get customer sites and blocks
   const customerSites = sites.filter(site => site.customerId === currentUser?.id);
@@ -46,6 +60,18 @@ export default function BlockManagementPage() {
       block.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }
+
+  const handleDeleteBlock = () => {
+    if (!blockToDelete) return;
+    
+    // In a real app, this would be an API call
+    toast({
+      title: "Block deleted",
+      description: `${blockToDelete.name} has been deleted.`,
+    });
+    
+    setBlockToDelete(null);
+  };
 
   return (
     <MainLayout pageTitle="Block Management">
@@ -135,9 +161,33 @@ export default function BlockManagementPage() {
                             <Edit className="h-4 w-4" />
                           </Link>
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-red-500">
-                          <Trash className="h-4 w-4" />
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="text-red-500"
+                              onClick={() => setBlockToDelete(block)}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This will permanently delete {block.name}.
+                                This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel onClick={() => setBlockToDelete(null)}>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={handleDeleteBlock} className="bg-red-500 hover:bg-red-600">
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </TableCell>
                   </TableRow>
