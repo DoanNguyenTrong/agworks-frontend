@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import MainLayout from "@/components/MainLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { sites, users } from "@/lib/data";
@@ -59,6 +60,7 @@ const siteFormSchema = z.object({
 export default function SiteManagement() {
   const { currentUser } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   // Get customer sites
@@ -224,8 +226,8 @@ export default function SiteManagement() {
                 </div>
               </CardContent>
               <CardFooter className="flex justify-between">
-                <Button variant="outline" size="sm">Edit</Button>
-                <Button variant="ghost" size="sm">View Details</Button>
+                <Button variant="outline" size="sm"  onClick={() => navigate(`/customer/sites/edit/${site.id}`)}>Edit</Button>
+                <Button variant="ghost" size="sm"  onClick={() => navigate(`/customer/sites/${site.id}`)}>View Details</Button>
               </CardFooter>
             </Card>
           ))

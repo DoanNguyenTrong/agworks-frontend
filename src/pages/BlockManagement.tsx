@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import MainLayout from "@/components/MainLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { sites, blocks } from "@/lib/data";
@@ -65,6 +66,7 @@ const blockFormSchema = z.object({
 export default function BlockManagement() {
   const { currentUser } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   // Get customer sites and blocks
@@ -284,8 +286,9 @@ export default function BlockManagement() {
                 )}
               </CardContent>
               <CardFooter className="flex justify-between">
-                <Button variant="outline" size="sm">Edit</Button>
-                <Button variant="ghost" size="sm">View Details</Button>
+                <Button variant="outline" size="sm" onClick={() => navigate(`/customer/blocks/edit/${block.id}`)}>Edit</Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate(`/customer/blocks/${block.id}`)}>
+                  View Details</Button>
               </CardFooter>
             </Card>
           ))
