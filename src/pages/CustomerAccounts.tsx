@@ -11,13 +11,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Plus, Search, Mail, Phone, Trash2, Edit } from "lucide-react";
 import ManagerForm from "@/components/ManagerForm";
 import { toast } from "@/hooks/use-toast";
-import { siteManagers } from "@/lib/data";
+import { users } from "@/lib/data";
 
 export default function CustomerAccounts() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [managerToDelete, setManagerToDelete] = useState<any>(null);
+
+  // Filter site managers from users
+  const siteManagers = users.filter(user => user.role === "siteManager");
 
   // Filter managers by search term
   const filteredManagers = siteManagers.filter(manager => {

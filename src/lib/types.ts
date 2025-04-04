@@ -21,6 +21,7 @@ export interface User {
   address?: string;
   logo?: string;
   profileImage?: string;
+  customerId?: string; // Added this property for site managers
 }
 
 // Site type

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -82,8 +81,7 @@ export default function AdminCustomers() {
         role: 'customer',
         companyName: data.companyName,
         phone: data.phone,
-        address: data.address,
-        logo: data.logo || '/placeholder.svg'
+        address: data.address
       });
       
       // Add the new customer to our local state

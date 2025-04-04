@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, UserCircle } from "lucide-react";
-import { siteManagers } from "@/lib/data";
+import { users } from "@/lib/data";
 import { toast } from "@/hooks/use-toast";
 
 export default function CustomerManagerEdit() {
@@ -22,7 +22,7 @@ export default function CustomerManagerEdit() {
   const [phone, setPhone] = useState("");
   
   useEffect(() => {
-    const foundManager = siteManagers.find(manager => manager.id === id);
+    const foundManager = users.find(user => user.id === id && user.role === "siteManager");
     if (foundManager) {
       setManager(foundManager);
       setName(foundManager.name);
