@@ -19,10 +19,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PlusCircle, Search, Grape, Edit, Eye, Trash } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { sites, blocks } from "@/lib/data";
+import { Block } from "@/lib/types";
 import { toast } from "@/hooks/use-toast";
+import { addBlock } from "@/lib/utils/dataManagement";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,20 +36,60 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+const blockFormSchema = z.object({
+  name: z.string().min(2, {
+    message: "Block name must be at least 2 characters.",
+  }),
+  siteId: z.string().min(1, {
+    message: "Please select a site.",
+  }),
+  acres: z.coerce.number().optional(),
+  rows: z.coerce.number().int().optional(),
+  vines: z.coerce.number().int().optional(),
+});
 
 export default function BlockManagementPage() {
   const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [siteFilter, setSiteFilter] = useState<string>("all");
-  const [blockToDelete, setBlockToDelete] = useState<any>(null);
-  const navigate = useNavigate();
+  const [blockToDelete, setBlockToDelete] = useState<Block | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [customerBlocks, setCustomerBlocks] = useState<Block[]>([]);
   
   // Get customer sites and blocks
   const customerSites = sites.filter(site => site.customerId === currentUser?.id);
   const siteIds = customerSites.map(site => site.id);
   
+  // Initialize blocks
+  useState(() => {
+    const initialBlocks = blocks.filter(block => siteIds.includes(block.siteId));
+    setCustomerBlocks(initialBlocks);
+  });
+  
   // Filter blocks
-  let filteredBlocks = blocks.filter(block => siteIds.includes(block.siteId));
+  let filteredBlocks = customerBlocks.filter(block => siteIds.includes(block.siteId));
   
   // Apply site filter
   if (siteFilter !== "all") {
@@ -61,10 +103,46 @@ export default function BlockManagementPage() {
     );
   }
 
+  const form = useForm<z.infer<typeof blockFormSchema>>({
+    resolver: zodResolver(blockFormSchema),
+    defaultValues: {
+      name: "",
+      siteId: "",
+      acres: undefined,
+      rows: undefined,
+      vines: undefined,
+    },
+  });
+
+  function onSubmit(values: z.infer<typeof blockFormSchema>) {
+    // Create new block
+    const newBlock = addBlock({
+      name: values.name,
+      siteId: values.siteId,
+      acres: values.acres,
+      rows: values.rows,
+      vines: values.vines
+    });
+    
+    // Update local state
+    setCustomerBlocks(prev => [...prev, newBlock]);
+    
+    toast({
+      title: "Block created",
+      description: `"${values.name}" has been added successfully.`,
+    });
+    
+    setIsDialogOpen(false);
+    form.reset();
+  }
+
   const handleDeleteBlock = () => {
     if (!blockToDelete) return;
     
-    // In a real app, this would be an API call
+    // In a real app, this would delete via API
+    // For now, we'll just update local state
+    setCustomerBlocks(prev => prev.filter(block => block.id !== blockToDelete.id));
+    
     toast({
       title: "Block deleted",
       description: `${blockToDelete.name} has been deleted.`,
@@ -100,12 +178,122 @@ export default function BlockManagementPage() {
           </Select>
         </div>
         
-        <Button asChild>
-          <Link to="/customer/blocks/new">
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Add Block
-          </Link>
-        </Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add Block
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Add New Vineyard Block</DialogTitle>
+              <DialogDescription>
+                Enter the details of your new vineyard block.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Block Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Block A - Cabernet" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        A descriptive name for this vineyard block
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="siteId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Site</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a site" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {customerSites.map(site => (
+                            <SelectItem key={site.id} value={site.id}>
+                              {site.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormDescription>
+                        The vineyard site where this block is located
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="acres"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Acres</FormLabel>
+                        <FormControl>
+                          <Input type="number" step="0.1" placeholder="5.2" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="rows"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Rows</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="120" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="vines"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Vines</FormLabel>
+                        <FormControl>
+                          <Input type="number" placeholder="3600" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <DialogFooter>
+                  <Button type="submit">Create Block</Button>
+                </DialogFooter>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
       
       {filteredBlocks.length === 0 ? (
@@ -119,11 +307,9 @@ export default function BlockManagementPage() {
               "Try adjusting your search or filter." : 
               "Add your first vineyard block to get started."}
           </p>
-          <Button asChild>
-            <Link to="/customer/blocks/new">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Add Block
-            </Link>
+          <Button onClick={() => setIsDialogOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Add Block
           </Button>
         </div>
       ) : (
@@ -167,7 +353,6 @@ export default function BlockManagementPage() {
                               variant="ghost" 
                               size="icon" 
                               className="text-red-500"
-                              onClick={() => setBlockToDelete(block)}
                             >
                               <Trash className="h-4 w-4" />
                             </Button>
@@ -182,7 +367,13 @@ export default function BlockManagementPage() {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel onClick={() => setBlockToDelete(null)}>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={handleDeleteBlock} className="bg-red-500 hover:bg-red-600">
+                              <AlertDialogAction 
+                                onClick={() => {
+                                  setBlockToDelete(block);
+                                  handleDeleteBlock();
+                                }} 
+                                className="bg-red-500 hover:bg-red-600"
+                              >
                                 Delete
                               </AlertDialogAction>
                             </AlertDialogFooter>

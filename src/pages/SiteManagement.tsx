@@ -24,6 +24,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Form,
   FormControl,
   FormDescription,
@@ -41,11 +52,12 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, MapPin, User } from "lucide-react";
+import { PlusCircle, MapPin, User, Trash } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
+import { addSite } from "@/lib/utils/dataManagement";
 
 const siteFormSchema = z.object({
   name: z.string().min(2, {
@@ -60,13 +72,12 @@ const siteFormSchema = z.object({
 export default function SiteManagement() {
   const { currentUser } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [siteToDelete, setSiteToDelete] = useState<Site | null>(null);
+  const [customerSites, setCustomerSites] = useState(
+    currentUser ? sites.filter(site => site.customerId === currentUser.id) : []
+  );
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  // Get customer sites
-  const customerSites = currentUser
-    ? sites.filter(site => site.customerId === currentUser.id)
-    : [];
 
   // Get available site managers
   const siteManagers = users.filter(user => user.role === "siteManager");
@@ -81,7 +92,19 @@ export default function SiteManagement() {
   });
 
   function onSubmit(values: z.infer<typeof siteFormSchema>) {
-    // In a real app, this would create a new site via API
+    if (!currentUser) return;
+    
+    // Create new site
+    const newSite = addSite({
+      name: values.name,
+      address: values.address,
+      customerId: currentUser.id,
+      managerId: values.managerId && values.managerId !== "no-manager" ? values.managerId : undefined
+    });
+    
+    // Update local state
+    setCustomerSites(prev => [...prev, newSite]);
+    
     toast({
       title: "Site created",
       description: `"${values.name}" has been added to your vineyard.`,
@@ -90,6 +113,21 @@ export default function SiteManagement() {
     setIsDialogOpen(false);
     form.reset();
   }
+
+  const handleDeleteSite = () => {
+    if (!siteToDelete) return;
+    
+    // In a real app, this would delete via API
+    // For now, we'll just update local state
+    setCustomerSites(prev => prev.filter(site => site.id !== siteToDelete.id));
+    
+    toast({
+      title: "Site deleted",
+      description: `"${siteToDelete.name}" has been removed from your vineyard.`,
+    });
+    
+    setSiteToDelete(null);
+  };
 
   const getManagerName = (managerId: string | undefined) => {
     if (!managerId) return "Unassigned";
@@ -226,8 +264,43 @@ export default function SiteManagement() {
                 </div>
               </CardContent>
               <CardFooter className="flex justify-between">
-                <Button variant="outline" size="sm"  onClick={() => navigate(`/customer/sites/edit/${site.id}`)}>Edit</Button>
-                <Button variant="ghost" size="sm"  onClick={() => navigate(`/customer/sites/${site.id}`)}>View Details</Button>
+                <div className="flex space-x-2">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to={`/customer/sites/edit/${site.id}`}>Edit</Link>
+                  </Button>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link to={`/customer/sites/${site.id}`}>View Details</Link>
+                  </Button>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="ghost" size="sm" className="text-red-500">
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Site</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete "{site.name}"? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel onClick={() => setSiteToDelete(null)}>
+                        Cancel
+                      </AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={() => {
+                          setSiteToDelete(site);
+                          handleDeleteSite();
+                        }}
+                        className="bg-red-500 hover:bg-red-600"
+                      >
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </CardFooter>
             </Card>
           ))

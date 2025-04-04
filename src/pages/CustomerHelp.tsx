@@ -46,7 +46,7 @@ export default function CustomerHelp() {
   return (
     <MainLayout pageTitle="Help & Support">
       <div className="max-w-4xl mx-auto">
-        <Tabs defaultValue="faq">
+        <Tabs defaultValue="faq" className="space-y-6">
           <div className="mb-6">
             <TabsList className="grid grid-cols-3 w-full">
               <TabsTrigger value="faq">FAQ</TabsTrigger>
@@ -116,46 +116,48 @@ export default function CustomerHelp() {
           
           <TabsContent value="contact">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="md:col-span-2">
-                <CardHeader>
-                  <CardTitle>Send Us a Message</CardTitle>
-                  <CardDescription>
-                    Fill out the form below and our support team will get back to you as soon as possible.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="subject">Subject</Label>
-                      <Input 
-                        id="subject"
-                        value={subject}
-                        onChange={(e) => setSubject(e.target.value)}
-                        placeholder="Briefly describe your issue"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="message">Message</Label>
-                      <Textarea 
-                        id="message"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        placeholder="Please provide as much detail as possible"
-                        rows={6}
-                        required
-                      />
-                    </div>
-                    
-                    <div className="flex justify-end">
-                      <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting ? "Sending..." : "Send Message"}
-                      </Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
+              <div className="md:col-span-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Send Us a Message</CardTitle>
+                    <CardDescription>
+                      Fill out the form below and our support team will get back to you as soon as possible.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="subject">Subject</Label>
+                        <Input 
+                          id="subject"
+                          value={subject}
+                          onChange={(e) => setSubject(e.target.value)}
+                          placeholder="Briefly describe your issue"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="message">Message</Label>
+                        <Textarea 
+                          id="message"
+                          value={message}
+                          onChange={(e) => setMessage(e.target.value)}
+                          placeholder="Please provide as much detail as possible"
+                          rows={6}
+                          required
+                        />
+                      </div>
+                      
+                      <div className="flex justify-end">
+                        <Button type="submit" disabled={isSubmitting}>
+                          {isSubmitting ? "Sending..." : "Send Message"}
+                        </Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
               
               <Card>
                 <CardHeader>

@@ -12,18 +12,20 @@ import { Plus, Search, Mail, Phone, Trash2, Edit, KeyRound } from "lucide-react"
 import ManagerForm from "@/components/ManagerForm";
 import { toast } from "@/hooks/use-toast";
 import { users } from "@/lib/data";
+import { User } from "@/lib/types";
 import AccountResetDialog from "@/components/AccountResetDialog";
+import { addUser } from "@/lib/utils/dataManagement";
 
 export default function CustomerAccounts() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [managerToDelete, setManagerToDelete] = useState<any>(null);
+  const [managerToDelete, setManagerToDelete] = useState<User | null>(null);
   const [showResetDialog, setShowResetDialog] = useState(false);
-  const [selectedManager, setSelectedManager] = useState<any>(null);
-
-  // Filter site managers from users
-  const siteManagers = users.filter(user => user.role === "siteManager");
+  const [selectedManager, setSelectedManager] = useState<User | null>(null);
+  const [siteManagers, setSiteManagers] = useState<User[]>(
+    users.filter(user => user.role === "siteManager")
+  );
 
   // Filter managers by search term
   const filteredManagers = siteManagers.filter(manager => {
@@ -32,22 +34,37 @@ export default function CustomerAccounts() {
   });
 
   const handleAddManager = (data: any) => {
-    // In a real app, this would be an API call
+    // Create a new site manager
+    const newManager = addUser({
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      role: "siteManager",
+      customerId: users.find(u => u.role === "customer")?.id
+    });
+    
+    // Update local state
+    setSiteManagers(prev => [...prev, newManager]);
+    
     toast({
       title: "Site manager invited",
       description: `${data.name} has been invited as a site manager.`,
     });
+    
     setIsDialogOpen(false);
   };
 
   const handleDelete = () => {
     if (!managerToDelete) return;
     
-    // In a real app, this would be an API call
+    // Update local state by removing the manager
+    setSiteManagers(prev => prev.filter(manager => manager.id !== managerToDelete.id));
+    
     toast({
       title: "Site manager deleted",
       description: `${managerToDelete.name} has been removed as a site manager.`,
     });
+    
     setManagerToDelete(null);
   };
 
@@ -55,7 +72,7 @@ export default function CustomerAccounts() {
     navigate(`/customer/managers/edit/${id}`);
   };
 
-  const handleResetAccount = (manager: any) => {
+  const handleResetAccount = (manager: User) => {
     setSelectedManager(manager);
     setShowResetDialog(true);
   };
