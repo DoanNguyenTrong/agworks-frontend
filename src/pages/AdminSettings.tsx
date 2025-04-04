@@ -83,9 +83,15 @@ export default function AdminSettings() {
   
   // Submit handlers
   const onGeneralSubmit = (data: z.infer<typeof generalSettingsSchema>) => {
-    // Update the settings in our data management
+    // Update the settings in our data management - ensure all properties are defined
     const updatedSettings = updateAdminSettings({
-      general: data
+      general: {
+        systemName: data.systemName,
+        supportEmail: data.supportEmail,
+        logoUrl: data.logoUrl || "",
+        enablePublicRegistration: data.enablePublicRegistration,
+        enableWorkerSelfRegistration: data.enableWorkerSelfRegistration,
+      }
     });
     
     setSettings(updatedSettings);
@@ -97,9 +103,16 @@ export default function AdminSettings() {
   };
   
   const onEmailSubmit = (data: z.infer<typeof emailSettingsSchema>) => {
-    // Update the settings in our data management
+    // Update the settings in our data management - ensure all properties are defined
     const updatedSettings = updateAdminSettings({
-      email: data
+      email: {
+        smtpServer: data.smtpServer,
+        smtpPort: data.smtpPort,
+        smtpUsername: data.smtpUsername,
+        smtpPassword: data.smtpPassword,
+        senderEmail: data.senderEmail,
+        senderName: data.senderName,
+      }
     });
     
     setSettings(updatedSettings);

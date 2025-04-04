@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import MainLayout from "@/components/MainLayout";
@@ -153,7 +154,7 @@ export default function AdminWorkerView() {
             <CardDescription>Task completion metrics and efficiency data</CardDescription>
           </CardHeader>
           <CardContent className="p-6">
-            {/* Pass id directly instead of workerId as it may not be defined in prop types */}
+            {/* Pass id to WorkerPerformance */}
             <WorkerPerformance id={worker.id} />
           </CardContent>
         </Card>

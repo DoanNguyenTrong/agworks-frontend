@@ -1,4 +1,3 @@
-
 import { 
   BarChart, 
   Bar, 
@@ -12,22 +11,18 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { WorkerTask } from "@/lib/types";
 import { format } from "date-fns";
+import { workerTasks } from "@/lib/data";
 
 interface WorkerPerformanceProps {
-  tasks: WorkerTask[];
-  payRate: number;
+  id: string;  // Worker ID
+  tasks?: WorkerTask[];
+  payRate?: number;
 }
 
-interface WorkerData {
-  id: string;
-  name: string;
-  tasks: number;
-  earnings: number;
-}
-
-export default function WorkerPerformance({ tasks, payRate }: WorkerPerformanceProps) {
-  // Group tasks by worker
-  const workerMap = new Map<string, WorkerData>();
+export default function WorkerPerformance({ id, tasks: providedTasks, payRate = 15 }: WorkerPerformanceProps) {
+  const tasks = providedTasks || workerTasks.filter(task => task.workerId === id);
+  
+  const workerMap = new Map<string, { id: string; name: string; tasks: number; earnings: number }>();
   
   tasks.forEach(task => {
     if (!workerMap.has(task.workerId)) {
@@ -46,7 +41,6 @@ export default function WorkerPerformance({ tasks, payRate }: WorkerPerformanceP
   
   const workerData = Array.from(workerMap.values());
   
-  // Group tasks by date
   const dateMap = new Map<string, { date: string, tasks: number }>();
   
   tasks.forEach(task => {
