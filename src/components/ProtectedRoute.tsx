@@ -1,12 +1,14 @@
 
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import React from "react";
 
 interface ProtectedRouteProps { 
   allowedRoles?: string[];
+  children?: React.ReactNode;
 }
 
-export const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
+export const ProtectedRoute = ({ allowedRoles, children }: ProtectedRouteProps) => {
   const { currentUser, isLoading } = useAuth();
   
   if (isLoading) {
@@ -30,5 +32,6 @@ export const ProtectedRoute = ({ allowedRoles }: ProtectedRouteProps) => {
     }
   }
   
-  return <Outlet />;
+  // Return children if provided, otherwise fallback to Outlet
+  return children ? <>{children}</> : <Outlet />;
 };
