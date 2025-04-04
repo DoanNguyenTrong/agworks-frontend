@@ -22,7 +22,7 @@ const customerSchema = z.object({
 export type CustomerFormData = z.infer<typeof customerSchema>;
 
 export interface CustomerFormProps {
-  onComplete?: () => void;
+  onComplete?: (data?: CustomerFormData) => void;
   onSubmit?: (data: CustomerFormData) => void;
   defaultValues?: CustomerFormData;
   isEditMode?: boolean;

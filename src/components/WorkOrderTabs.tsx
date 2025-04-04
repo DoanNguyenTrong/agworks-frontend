@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,7 +72,7 @@ export default function WorkOrderTabs({ workOrder, tasks }: WorkOrderTabsProps) 
       
       {/* Overview Tab */}
       <TabsContent value="overview">
-        <WorkerPerformance tasks={tasks} payRate={workOrder.payRate} />
+        <WorkerPerformance id={workOrder.id} tasks={tasks} payRate={workOrder.payRate} />
       </TabsContent>
       
       {/* Tasks Tab */}

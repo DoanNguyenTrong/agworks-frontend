@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -157,7 +156,6 @@ export default function AdminCustomers() {
                 Fill out the form below to create a new customer account.
               </DialogDescription>
             </DialogHeader>
-            {/* The CustomerForm onComplete prop expects a function that takes data */}
             <CustomerForm onComplete={handleAddCustomer} />
           </DialogContent>
         </Dialog>
