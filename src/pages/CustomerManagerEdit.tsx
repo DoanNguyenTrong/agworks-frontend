@@ -1,15 +1,21 @@
-
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import AccountResetDialog from "@/components/AccountResetDialog";
 import MainLayout from "@/components/MainLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, UserCircle, KeyRound, Mail } from "lucide-react";
-import { users } from "@/lib/data";
 import { toast } from "@/hooks/use-toast";
-import AccountResetDialog from "@/components/AccountResetDialog";
+import { users } from "@/lib/data";
+import { MAP_ROLE } from "@/lib/utils/role";
+import { ArrowLeft, KeyRound, UserCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 export default function CustomerManagerEdit() {
   const { id } = useParams();
@@ -17,14 +23,16 @@ export default function CustomerManagerEdit() {
   const [isLoading, setIsLoading] = useState(true);
   const [manager, setManager] = useState<any>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
-  
+
   // Form state
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  
+
   useEffect(() => {
-    const foundManager = users.find(user => user.id === id && user.role === "siteManager");
+    const foundManager = users.find(
+      (user) => user.id === id && user.role === MAP_ROLE.SITE_MANAGER
+    );
     if (foundManager) {
       setManager(foundManager);
       setName(foundManager.name);
@@ -33,7 +41,7 @@ export default function CustomerManagerEdit() {
     }
     setIsLoading(false);
   }, [id]);
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // In a real app, this would make an API call
@@ -43,7 +51,7 @@ export default function CustomerManagerEdit() {
     });
     navigate("/customer/accounts");
   };
-  
+
   if (isLoading) {
     return (
       <MainLayout pageTitle="Edit Site Manager">
@@ -53,7 +61,7 @@ export default function CustomerManagerEdit() {
       </MainLayout>
     );
   }
-  
+
   if (!manager) {
     return (
       <MainLayout pageTitle="Edit Site Manager">
@@ -69,23 +77,23 @@ export default function CustomerManagerEdit() {
 
   return (
     <MainLayout pageTitle="Edit Site Manager">
-      <Button 
-        variant="ghost" 
+      <Button
+        variant="ghost"
         className="p-0 mb-6"
         onClick={() => navigate("/customer/accounts")}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Site Managers
       </Button>
-      
+
       <Card>
         <CardHeader>
           <div className="flex items-center mb-2">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
               {manager.profileImage ? (
-                <img 
-                  src={manager.profileImage} 
-                  alt={manager.name} 
+                <img
+                  src={manager.profileImage}
+                  alt={manager.name}
                   className="w-full h-full rounded-full object-cover"
                 />
               ) : (
@@ -110,7 +118,7 @@ export default function CustomerManagerEdit() {
                   required
                 />
               </div>
-              
+
               <div className="grid gap-2">
                 <Label htmlFor="email">Email Address</Label>
                 <Input
@@ -121,7 +129,7 @@ export default function CustomerManagerEdit() {
                   required
                 />
               </div>
-              
+
               <div className="grid gap-2">
                 <Label htmlFor="phone">Phone Number</Label>
                 <Input
@@ -131,10 +139,10 @@ export default function CustomerManagerEdit() {
                 />
               </div>
             </div>
-            
+
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 variant="outline"
                 onClick={() => setResetDialogOpen(true)}
                 className="flex items-center justify-center"
@@ -143,10 +151,10 @@ export default function CustomerManagerEdit() {
                 Reset Account
               </Button>
             </div>
-            
+
             <div className="flex justify-end gap-3">
-              <Button 
-                type="button" 
+              <Button
+                type="button"
                 variant="outline"
                 onClick={() => navigate("/customer/accounts")}
               >
@@ -157,7 +165,7 @@ export default function CustomerManagerEdit() {
           </form>
         </CardContent>
       </Card>
-      
+
       <AccountResetDialog
         open={resetDialogOpen}
         onOpenChange={setResetDialogOpen}

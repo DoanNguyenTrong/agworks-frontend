@@ -1,10 +1,15 @@
-
-import { useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
 import MainLayout from "@/components/MainLayout";
-import { useAuth } from "@/contexts/AuthContext";
-import { sites, users } from "@/lib/data";
-import { Site } from "@/lib/types";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,17 +29,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
   Form,
   FormControl,
   FormDescription,
@@ -43,6 +37,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -50,14 +45,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { PlusCircle, MapPin, User, Trash } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { sites, users } from "@/lib/data";
+import { Site } from "@/lib/types";
 import { addSite } from "@/lib/utils/dataManagement";
+import { MAP_ROLE } from "@/lib/utils/role";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { MapPin, PlusCircle, Trash, User } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
+import * as z from "zod";
 
 const siteFormSchema = z.object({
   name: z.string().min(2, {
@@ -74,13 +74,17 @@ export default function SiteManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [siteToDelete, setSiteToDelete] = useState<Site | null>(null);
   const [customerSites, setCustomerSites] = useState(
-    currentUser ? sites.filter(site => site.customerId === currentUser.id) : []
+    currentUser
+      ? sites.filter((site) => site.customerId === currentUser.id)
+      : []
   );
   const navigate = useNavigate();
   const { toast } = useToast();
 
   // Get available site managers
-  const siteManagers = users.filter(user => user.role === "siteManager");
+  const siteManagers = users.filter(
+    (user) => user.role === MAP_ROLE.SITE_MANAGER
+  );
 
   const form = useForm<z.infer<typeof siteFormSchema>>({
     resolver: zodResolver(siteFormSchema),
@@ -93,45 +97,50 @@ export default function SiteManagement() {
 
   function onSubmit(values: z.infer<typeof siteFormSchema>) {
     if (!currentUser) return;
-    
+
     // Create new site
     const newSite = addSite({
       name: values.name,
       address: values.address,
       customerId: currentUser.id,
-      managerId: values.managerId && values.managerId !== "no-manager" ? values.managerId : undefined
+      managerId:
+        values.managerId && values.managerId !== "no-manager"
+          ? values.managerId
+          : undefined,
     });
-    
+
     // Update local state
-    setCustomerSites(prev => [...prev, newSite]);
-    
+    setCustomerSites((prev) => [...prev, newSite]);
+
     toast({
       title: "Site created",
       description: `"${values.name}" has been added to your vineyard.`,
     });
-    
+
     setIsDialogOpen(false);
     form.reset();
   }
 
   const handleDeleteSite = () => {
     if (!siteToDelete) return;
-    
+
     // In a real app, this would delete via API
     // For now, we'll just update local state
-    setCustomerSites(prev => prev.filter(site => site.id !== siteToDelete.id));
-    
+    setCustomerSites((prev) =>
+      prev.filter((site) => site.id !== siteToDelete.id)
+    );
+
     toast({
       title: "Site deleted",
       description: `"${siteToDelete.name}" has been removed from your vineyard.`,
     });
-    
+
     setSiteToDelete(null);
   };
 
   const getManagerName = (managerId: string | undefined) => {
     if (!managerId) return "Unassigned";
-    const manager = users.find(user => user.id === managerId);
+    const manager = users.find((user) => user.id === managerId);
     return manager ? manager.name : "Unknown Manager";
   };
 
@@ -141,7 +150,7 @@ export default function SiteManagement() {
         <p className="text-muted-foreground">
           Manage your vineyard properties and locations
         </p>
-        
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -156,9 +165,12 @@ export default function SiteManagement() {
                 Enter the details of your new vineyard location.
               </DialogDescription>
             </DialogHeader>
-            
+
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-6"
+              >
                 <FormField
                   control={form.control}
                   name="name"
@@ -175,7 +187,7 @@ export default function SiteManagement() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="address"
@@ -183,9 +195,9 @@ export default function SiteManagement() {
                     <FormItem>
                       <FormLabel>Address</FormLabel>
                       <FormControl>
-                        <Textarea 
-                          placeholder="1234 Vine St, Napa, CA 94558" 
-                          {...field} 
+                        <Textarea
+                          placeholder="1234 Vine St, Napa, CA 94558"
+                          {...field}
                         />
                       </FormControl>
                       <FormDescription>
@@ -195,15 +207,15 @@ export default function SiteManagement() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="managerId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Site Manager (Optional)</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
+                      <Select
+                        onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
@@ -212,7 +224,9 @@ export default function SiteManagement() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="no-manager">No manager assigned</SelectItem>
+                          <SelectItem value="no-manager">
+                            No manager assigned
+                          </SelectItem>
                           {siteManagers.map((manager) => (
                             <SelectItem key={manager.id} value={manager.id}>
                               {manager.name}
@@ -250,7 +264,9 @@ export default function SiteManagement() {
                   <MapPin className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground" />
                   <div>
                     <p className="text-sm font-medium">Address</p>
-                    <p className="text-sm text-muted-foreground">{site.address}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {site.address}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start">
@@ -282,14 +298,15 @@ export default function SiteManagement() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Delete Site</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Are you sure you want to delete "{site.name}"? This action cannot be undone.
+                        Are you sure you want to delete "{site.name}"? This
+                        action cannot be undone.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel onClick={() => setSiteToDelete(null)}>
                         Cancel
                       </AlertDialogCancel>
-                      <AlertDialogAction 
+                      <AlertDialogAction
                         onClick={() => {
                           setSiteToDelete(site);
                           handleDeleteSite();

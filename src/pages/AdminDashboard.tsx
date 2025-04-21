@@ -1,6 +1,21 @@
-
 import MainLayout from "@/components/MainLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -9,48 +24,53 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, PlusCircle } from "lucide-react";
-import { useState } from "react";
-import { users, sites, workOrders } from "@/lib/data";
+import { sites, users, workOrders } from "@/lib/data";
 import { User } from "@/lib/types";
+import { MAP_ROLE } from "@/lib/utils/role";
+import { PlusCircle, Search } from "lucide-react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
-  
+
   // Filter users by search term and role
-  const filteredUsers = users.filter(user => {
+  const filteredUsers = users.filter((user) => {
     // Search filter
-    const searchString = `${user.name} ${user.email} ${user.role} ${user.companyName || ""}`.toLowerCase();
+    const searchString = `${user.name} ${user.email} ${user.role} ${
+      user.companyName || ""
+    }`.toLowerCase();
     if (!searchString.includes(searchTerm.toLowerCase())) return false;
-    
+
     // Role filter
     if (roleFilter !== "all" && user.role !== roleFilter) return false;
-    
+
     return true;
   });
-  
+
   // Customer and worker counts
-  const customerCount = users.filter(user => user.role === "customer").length;
-  const workerCount = users.filter(user => user.role === "worker").length;
-  const siteManagerCount = users.filter(user => user.role === "siteManager").length;
-  
+  const customerCount = users.filter(
+    (user) => user.role === MAP_ROLE.CUSTOIMER
+  ).length;
+  const workerCount = users.filter(
+    (user) => user.role === MAP_ROLE.WORKER
+  ).length;
+  const siteManagerCount = users.filter(
+    (user) => user.role === MAP_ROLE.SITE_MANAGER
+  ).length;
+
   // Get role badge color
   const getRoleBadge = (role: User["role"]) => {
     switch (role) {
-      case "admin":
+      case MAP_ROLE.ADMIN:
         return <Badge className="bg-purple-500">Admin</Badge>;
-      case "customer":
+      case MAP_ROLE.CUSTOIMER:
         return <Badge className="bg-agworks-green">Vineyard Owner</Badge>;
-      case "siteManager":
+      case MAP_ROLE.SITE_MANAGER:
         return <Badge className="bg-blue-500">Site Manager</Badge>;
-      case "worker":
+      case MAP_ROLE.WORKER:
         return <Badge className="bg-agworks-brown">Field Worker</Badge>;
       default:
         return null;
@@ -59,9 +79,9 @@ export default function AdminDashboard() {
 
   const handleRowDoubleClick = (user: User) => {
     // Navigate to user details page based on role
-    if (user.role === "customer") {
+    if (user.role === MAP_ROLE.CUSTOIMER) {
       navigate(`/admin/customers/${user.id}`);
-    } else if (user.role === "worker") {
+    } else if (user.role === MAP_ROLE.WORKER) {
       navigate(`/admin/workers/${user.id}`);
     }
   };
@@ -84,7 +104,9 @@ export default function AdminDashboard() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Vineyard Owners</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Vineyard Owners
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{customerCount}</div>
@@ -129,8 +151,8 @@ export default function AdminDashboard() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Select 
-            defaultValue="all" 
+          <Select
+            defaultValue="all"
             onValueChange={(value) => setRoleFilter(value)}
             value={roleFilter}
           >
@@ -139,10 +161,14 @@ export default function AdminDashboard() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value="customer">Vineyard Owners</SelectItem>
-              <SelectItem value="siteManager">Site Managers</SelectItem>
-              <SelectItem value="worker">Field Workers</SelectItem>
-              <SelectItem value="admin">Admins</SelectItem>
+              <SelectItem value={MAP_ROLE.CUSTOIMER}>
+                Vineyard Owners
+              </SelectItem>
+              <SelectItem value={MAP_ROLE.SITE_MANAGER}>
+                Site Managers
+              </SelectItem>
+              <SelectItem value={MAP_ROLE.WORKER}>Field Workers</SelectItem>
+              <SelectItem value={MAP_ROLE.ADMIN}>Admins</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -162,8 +188,8 @@ export default function AdminDashboard() {
             </TableHeader>
             <TableBody>
               {filteredUsers.map((user) => (
-                <TableRow 
-                  key={user.id} 
+                <TableRow
+                  key={user.id}
                   className="cursor-pointer"
                   onDoubleClick={() => handleRowDoubleClick(user)}
                 >
@@ -171,7 +197,9 @@ export default function AdminDashboard() {
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{getRoleBadge(user.role)}</TableCell>
                   <TableCell>{user.companyName || "-"}</TableCell>
-                  <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    {new Date(user.createdAt).toLocaleDateString()}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -183,7 +211,7 @@ export default function AdminDashboard() {
         <div className="flex flex-col md:flex-row justify-between items-center mb-6">
           <h2 className="text-xl font-semibold">System Overview</h2>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
@@ -205,7 +233,11 @@ export default function AdminDashboard() {
                   <Badge variant="outline">5 sites</Badge>
                 </div>
                 <div className="flex justify-between items-center mt-2">
-                  <Button variant="outline" size="sm" onClick={() => navigate('/admin/sites')}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate("/admin/sites")}
+                  >
                     <PlusCircle className="mr-2 h-3 w-3" />
                     View All Sites
                   </Button>
@@ -213,7 +245,7 @@ export default function AdminDashboard() {
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardHeader>
               <CardTitle>Work Orders</CardTitle>
@@ -224,23 +256,37 @@ export default function AdminDashboard() {
                 <div className="flex justify-between items-center">
                   <span>In Progress</span>
                   <Badge>
-                    {workOrders.filter(order => order.status === "inProgress").length}
+                    {
+                      workOrders.filter(
+                        (order) => order.status === "inProgress"
+                      ).length
+                    }
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Published</span>
                   <Badge variant="secondary">
-                    {workOrders.filter(order => order.status === "published").length}
+                    {
+                      workOrders.filter((order) => order.status === "published")
+                        .length
+                    }
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center">
                   <span>Completed</span>
                   <Badge className="bg-agworks-green">
-                    {workOrders.filter(order => order.status === "completed").length}
+                    {
+                      workOrders.filter((order) => order.status === "completed")
+                        .length
+                    }
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center mt-2">
-                  <Button variant="outline" size="sm" onClick={() => navigate('/admin/orders')}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate("/admin/orders")}
+                  >
                     <PlusCircle className="mr-2 h-3 w-3" />
                     View All Orders
                   </Button>
