@@ -44,7 +44,6 @@ export default function Login() {
     setIsLoading(true);
     try {
       await login(values.email, values.password);
-      // Navigation will be handled by the auth state change listener in AuthContext
     } catch (error: any) {
       console.error("Login failed:", error);
       setIsLoading(false);

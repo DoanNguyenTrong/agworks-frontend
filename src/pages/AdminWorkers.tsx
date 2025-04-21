@@ -1,24 +1,6 @@
-
-import { useState } from "react";
+import { apiCreateAcc } from "@/api/account";
+import AccountResetDialog from "@/components/AccountResetDialog";
 import MainLayout from "@/components/MainLayout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,24 +12,41 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { Search, PlusCircle, Trash, Edit, Eye, KeyRound } from "lucide-react";
-import { Link } from "react-router-dom";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import WorkerForm, { WorkerFormData } from "@/components/WorkerForm";
-import { users, workerTasks } from "@/lib/data";
-import { addUser } from "@/lib/utils/dataManagement";
 import { toast } from "@/hooks/use-toast";
+import { users, workerTasks } from "@/lib/data";
 import { User } from "@/lib/types";
-import AccountResetDialog from "@/components/AccountResetDialog";
+import { Edit, Eye, KeyRound, PlusCircle, Search, Trash } from "lucide-react";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function AdminWorkers() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -56,52 +55,67 @@ export default function AdminWorkers() {
   const [isLoading, setIsLoading] = useState(false);
   const [workerToDelete, setWorkerToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [workersList, setWorkersList] = useState<User[]>(users.filter(user => user.role === 'worker'));
+  const [workersList, setWorkersList] = useState<User[]>(
+    users.filter((user) => user.role === "worker")
+  );
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  
+
   // Filter workers based on search term and status
-  const filteredWorkers = workersList.filter(worker => {
+  const filteredWorkers = workersList.filter((worker) => {
     // Search filter
-    const searchString = `${worker.name} ${worker.email} ${worker.phone || ""}`.toLowerCase();
+    const searchString = `${worker.name} ${worker.email} ${
+      worker.phone || ""
+    }`.toLowerCase();
     if (!searchString.includes(searchTerm.toLowerCase())) return false;
-    
+
     // Role filter - for now, we'll consider all workers active
     const matchesStatus = statusFilter === "all" || statusFilter === "active";
-    
+
     return matchesStatus;
   });
-  
+
   // Calculate completed tasks for each worker
   const calculateCompletedTasks = (workerId: string) => {
-    return workerTasks.filter(task => 
-      task.workerId === workerId && task.status === "approved"
+    return workerTasks.filter(
+      (task) => task.workerId === workerId && task.status === "approved"
     ).length;
   };
-  
+
   // Handle adding a new worker
-  const handleAddWorker = (workerData: WorkerFormData) => {
+  const handleAddWorker = async (workerData: WorkerFormData) => {
     try {
       // Add new worker using the data management utility
-      const newWorker = addUser({
+      // const newWorker = addUser({
+      //   email: workerData.email,
+      //   name: workerData.name,
+      //   role: 'worker',
+      //   phone: workerData.phone,
+      //   profileImage: '/placeholder.svg'
+      // });
+
+      const res = await apiCreateAcc({
         email: workerData.email,
         name: workerData.name,
-        role: 'worker',
+        role: "Worker",
+        password: workerData.phone,
+        // companyName: string,
         phone: workerData.phone,
-        profileImage: '/placeholder.svg'
+        // address: string
       });
-      
+      console.log("res :>> ", res);
+
       // Add the new worker to the local state
-      setWorkersList([...workersList, newWorker]);
-      
+      // setWorkersList([...workersList, newWorker]);
+
       toast({
         title: "Worker added",
         description: "New worker has been added successfully.",
       });
-      
+
       setShowAddDialog(false);
     } catch (error: any) {
-      console.error('Error adding worker:', error);
+      console.error("Error adding worker:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to add worker",
@@ -109,24 +123,26 @@ export default function AdminWorkers() {
       });
     }
   };
-  
+
   // Delete worker
   const handleDeleteWorker = () => {
     if (!workerToDelete) return;
-    
+
     try {
       setIsDeleting(true);
-      
+
       // In a real implementation, we would remove from the data array
       // For now, we'll just remove from our local state
-      setWorkersList(workersList.filter(worker => worker.id !== workerToDelete));
-      
+      setWorkersList(
+        workersList.filter((worker) => worker.id !== workerToDelete)
+      );
+
       toast({
         title: "Worker deleted",
         description: "Worker has been removed successfully.",
       });
     } catch (error: any) {
-      console.error('Error deleting worker:', error);
+      console.error("Error deleting worker:", error);
       toast({
         title: "Error",
         description: error.message || "Failed to delete worker",
@@ -137,7 +153,7 @@ export default function AdminWorkers() {
       setWorkerToDelete(null);
     }
   };
-  
+
   // Handle account reset
   const handleOpenResetDialog = (worker: User) => {
     setSelectedUser(worker);
@@ -157,7 +173,7 @@ export default function AdminWorkers() {
               className="pl-8"
             />
           </div>
-          
+
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full md:w-[180px]">
               <SelectValue placeholder="Filter by status" />
@@ -169,7 +185,7 @@ export default function AdminWorkers() {
             </SelectContent>
           </Select>
         </div>
-        
+
         <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
           <DialogTrigger asChild>
             <Button className="mt-4 md:mt-0">
@@ -184,7 +200,7 @@ export default function AdminWorkers() {
                 Fill out the form below to create a new worker account.
               </DialogDescription>
             </DialogHeader>
-            <WorkerForm 
+            <WorkerForm
               onComplete={() => setShowAddDialog(false)}
               onSubmit={handleAddWorker}
             />
@@ -218,18 +234,27 @@ export default function AdminWorkers() {
                       <div className="flex items-center gap-3">
                         <Avatar>
                           <AvatarImage src={worker.profileImage} />
-                          <AvatarFallback>{worker.name?.charAt(0) || 'W'}</AvatarFallback>
+                          <AvatarFallback>
+                            {worker.name?.charAt(0) || "W"}
+                          </AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="font-medium">{worker.name}</p>
-                          <p className="text-sm text-muted-foreground">{worker.email}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {worker.email}
+                          </p>
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>{worker.phone || "—"}</TableCell>
-                    <TableCell>{calculateCompletedTasks(worker.id)} tasks</TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                      {calculateCompletedTasks(worker.id)} tasks
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className="bg-green-50 text-green-700 border-green-200"
+                      >
                         Active
                       </Badge>
                     </TableCell>
@@ -245,18 +270,18 @@ export default function AdminWorkers() {
                             <Edit className="h-4 w-4" />
                           </Link>
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
+                        <Button
+                          variant="outline"
+                          size="icon"
                           onClick={() => handleOpenResetDialog(worker)}
                         >
                           <KeyRound className="h-4 w-4" />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button 
-                              variant="outline" 
-                              size="icon" 
+                            <Button
+                              variant="outline"
+                              size="icon"
                               className="text-red-500"
                               onClick={() => setWorkerToDelete(worker.id)}
                             >
@@ -265,15 +290,21 @@ export default function AdminWorkers() {
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                              <AlertDialogTitle>
+                                Confirm Deletion
+                              </AlertDialogTitle>
                               <AlertDialogDescription>
-                                Are you sure you want to delete {worker.name}? 
+                                Are you sure you want to delete {worker.name}?
                                 This action cannot be undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel onClick={() => setWorkerToDelete(null)}>Cancel</AlertDialogCancel>
-                              <AlertDialogAction 
+                              <AlertDialogCancel
+                                onClick={() => setWorkerToDelete(null)}
+                              >
+                                Cancel
+                              </AlertDialogCancel>
+                              <AlertDialogAction
                                 onClick={handleDeleteWorker}
                                 className="bg-red-500 hover:bg-red-600"
                                 disabled={isDeleting}
@@ -290,7 +321,9 @@ export default function AdminWorkers() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-6">
-                    {searchTerm ? "No workers found matching your search." : "No workers added yet."}
+                    {searchTerm
+                      ? "No workers found matching your search."
+                      : "No workers added yet."}
                   </TableCell>
                 </TableRow>
               )}
@@ -298,7 +331,7 @@ export default function AdminWorkers() {
           </Table>
         </CardContent>
       </Card>
-      
+
       {selectedUser && (
         <AccountResetDialog
           open={showResetDialog}

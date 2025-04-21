@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const { data } = await apiLogin({ email, password });
-      // console.log("data :>> ", data);
+      console.log("data :>> ", data);
 
       // Save user to state and localStorage
       setCurrentUser(data?.metaData?.user);
@@ -79,10 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         JSON.stringify(data?.metaData?.user)
       );
 
-      localStorage.setItem(
-        "accessToken",
-        JSON.stringify(data?.metaData?.access_token)
-      );
+      localStorage.setItem("accessToken", data?.metaData?.access_token);
 
       toast({
         title: "Login successful",
