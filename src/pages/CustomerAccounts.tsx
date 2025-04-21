@@ -1,20 +1,50 @@
-
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import AccountResetDialog from "@/components/AccountResetDialog";
 import MainLayout from "@/components/MainLayout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, Mail, Phone, Trash2, Edit, KeyRound } from "lucide-react";
 import ManagerForm from "@/components/ManagerForm";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
 import { users } from "@/lib/data";
 import { User } from "@/lib/types";
-import AccountResetDialog from "@/components/AccountResetDialog";
 import { addUser } from "@/lib/utils/dataManagement";
+import { MAP_ROLE } from "@/lib/utils/role";
+import {
+  Edit,
+  KeyRound,
+  Mail,
+  Phone,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function CustomerAccounts() {
   const navigate = useNavigate();
@@ -23,12 +53,14 @@ export default function CustomerAccounts() {
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [selectedManager, setSelectedManager] = useState<User | null>(null);
   const [siteManagers, setSiteManagers] = useState<User[]>(
-    users.filter(user => user.role === "siteManager")
+    users.filter((user) => user.role === MAP_ROLE.SITE_MANAGER)
   );
 
   // Filter managers by search term
-  const filteredManagers = siteManagers.filter(manager => {
-    const searchStr = `${manager.name} ${manager.email} ${manager.phone || ""}`.toLowerCase();
+  const filteredManagers = siteManagers.filter((manager) => {
+    const searchStr = `${manager.name} ${manager.email} ${
+      manager.phone || ""
+    }`.toLowerCase();
     return searchStr.includes(searchTerm.toLowerCase());
   });
 
@@ -38,25 +70,27 @@ export default function CustomerAccounts() {
       name: data.name,
       email: data.email,
       phone: data.phone,
-      role: "siteManager",
-      customerId: users.find(u => u.role === "customer")?.id
+      role: MAP_ROLE.SITE_MANAGER,
+      customerId: users.find((u) => u.role === MAP_ROLE.CUSTOIMER)?.id,
     });
-    
+
     // Update local state
-    setSiteManagers(prev => [...prev, newManager]);
-    
+    setSiteManagers((prev) => [...prev, newManager]);
+
     toast({
       title: "Site manager invited",
       description: `${data.name} has been invited as a site manager.`,
     });
-    
+
     setIsDialogOpen(false);
   };
 
   const handleDelete = (managerToDelete: User) => {
     // Update local state by removing the manager
-    setSiteManagers(prev => prev.filter(manager => manager.id !== managerToDelete.id));
-    
+    setSiteManagers((prev) =>
+      prev.filter((manager) => manager.id !== managerToDelete.id)
+    );
+
     toast({
       title: "Site manager deleted",
       description: `${managerToDelete.name} has been removed as a site manager.`,
@@ -105,12 +139,14 @@ export default function CustomerAccounts() {
             <TableBody>
               {filteredManagers.length > 0 ? (
                 filteredManagers.map((manager) => (
-                  <TableRow 
-                    key={manager.id} 
+                  <TableRow
+                    key={manager.id}
                     onDoubleClick={() => handleRowDoubleClick(manager.id)}
                     className="cursor-pointer"
                   >
-                    <TableCell className="font-medium">{manager.name}</TableCell>
+                    <TableCell className="font-medium">
+                      {manager.name}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center">
                         <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
@@ -124,7 +160,9 @@ export default function CustomerAccounts() {
                           {manager.phone}
                         </div>
                       ) : (
-                        <span className="text-muted-foreground">Not provided</span>
+                        <span className="text-muted-foreground">
+                          Not provided
+                        </span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -134,8 +172,8 @@ export default function CustomerAccounts() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="icon"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -144,8 +182,8 @@ export default function CustomerAccounts() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="icon"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -156,8 +194,8 @@ export default function CustomerAccounts() {
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button 
-                              variant="ghost" 
+                            <Button
+                              variant="ghost"
                               size="icon"
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -168,15 +206,20 @@ export default function CustomerAccounts() {
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogTitle>
+                                Are you absolutely sure?
+                              </AlertDialogTitle>
                               <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the site manager
-                                account and remove their access to all sites.
+                                This action cannot be undone. This will
+                                permanently delete the site manager account and
+                                remove their access to all sites.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(manager)}>
+                              <AlertDialogAction
+                                onClick={() => handleDelete(manager)}
+                              >
                                 Delete
                               </AlertDialogAction>
                             </AlertDialogFooter>
@@ -189,7 +232,9 @@ export default function CustomerAccounts() {
               ) : (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8">
-                    <p className="text-muted-foreground">No site managers found</p>
+                    <p className="text-muted-foreground">
+                      No site managers found
+                    </p>
                   </TableCell>
                 </TableRow>
               )}

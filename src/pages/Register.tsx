@@ -1,9 +1,3 @@
-
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -14,6 +8,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -21,40 +16,51 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Grape, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { MAP_ROLE } from "@/lib/utils/role";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Grape, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
+import * as z from "zod";
 
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  email: z.string().email({
-    message: "Please enter a valid email address.",
-  }),
-  password: z.string().min(8, {
-    message: "Password must be at least 8 characters.",
-  }),
-  confirmPassword: z.string(),
-  role: z.enum(["customer", "worker"]),
-  companyName: z.string().optional(),
-  phone: z.string().optional(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-}).refine(
-  (data) => {
-    // If role is customer, company name is required
-    if (data.role === "customer" && (!data.companyName || data.companyName.length < 2)) {
-      return false;
+const formSchema = z
+  .object({
+    name: z.string().min(2, {
+      message: "Name must be at least 2 characters.",
+    }),
+    email: z.string().email({
+      message: "Please enter a valid email address.",
+    }),
+    password: z.string().min(8, {
+      message: "Password must be at least 8 characters.",
+    }),
+    confirmPassword: z.string(),
+    role: z.enum([MAP_ROLE.CUSTOIMER, MAP_ROLE.WORKER]),
+    companyName: z.string().optional(),
+    phone: z.string().optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  })
+  .refine(
+    (data) => {
+      // If role is customer, company name is required
+      if (
+        data.role === MAP_ROLE.CUSTOIMER &&
+        (!data.companyName || data.companyName.length < 2)
+      ) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "Company name is required for vineyard owners",
+      path: ["companyName"],
     }
-    return true;
-  },
-  {
-    message: "Company name is required for vineyard owners",
-    path: ["companyName"],
-  }
-);
+  );
 
 export default function Register() {
   const [isLoading, setIsLoading] = useState(false);
@@ -68,7 +74,7 @@ export default function Register() {
       email: "",
       password: "",
       confirmPassword: "",
-      role: "worker",
+      role: MAP_ROLE.WORKER,
       companyName: "",
       phone: "",
     },
@@ -78,15 +84,18 @@ export default function Register() {
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    
+
     try {
       await signup(values.email, values.password, {
         name: values.name,
-        role: values.role === "customer" ? "customer" : "worker",
+        role:
+          values.role === MAP_ROLE.CUSTOIMER
+            ? MAP_ROLE.CUSTOIMER
+            : MAP_ROLE.WORKER,
         companyName: values.companyName,
-        phone: values.phone
+        phone: values.phone,
       });
-      
+
       navigate("/login");
     } catch (error) {
       console.error("Signup error:", error);
@@ -119,20 +128,25 @@ export default function Register() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Account Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select your account type" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="customer">Vineyard Owner</SelectItem>
+                        <SelectItem value={MAP_ROLE.CUSTOIMER}>
+                          Vineyard Owner
+                        </SelectItem>
                         <SelectItem value="worker">Field Worker</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormDescription>
-                      {field.value === "customer" 
-                        ? "Create an account to manage your vineyard operations" 
+                      {field.value === MAP_ROLE.CUSTOIMER
+                        ? "Create an account to manage your vineyard operations"
                         : "Create an account to apply for vineyard jobs"}
                     </FormDescription>
                     <FormMessage />
@@ -155,7 +169,7 @@ export default function Register() {
                   )}
                 />
 
-                {role === "customer" && (
+                {role === MAP_ROLE.CUSTOIMER && (
                   <FormField
                     control={form.control}
                     name="companyName"
@@ -206,7 +220,11 @@ export default function Register() {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -220,7 +238,11 @@ export default function Register() {
                     <FormItem>
                       <FormLabel>Confirm Password</FormLabel>
                       <FormControl>
-                        <Input type="password" placeholder="••••••••" {...field} />
+                        <Input
+                          type="password"
+                          placeholder="••••••••"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -244,7 +266,10 @@ export default function Register() {
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link to="/login" className="font-medium text-primary hover:underline">
+              <Link
+                to="/login"
+                className="font-medium text-primary hover:underline"
+              >
                 Log in
               </Link>
             </p>

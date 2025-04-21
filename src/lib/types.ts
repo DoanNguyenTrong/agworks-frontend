@@ -14,7 +14,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'customer' | 'siteManager' | 'worker';
+  role: string
   createdAt: string;
   companyName?: string;
   phone?: string;
