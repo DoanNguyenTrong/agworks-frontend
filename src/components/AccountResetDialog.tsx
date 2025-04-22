@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Dialog,
@@ -13,10 +12,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
+import { apiResetAcc, apiUpdateAcc } from "@/api/account";
 
 interface AccountResetDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onComplete: () => void;
   userName: string;
   userEmail: string;
   userId: string;
@@ -25,6 +26,7 @@ interface AccountResetDialogProps {
 export default function AccountResetDialog({
   open,
   onOpenChange,
+  onComplete,
   userName,
   userEmail,
   userId,
@@ -37,7 +39,6 @@ export default function AccountResetDialog({
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (password !== confirmPassword) {
       toast({
         title: "Passwords don't match",
@@ -46,7 +47,7 @@ export default function AccountResetDialog({
       });
       return;
     }
-    
+
     if (password.length < 8) {
       toast({
         title: "Password too short",
@@ -55,18 +56,18 @@ export default function AccountResetDialog({
       });
       return;
     }
-    
+
     try {
       setIsLoading(true);
-      
+
       // In a real app, this would call an API to reset the password
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
+      await apiResetAcc({ password: password, id: userId });
+
       toast({
         title: "Password reset successful",
         description: `${userName}'s password has been reset.`,
       });
-      
+      onComplete();
       setPassword("");
       setConfirmPassword("");
       onOpenChange(false);
@@ -84,8 +85,8 @@ export default function AccountResetDialog({
 
   const handleChangeEmail = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !email.includes('@')) {
+
+    if (!email || !email.includes("@")) {
       toast({
         title: "Invalid email",
         description: "Please enter a valid email address.",
@@ -93,18 +94,22 @@ export default function AccountResetDialog({
       });
       return;
     }
-    
+
     try {
       setIsLoading(true);
-      
+
       // In a real app, this would call an API to change the email
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
+      apiUpdateAcc({
+        email: email,
+        id: userId,
+        name: userName,
+      });
+
       toast({
         title: "Email updated successfully",
         description: `${userName}'s email has been updated to ${email}.`,
       });
-      
+      onComplete();
       onOpenChange(false);
     } catch (error) {
       console.error("Error changing email:", error);
@@ -127,18 +132,21 @@ export default function AccountResetDialog({
             Reset password or update email address for this user.
           </DialogDescription>
         </DialogHeader>
-        
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "password" | "email")}>
+
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as "password" | "email")}
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="password">Reset Password</TabsTrigger>
             <TabsTrigger value="email">Change Email</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="password">
             <form onSubmit={handleResetPassword} className="space-y-4 pt-4">
               <div className="space-y-2">
                 <Label htmlFor="new-password">New Password</Label>
-                <Input 
+                <Input
                   id="new-password"
                   type="password"
                   value={password}
@@ -147,10 +155,10 @@ export default function AccountResetDialog({
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirm Password</Label>
-                <Input 
+                <Input
                   id="confirm-password"
                   type="password"
                   value={confirmPassword}
@@ -159,11 +167,11 @@ export default function AccountResetDialog({
                   required
                 />
               </div>
-              
+
               <DialogFooter>
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => onOpenChange(false)}
                   disabled={isLoading}
                 >
@@ -175,22 +183,22 @@ export default function AccountResetDialog({
               </DialogFooter>
             </form>
           </TabsContent>
-          
+
           <TabsContent value="email">
             <form onSubmit={handleChangeEmail} className="space-y-4 pt-4">
               <div className="space-y-2">
                 <Label htmlFor="current-email">Current Email</Label>
-                <Input 
+                <Input
                   id="current-email"
                   value={userEmail}
                   disabled
                   className="bg-muted"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="new-email">New Email</Label>
-                <Input 
+                <Input
                   id="new-email"
                   type="email"
                   value={email}
@@ -199,11 +207,11 @@ export default function AccountResetDialog({
                   required
                 />
               </div>
-              
+
               <DialogFooter>
-                <Button 
-                  type="button" 
-                  variant="outline" 
+                <Button
+                  type="button"
+                  variant="outline"
                   onClick={() => onOpenChange(false)}
                   disabled={isLoading}
                 >
