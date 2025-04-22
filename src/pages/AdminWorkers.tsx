@@ -1,4 +1,4 @@
-import { apiCreateAcc } from "@/api/account";
+import { apiCreateAcc, apiDeleteAcc, apiGetAccList } from "@/api/account";
 import AccountResetDialog from "@/components/AccountResetDialog";
 import MainLayout from "@/components/MainLayout";
 import {
@@ -44,8 +44,9 @@ import WorkerForm, { WorkerFormData } from "@/components/WorkerForm";
 import { toast } from "@/hooks/use-toast";
 import { users, workerTasks } from "@/lib/data";
 import { User } from "@/lib/types";
+import { get } from "lodash";
 import { Edit, Eye, KeyRound, PlusCircle, Search, Trash } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function AdminWorkers() {
@@ -75,6 +76,21 @@ export default function AdminWorkers() {
     return matchesStatus;
   });
 
+  const getList = async () => {
+    try {
+      const { data } = await apiGetAccList({ filter: { role: "Worker" } });
+      // const data = response.metaData;
+      console.log("list data: ", data);
+      setWorkersList(get(data, "metaData", []));
+    } catch (error) {
+      console.error("Error fetching worker list:", error);
+    }
+  };
+
+  useEffect(() => {
+    getList();
+  }, []);
+
   // Calculate completed tasks for each worker
   const calculateCompletedTasks = (workerId: string) => {
     return workerTasks.filter(
@@ -85,28 +101,15 @@ export default function AdminWorkers() {
   // Handle adding a new worker
   const handleAddWorker = async (workerData: WorkerFormData) => {
     try {
-      // Add new worker using the data management utility
-      // const newWorker = addUser({
-      //   email: workerData.email,
-      //   name: workerData.name,
-      //   role: 'worker',
-      //   phone: workerData.phone,
-      //   profileImage: '/placeholder.svg'
-      // });
-
       const res = await apiCreateAcc({
         email: workerData.email,
         name: workerData.name,
         role: "Worker",
-        password: workerData.phone,
-        // companyName: string,
+        password: workerData.password || "12345678",
         phone: workerData.phone,
-        // address: string
       });
-      console.log("res :>> ", res);
 
-      // Add the new worker to the local state
-      // setWorkersList([...workersList, newWorker]);
+      getList();
 
       toast({
         title: "Worker added",
@@ -125,17 +128,13 @@ export default function AdminWorkers() {
   };
 
   // Delete worker
-  const handleDeleteWorker = () => {
+  const handleDeleteWorker = async () => {
     if (!workerToDelete) return;
 
     try {
       setIsDeleting(true);
-
-      // In a real implementation, we would remove from the data array
-      // For now, we'll just remove from our local state
-      setWorkersList(
-        workersList.filter((worker) => worker.id !== workerToDelete)
-      );
+      await apiDeleteAcc({ id: workerToDelete });
+      getList();
 
       toast({
         title: "Worker deleted",
@@ -209,7 +208,7 @@ export default function AdminWorkers() {
       </div>
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="p-0 max-h-[540px] overflow-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -229,7 +228,7 @@ export default function AdminWorkers() {
                 </TableRow>
               ) : filteredWorkers.length > 0 ? (
                 filteredWorkers.map((worker) => (
-                  <TableRow key={worker.id}>
+                  <TableRow key={worker["_id"]}>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar>
@@ -248,7 +247,7 @@ export default function AdminWorkers() {
                     </TableCell>
                     <TableCell>{worker.phone || "—"}</TableCell>
                     <TableCell>
-                      {calculateCompletedTasks(worker.id)} tasks
+                      {calculateCompletedTasks(worker["_id"])} tasks
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -261,12 +260,12 @@ export default function AdminWorkers() {
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button variant="outline" size="icon" asChild>
-                          <Link to={`/admin/workers/${worker.id}`}>
+                          <Link to={`/admin/workers/${worker["_id"]}`}>
                             <Eye className="h-4 w-4" />
                           </Link>
                         </Button>
                         <Button variant="outline" size="icon" asChild>
-                          <Link to={`/admin/workers/edit/${worker.id}`}>
+                          <Link to={`/admin/workers/edit/${worker["_id"]}`}>
                             <Edit className="h-4 w-4" />
                           </Link>
                         </Button>
@@ -283,7 +282,7 @@ export default function AdminWorkers() {
                               variant="outline"
                               size="icon"
                               className="text-red-500"
-                              onClick={() => setWorkerToDelete(worker.id)}
+                              onClick={() => setWorkerToDelete(worker["_id"])}
                             >
                               <Trash className="h-4 w-4" />
                             </Button>
@@ -335,10 +334,11 @@ export default function AdminWorkers() {
       {selectedUser && (
         <AccountResetDialog
           open={showResetDialog}
+          onComplete={getList}
           onOpenChange={setShowResetDialog}
           userName={selectedUser.name}
           userEmail={selectedUser.email}
-          userId={selectedUser.id}
+          userId={selectedUser["_id"]}
         />
       )}
     </MainLayout>

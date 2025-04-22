@@ -11,10 +11,12 @@ import { useState } from "react";
 import { addUser } from "@/lib/utils/dataManagement";
 
 const workerSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().optional(),
-  password: z.string().min(8, "Password must be at least 8 characters").optional(),
+  name: z.string().trim().min(1, "Name is required"),
+  email: z.string().trim().email("Invalid email address"),
+  phone: z.string().regex(/^[0-9 ()+-]*$/, "Invalid phone number").optional(),
+  password: z.string().refine(val => val === '' || val.length >= 8,
+    "Password must be at least 8 characters if provided"
+  ).optional(),
   sendInvite: z.boolean().default(true),
 });
 
@@ -59,31 +61,31 @@ export default function WorkerForm({
       }
       
       // Default handling if no onSubmit is provided
-      if (isEditMode && workerId) {
-        // In a real implementation, we would update the data
-        // For now, we'll just simulate success
-        
-        toast({
-          title: "Worker updated",
-          description: `${data.name} has been updated.`,
-        });
-      } else {
-        // Create new worker using local data management
-        const newWorker = addUser({
-          email: data.email,
-          name: data.name,
-          role: 'worker',
-          phone: data.phone,
-          profileImage: '/placeholder.svg'
-        });
-        
-        // If sendInvite is true, we'd send an email in a real implementation
-        
-        toast({
-          title: "Worker created",
-          description: `${data.name} has been added as a worker.${!data.password ? ' A password was generated.' : ''}`,
-        });
-      }
+      // if (isEditMode && workerId) {
+      //   // In a real implementation, we would update the data
+      //   // For now, we'll just simulate success
+      //
+      //   toast({
+      //     title: "Worker updated",
+      //     description: `${data.name} has been updated.`,
+      //   });
+      // } else {
+      //   // Create new worker using local data management
+      //   const newWorker = addUser({
+      //     email: data.email,
+      //     name: data.name,
+      //     role: 'worker',
+      //     phone: data.phone,
+      //     profileImage: '/placeholder.svg'
+      //   });
+      //
+      //   // If sendInvite is true, we'd send an email in a real implementation
+      //
+      //   toast({
+      //     title: "Worker created",
+      //     description: `${data.name} has been added as a worker.${!data.password ? ' A password was generated.' : ''}`,
+      //   });
+      // }
       
       if (onComplete) {
         onComplete();

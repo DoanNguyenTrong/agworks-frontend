@@ -11,11 +11,11 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const customerSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address"),
-  companyName: z.string().min(1, "Company name is required"),
-  phone: z.string().optional(),
-  address: z.string().optional(),
+  name: z.string().trim().min(1, "Name is required"),
+  email: z.string().trim().email("Invalid email address"),
+  companyName: z.string().trim().min(1, "Company name is required"),
+  phone: z.string().regex(/^[0-9 ()+-]*$/, "Invalid phone number").optional(),
+  address: z.string().trim().optional(),
   password: z.string().min(8, "Password must be at least 8 characters").optional(),
 });
 

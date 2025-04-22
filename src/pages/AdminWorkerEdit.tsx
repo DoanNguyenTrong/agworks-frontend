@@ -1,3 +1,4 @@
+import { apiGetAccDetail, apiUpdateAcc } from "@/api/account";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { User } from "@/lib/types";
 import { findUserById } from "@/lib/utils/dataManagement";
 import { MAP_ROLE } from "@/lib/utils/role";
+import { get } from "lodash";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -23,15 +25,9 @@ export default function AdminWorkerEdit() {
 
       try {
         setIsLoading(true);
-
-        // Find worker by ID using the utility function
-        const foundWorker = findUserById(id);
-
-        if (!foundWorker || foundWorker.role !== MAP_ROLE.WORKER) {
-          throw new Error("Worker not found");
-        }
-
-        setWorker(foundWorker);
+        const { data } = await apiGetAccDetail({ id: id });
+        setWorker(get(data, "metaData", {}));
+        //
       } catch (error: any) {
         console.error("Error fetching worker:", error);
         toast({
@@ -54,11 +50,7 @@ export default function AdminWorkerEdit() {
   const handleSave = async (data: any) => {
     try {
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      // In a real app, we would update the worker in the database.
-      // Here we just show a success message.
-
+      await apiUpdateAcc({ ...data, id: id });
       toast({
         title: "Worker updated",
         description: "Worker information has been updated successfully.",

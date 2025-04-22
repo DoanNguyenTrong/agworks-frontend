@@ -1,3 +1,4 @@
+import { apiGetAccList } from "@/api/account";
 import MainLayout from "@/components/MainLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,17 +28,19 @@ import {
 import { sites, users, workOrders } from "@/lib/data";
 import { User } from "@/lib/types";
 import { MAP_ROLE } from "@/lib/utils/role";
+import { get } from "lodash";
 import { PlusCircle, Search } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
+  const [userList, setUserList] = useState<User[]>([]);
 
   // Filter users by search term and role
-  const filteredUsers = users.filter((user) => {
+  const filteredUsers = userList.filter((user) => {
     // Search filter
     const searchString = `${user.name} ${user.email} ${user.role} ${
       user.companyName || ""
@@ -50,14 +53,29 @@ export default function AdminDashboard() {
     return true;
   });
 
+  const getList = async () => {
+    try {
+      const { data } = await apiGetAccList({ number_of_page: 1000 });
+      // const data = response.metaData;
+      console.log("list data: ", data);
+      setUserList(get(data, "metaData", []));
+    } catch (error) {
+      console.error("Error fetching customer list:", error);
+    }
+  };
+
+  useEffect(() => {
+    getList();
+  }, []);
+
   // Customer and worker counts
-  const customerCount = users.filter(
+  const customerCount = userList.filter(
     (user) => user.role === MAP_ROLE.CUSTOIMER
   ).length;
-  const workerCount = users.filter(
+  const workerCount = userList.filter(
     (user) => user.role === MAP_ROLE.WORKER
   ).length;
-  const siteManagerCount = users.filter(
+  const siteManagerCount = userList.filter(
     (user) => user.role === MAP_ROLE.SITE_MANAGER
   ).length;
 
@@ -80,9 +98,9 @@ export default function AdminDashboard() {
   const handleRowDoubleClick = (user: User) => {
     // Navigate to user details page based on role
     if (user.role === MAP_ROLE.CUSTOIMER) {
-      navigate(`/admin/customers/${user.id}`);
+      navigate(`/admin/customers/${user["_id"]}`);
     } else if (user.role === MAP_ROLE.WORKER) {
-      navigate(`/admin/workers/${user.id}`);
+      navigate(`/admin/workers/${user["_id"]}`);
     }
   };
 
@@ -95,7 +113,7 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <div className="text-2xl font-bold">{users.length}</div>
+              <div className="text-2xl font-bold">{userList.length}</div>
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               Across all roles
@@ -175,7 +193,7 @@ export default function AdminDashboard() {
       </div>
 
       <Card>
-        <CardContent className="p-0">
+        <CardContent className="p-0 max-h-[320px] overflow-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -189,7 +207,7 @@ export default function AdminDashboard() {
             <TableBody>
               {filteredUsers.map((user) => (
                 <TableRow
-                  key={user.id}
+                  key={user["_id"]}
                   className="cursor-pointer"
                   onDoubleClick={() => handleRowDoubleClick(user)}
                 >
