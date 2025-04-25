@@ -12,8 +12,12 @@ export const apiGetAccList = async (payload: any) => {
   return await apiClient.post("/auth/list", payload);
 };
 
+export const apiGetAllAccOrganization = async () => {
+  return await apiClient.get("/auth/search/organizationId");
+};
+
 export const apiDeleteAcc = async (payload: any) => {
-  return await apiClient.delete(`/auth/${payload?.id}`, payload);
+  return await apiClient.delete(`/auth/${payload?._id}`);
 };
 
 export const apiGetAccDetail = async (payload: any) => {
@@ -21,7 +25,7 @@ export const apiGetAccDetail = async (payload: any) => {
 };
 
 export const apiUpdateAcc = async (payload: any) => {
-  return await apiClient.patch(`/auth/account/${payload.id}`, payload);
+  return await apiClient.patch(`/auth/account/${payload._id}`, payload);
 };
 
 export const apiResetAcc = async (payload: any) => {

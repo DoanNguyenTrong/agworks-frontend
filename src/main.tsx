@@ -1,29 +1,35 @@
-
-import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
-import './index.css'
+import { createRoot } from "react-dom/client";
+import App from "./App.tsx";
+import "./index.css";
 
 // More robust error handling for script loading errors
-window.addEventListener('error', (event) => {
-  // Only handle script loading errors, not regular runtime errors
-  if (event.filename && (event.filename.includes('.js') || event.filename.includes('.ts'))) {
-    console.error('Script loading error:', {
-      message: event.message,
-      filename: event.filename,
-      lineno: event.lineno,
-      colno: event.colno
-    });
-  }
-}, true);
+window.addEventListener(
+  "error",
+  (event) => {
+    // Only handle script loading errors, not regular runtime errors
+    if (
+      event.filename &&
+      (event.filename.includes(".js") || event.filename.includes(".ts"))
+    ) {
+      console.error("Script loading error:", {
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+      });
+    }
+  },
+  true
+);
 
 const mount = () => {
   const rootElement = document.getElementById("root");
-  
+
   if (!rootElement) {
     console.error("Could not find root element to mount React app");
     return;
   }
-  
+
   try {
     const root = createRoot(rootElement);
     root.render(<App />);

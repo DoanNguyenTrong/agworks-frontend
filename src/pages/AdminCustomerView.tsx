@@ -1,22 +1,5 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { apiDeleteAcc, apiGetAccDetail } from "@/api/account";
 import MainLayout from "@/components/MainLayout";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Edit, Trash } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { User, Site } from "@/lib/types";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Link } from "react-router-dom";
-import { toast } from "@/hooks/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,10 +11,25 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { users, sites } from "@/lib/data";
-import { apiGetAccDetail, apiDeleteAcc } from "@/api/account";
-import { findUserById } from "@/lib/utils/dataManagement";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { toast } from "@/hooks/use-toast";
+import { sites } from "@/lib/data";
+import { Site, User } from "@/lib/types";
 import { get } from "lodash";
+import { ArrowLeft, Edit, Trash } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 export default function AdminCustomerView() {
   const { id } = useParams<{ id: string }>();
@@ -79,7 +77,7 @@ export default function AdminCustomerView() {
 
     try {
       setIsDeleting(true);
-      await apiDeleteAcc({ id: customer["_id"] });
+      await apiDeleteAcc({ _id: customer["_id"] });
 
       toast({
         title: "Customer deleted",
@@ -231,7 +229,7 @@ export default function AdminCustomerView() {
             <div className="flex justify-between items-center">
               <CardTitle>Sites</CardTitle>
               <Button size="sm" variant="outline" asChild>
-                <Link to={`/admin/sites/new?customerId=${customer.id}`}>
+                <Link to={`/admin/sites/new?customerId=${customer._id}`}>
                   Add Site
                 </Link>
               </Button>
@@ -250,7 +248,7 @@ export default function AdminCustomerView() {
                 </TableHeader>
                 <TableBody>
                   {customerSites.map((site) => (
-                    <TableRow key={site.id} className="cursor-pointer">
+                    <TableRow key={site._id} className="cursor-pointer">
                       <TableCell>{site.name}</TableCell>
                       <TableCell>{site.address}</TableCell>
                       <TableCell>{site.managerId ? "Assigned" : "—"}</TableCell>
@@ -259,7 +257,7 @@ export default function AdminCustomerView() {
                           <Button
                             variant="outline"
                             size="icon"
-                            onClick={() => navigate(`/admin/sites/${site.id}`)}
+                            onClick={() => navigate(`/admin/sites/${site._id}`)}
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -275,7 +273,7 @@ export default function AdminCustomerView() {
                   No sites found for this customer.
                 </p>
                 <Button className="mt-4" size="sm" asChild>
-                  <Link to={`/admin/sites/new?customerId=${customer.id}`}>
+                  <Link to={`/admin/sites/new?customerId=${customer._id}`}>
                     Add Site
                   </Link>
                 </Button>

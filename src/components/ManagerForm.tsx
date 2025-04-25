@@ -1,22 +1,41 @@
-
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { apiGetListSite } from "@/api/site";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { sites } from "@/lib/data";
-import { useAuth } from "@/contexts/AuthContext";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
+import { Site } from "@/lib/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { get } from "lodash";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 const managerSchema = z.object({
   name: z.string().min(1, "Name is required"),
   email: z.string().email("Invalid email address"),
   phone: z.string().optional(),
   siteId: z.string().optional(),
-  password: z.string().min(8, "Password must be at least 8 characters").optional(),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .optional(),
   sendInvite: z.boolean().default(true),
 });
 
@@ -29,12 +48,17 @@ export interface ManagerFormProps {
   isEditMode?: boolean;
 }
 
-export default function ManagerForm({ onComplete, onSubmit, defaultValues, isEditMode = false }: ManagerFormProps) {
+export default function ManagerForm({
+  onComplete,
+  onSubmit,
+  defaultValues,
+  isEditMode = false,
+}: ManagerFormProps) {
   const { currentUser } = useAuth();
-  
+  const [customerSites, setCustomerSites] = useState<Array<Site>>([]);
   // Get customer sites
-  const customerSites = sites.filter(site => site.customerId === currentUser?.id);
-  
+  // const customerSites = sites.filter(site => site.customerId === currentUser?.id);
+
   const form = useForm<ManagerFormData>({
     resolver: zodResolver(managerSchema),
     defaultValues: defaultValues || {
@@ -49,23 +73,37 @@ export default function ManagerForm({ onComplete, onSubmit, defaultValues, isEdi
 
   const handleSubmit = (data: ManagerFormData) => {
     console.log("Site manager data:", data);
-    
+
     if (onSubmit) {
       onSubmit(data);
     } else {
       // Default behavior if no onSubmit is provided
       toast({
         title: isEditMode ? "Site manager updated" : "Site manager created",
-        description: isEditMode 
+        description: isEditMode
           ? `${data.name} has been updated.`
           : `${data.name} has been added as a site manager.`,
       });
-      
+
       if (onComplete) {
         onComplete();
       }
     }
   };
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { data } = await apiGetListSite({});
+        // console.log("data :>> ", data);
+        setCustomerSites(get(data, "metaData", []));
+      } catch (error) {
+        console.log("error :>> ", error);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <Form {...form}>
@@ -83,7 +121,7 @@ export default function ManagerForm({ onComplete, onSubmit, defaultValues, isEdi
             </FormItem>
           )}
         />
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
@@ -101,7 +139,7 @@ export default function ManagerForm({ onComplete, onSubmit, defaultValues, isEdi
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="phone"
@@ -116,7 +154,7 @@ export default function ManagerForm({ onComplete, onSubmit, defaultValues, isEdi
             )}
           />
         </div>
-        
+
         <FormField
           control={form.control}
           name="siteId"
@@ -130,9 +168,9 @@ export default function ManagerForm({ onComplete, onSubmit, defaultValues, isEdi
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  {customerSites.map(site => (
-                    <SelectItem key={site.id} value={site.id}>
+                  {/* <SelectItem value="none">None</SelectItem> */}
+                  {customerSites.map((site) => (
+                    <SelectItem key={site._id} value={site._id}>
                       {site.name}
                     </SelectItem>
                   ))}
@@ -145,7 +183,7 @@ export default function ManagerForm({ onComplete, onSubmit, defaultValues, isEdi
             </FormItem>
           )}
         />
-        
+
         {!isEditMode && (
           <FormField
             control={form.control}
@@ -164,7 +202,7 @@ export default function ManagerForm({ onComplete, onSubmit, defaultValues, isEdi
             )}
           />
         )}
-        
+
         {!isEditMode && (
           <FormField
             control={form.control}
@@ -187,7 +225,7 @@ export default function ManagerForm({ onComplete, onSubmit, defaultValues, isEdi
             )}
           />
         )}
-        
+
         <div className="flex justify-end gap-3">
           <Button type="button" variant="outline" onClick={onComplete}>
             Cancel

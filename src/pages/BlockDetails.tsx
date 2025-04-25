@@ -1,15 +1,5 @@
-
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { apiDeleteBlock, apiGetDetailBlock } from "@/api/block";
 import MainLayout from "@/components/MainLayout";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Trash } from "lucide-react";
-import { blocks as allBlocks, sites, workOrders } from "@/lib/data";
-import { Block } from "@/lib/types";
-import { format } from "date-fns";
-import { toast } from "@/hooks/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,6 +11,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "@/hooks/use-toast";
+import { Block } from "@/lib/types";
+import { format } from "date-fns";
+import { get } from "lodash";
+import { ArrowLeft, Edit, Trash } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 export default function BlockDetails() {
   const { id } = useParams<{ id: string }>();
@@ -29,41 +29,48 @@ export default function BlockDetails() {
   const [site, setSite] = useState<any>(null);
   const [activeOrders, setActiveOrders] = useState<any[]>([]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  
+
   useEffect(() => {
     if (id) {
-      const foundBlock = allBlocks.find(b => b.id === id);
-      if (foundBlock) {
-        setBlock(foundBlock);
-        
-        // Get site info
-        const foundSite = sites.find(s => s.id === foundBlock.siteId);
-        if (foundSite) {
-          setSite(foundSite);
+      const getDetail = async (id: string) => {
+        try {
+          const { data } = await apiGetDetailBlock(id);
+          console.log("data :>> ", data);
+          setBlock(get(data, "metaData", {}));
+          setSite(get(data, "metaData.siteId", ""));
+          //   // Get active orders for this block
+          //   const orders = workOrders.filter(
+          //     order => order.blockId === id &&
+          //     ["published", "inProgress"].includes(order.status)
+          //   );
+          //   setActiveOrders(orders);
+          // }
+        } catch (error) {
+          console.log("error :>> ", error);
         }
-        
-        // Get active orders for this block
-        const orders = workOrders.filter(
-          order => order.blockId === id && 
-          ["published", "inProgress"].includes(order.status)
-        );
-        setActiveOrders(orders);
-      }
+      };
+
+      getDetail(id);
     }
   }, [id]);
-  
-  const handleDeleteBlock = () => {
+
+  const handleDeleteBlock = async () => {
     if (!block) return;
-    
+
     // In a real app, this would call an API
-    toast({
-      title: "Block deleted",
-      description: `${block.name} has been deleted.`,
-    });
-    
-    navigate('/customer/blocks');
+    try {
+      await apiDeleteBlock(block._id);
+
+      toast({
+        title: "Block deleted",
+        description: `${block.name} has been deleted.`,
+      });
+      navigate("/customer/blocks");
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   };
-  
+
   if (!block || !site) {
     return (
       <MainLayout pageTitle="Block Details">
@@ -77,7 +84,11 @@ export default function BlockDetails() {
   return (
     <MainLayout>
       <div className="mb-6">
-        <Button variant="ghost" className="p-0" onClick={() => navigate('/customer/blocks')}>
+        <Button
+          variant="ghost"
+          className="p-0"
+          onClick={() => navigate("/customer/blocks")}
+        >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Blocks
         </Button>
@@ -87,12 +98,18 @@ export default function BlockDetails() {
             <p className="text-muted-foreground">{site.name}</p>
           </div>
           <div className="flex gap-2 mt-4 sm:mt-0">
-            <Button variant="outline" onClick={() => navigate(`/customer/blocks/edit/${block.id}`)}>
+            <Button
+              variant="outline"
+              onClick={() => navigate(`/customer/blocks/edit/${block._id}`)}
+            >
               <Edit className="h-4 w-4 mr-2" />
               Edit Block
             </Button>
-            
-            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+
+            <AlertDialog
+              open={isDeleteDialogOpen}
+              onOpenChange={setIsDeleteDialogOpen}
+            >
               <AlertDialogTrigger asChild>
                 <Button variant="destructive">
                   <Trash className="h-4 w-4 mr-2" />
@@ -103,14 +120,14 @@ export default function BlockDetails() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will permanently delete {block.name}.
-                    This action cannot be undone.
+                    This will permanently delete {block.name}. This action
+                    cannot be undone.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction 
-                    onClick={handleDeleteBlock} 
+                  <AlertDialogAction
+                    onClick={handleDeleteBlock}
                     className="bg-red-500 hover:bg-red-600"
                   >
                     Delete
@@ -121,7 +138,7 @@ export default function BlockDetails() {
           </div>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader className="pb-2">
@@ -131,7 +148,7 @@ export default function BlockDetails() {
             <div className="text-2xl font-bold">{block.acres || 0} acres</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total Rows</CardTitle>
@@ -140,7 +157,7 @@ export default function BlockDetails() {
             <div className="text-2xl font-bold">{block.rows || 0}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total Vines</CardTitle>
@@ -155,25 +172,34 @@ export default function BlockDetails() {
           </CardContent>
         </Card>
       </div>
-      
+
       <h2 className="text-xl font-semibold mb-6">Active Work Orders</h2>
-      
+
       <div className="space-y-4">
         {activeOrders.length > 0 ? (
-          activeOrders.map(order => (
+          activeOrders.map((order) => (
             <Card key={order.id}>
               <CardContent className="p-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
                   <div>
                     <h3 className="text-lg font-semibold">
-                      {order.workType.charAt(0).toUpperCase() + order.workType.slice(1)}
+                      {order.workType.charAt(0).toUpperCase() +
+                        order.workType.slice(1)}
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      {format(new Date(order.startDate), "MMM d")} - {format(new Date(order.endDate), "MMM d")}
+                      {format(new Date(order.startDate), "MMM d")} -{" "}
+                      {format(new Date(order.endDate), "MMM d")}
                     </p>
                   </div>
-                  <Badge className="mt-2 md:mt-0 w-fit" variant={order.status === "inProgress" ? "default" : "secondary"}>
-                    {order.status === "inProgress" ? "In Progress" : "Published"}
+                  <Badge
+                    className="mt-2 md:mt-0 w-fit"
+                    variant={
+                      order.status === "inProgress" ? "default" : "secondary"
+                    }
+                  >
+                    {order.status === "inProgress"
+                      ? "In Progress"
+                      : "Published"}
                   </Badge>
                 </div>
                 <div className="flex flex-wrap gap-4 text-sm">
@@ -182,12 +208,16 @@ export default function BlockDetails() {
                     <span className="font-medium">{order.neededWorkers}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Expected Hours: </span>
+                    <span className="text-muted-foreground">
+                      Expected Hours:{" "}
+                    </span>
                     <span className="font-medium">{order.expectedHours}</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Pay Rate: </span>
-                    <span className="font-medium">${order.payRate.toFixed(2)}</span>
+                    <span className="font-medium">
+                      ${order.payRate.toFixed(2)}
+                    </span>
                   </div>
                 </div>
               </CardContent>

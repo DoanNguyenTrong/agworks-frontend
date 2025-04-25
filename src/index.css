@@ -111,3 +111,15 @@
 .agworks-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: hsl(var(--muted-foreground) / 0.5);
 }
+
+.delete-user .des {
+  display: none;
+}
+
+.delete-user:hover .name {
+  display: none;
+}
+
+.delete-user:hover .des {
+  display: block;
+}

@@ -1,9 +1,6 @@
-
-import { useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { apiCreateBlock, apiGetListBlock } from "@/api/block";
+import { apiGetAllSite } from "@/api/site";
 import MainLayout from "@/components/MainLayout";
-import { useAuth } from "@/contexts/AuthContext";
-import { sites, blocks } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -31,6 +28,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -38,12 +36,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { PlusCircle, MapPin, Grape, Rows } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { get } from "lodash";
+import { Grape, MapPin, PlusCircle, Rows } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
+import * as z from "zod";
 
 const blockFormSchema = z.object({
   name: z.string().min(2, {
@@ -52,30 +53,65 @@ const blockFormSchema = z.object({
   siteId: z.string().min(1, {
     message: "Please select a site.",
   }),
-  acres: z.number().min(0.1, {
-    message: "Acreage must be at least 0.1 acres.",
-  }).optional(),
-  rows: z.number().min(1, {
-    message: "Number of rows must be at least 1.",
-  }).optional(),
-  vines: z.number().min(1, {
-    message: "Number of vines must be at least 1.",
-  }).optional(),
+  acres: z
+    .number()
+    .min(0.1, {
+      message: "Acreage must be at least 0.1 acres.",
+    })
+    .optional(),
+  rows: z
+    .number()
+    .min(1, {
+      message: "Number of rows must be at least 1.",
+    })
+    .optional(),
+  vines: z
+    .number()
+    .min(1, {
+      message: "Number of vines must be at least 1.",
+    })
+    .optional(),
 });
+
+interface SiteProps {
+  _id?: string;
+  name?: string;
+  address?: string;
+  organizationId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  __v?: string;
+}
+
+interface BlockProps {
+  _id?: string;
+  name: string;
+  siteId?: SiteProps;
+  acres: number;
+  rows: number;
+  vines: number;
+  organizationId?: string;
+  vinesPerRow?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  __v?: string;
+}
 
 export default function BlockManagement() {
   const { currentUser } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [customerSites, setCustomerSites] = useState<Array<SiteProps>>([]);
+  const [idActiveSite, setIdActiveSite] = useState<Array<string>>([]);
+  const [customerBlocks, setCustomerBlocks] = useState<Array<BlockProps>>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Get customer sites and blocks
-  const customerSites = currentUser
-    ? sites.filter(site => site.customerId === currentUser.id)
-    : [];
-  
-  const siteIds = customerSites.map(site => site.id);
-  const customerBlocks = blocks.filter(block => siteIds.includes(block.siteId));
+  // Get customer sites and blocks];
+
+  const siteIds = customerSites.map((site) => site._id);
+  // const customerBlocks = blocks.filter((block) =>
+  //   siteIds.includes(block.siteId)
+  // );
 
   const form = useForm<z.infer<typeof blockFormSchema>>({
     resolver: zodResolver(blockFormSchema),
@@ -88,21 +124,63 @@ export default function BlockManagement() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof blockFormSchema>) {
+  async function onSubmit(values: z.infer<typeof blockFormSchema>) {
     // In a real app, this would create a new block via API
-    toast({
-      title: "Block created",
-      description: `"${values.name}" has been added to your vineyard.`,
-    });
-    
-    setIsDialogOpen(false);
-    form.reset();
+    try {
+      await apiCreateBlock(values);
+      toast({
+        title: "Block created",
+        description: `"${values.name}" has been added to your vineyard.`,
+      });
+      await fetchData();
+      setIsDialogOpen(false);
+      form.reset();
+    } catch (error) {
+      toast({
+        title: "Faild",
+        description: `Created faild`,
+      });
+    }
   }
 
-  const getSiteName = (siteId: string) => {
-    const site = sites.find(site => site.id === siteId);
-    return site ? site.name : "Unknown Site";
+  const fetchData = async () => {
+    try {
+      const { data } = await apiGetListBlock({});
+      console.log("data :>> ", data);
+      console.log(
+        "object :>> ",
+        get(data, "metaData", []).map((i: BlockProps) =>
+          get(i, "siteId._id", "")
+        )
+      );
+      setIdActiveSite(
+        get(data, "metaData", []).map((i: BlockProps) =>
+          get(i, "siteId._id", "")
+        )
+      );
+      setCustomerBlocks(get(data, "metaData", []));
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   };
+
+  useEffect(() => {
+    const getAllSite = async () => {
+      try {
+        const { data } = await apiGetAllSite();
+        const getBlockNoSite = get(data, "metaData", []).filter(
+          (i: any) => !i?.siteId
+        );
+        // console.log("getBlockNoSite :>> ", getBlockNoSite);
+        setCustomerSites(getBlockNoSite);
+      } catch (error) {
+        console.log("error :>> ", error);
+      }
+    };
+
+    fetchData();
+    getAllSite();
+  }, []);
 
   return (
     <MainLayout pageTitle="Block Management">
@@ -110,7 +188,7 @@ export default function BlockManagement() {
         <p className="text-muted-foreground">
           Manage vineyard blocks and growing areas
         </p>
-        
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -125,9 +203,12 @@ export default function BlockManagement() {
                 Enter the details of your new growing area.
               </DialogDescription>
             </DialogHeader>
-            
+
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-6"
+              >
                 <FormField
                   control={form.control}
                   name="name"
@@ -144,15 +225,15 @@ export default function BlockManagement() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={form.control}
                   name="siteId"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Site</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
+                      <Select
+                        onValueChange={field.onChange}
                         defaultValue={field.value}
                       >
                         <FormControl>
@@ -162,7 +243,7 @@ export default function BlockManagement() {
                         </FormControl>
                         <SelectContent>
                           {customerSites.map((site) => (
-                            <SelectItem key={site.id} value={site.id}>
+                            <SelectItem key={site._id} value={site._id}>
                               {site.name}
                             </SelectItem>
                           ))}
@@ -175,7 +256,7 @@ export default function BlockManagement() {
                     </FormItem>
                   )}
                 />
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
@@ -184,12 +265,18 @@ export default function BlockManagement() {
                       <FormItem>
                         <FormLabel>Acres</FormLabel>
                         <FormControl>
-                          <Input 
-                            type="number" 
+                          <Input
+                            type="number"
                             step="0.1"
                             placeholder="5.2"
                             {...field}
-                            onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value
+                                  ? parseFloat(e.target.value)
+                                  : undefined
+                              )
+                            }
                             value={field.value === undefined ? "" : field.value}
                           />
                         </FormControl>
@@ -197,7 +284,7 @@ export default function BlockManagement() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="rows"
@@ -205,11 +292,17 @@ export default function BlockManagement() {
                       <FormItem>
                         <FormLabel>Rows</FormLabel>
                         <FormControl>
-                          <Input 
+                          <Input
                             type="number"
                             placeholder="52"
                             {...field}
-                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value
+                                  ? parseInt(e.target.value)
+                                  : undefined
+                              )
+                            }
                             value={field.value === undefined ? "" : field.value}
                           />
                         </FormControl>
@@ -217,7 +310,7 @@ export default function BlockManagement() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="vines"
@@ -225,11 +318,17 @@ export default function BlockManagement() {
                       <FormItem>
                         <FormLabel>Vines</FormLabel>
                         <FormControl>
-                          <Input 
+                          <Input
                             type="number"
                             placeholder="2080"
                             {...field}
-                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.value
+                                  ? parseInt(e.target.value)
+                                  : undefined
+                              )
+                            }
                             value={field.value === undefined ? "" : field.value}
                           />
                         </FormControl>
@@ -251,10 +350,12 @@ export default function BlockManagement() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {customerBlocks.length > 0 ? (
           customerBlocks.map((block) => (
-            <Card key={block.id}>
+            <Card key={block._id}>
               <CardHeader>
                 <CardTitle>{block.name}</CardTitle>
-                <CardDescription>{getSiteName(block.siteId)}</CardDescription>
+                <CardDescription>
+                  {get(block, "siteId.name", "Unknown Site")}
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center gap-4">
@@ -277,18 +378,31 @@ export default function BlockManagement() {
                     </span>
                   </div>
                 </div>
-                
+
                 {block.rows && block.vines && block.rows > 0 && (
                   <div className="text-sm">
-                    <span className="text-muted-foreground">Vines per Row: </span>
+                    <span className="text-muted-foreground">
+                      Vines per Row:{" "}
+                    </span>
                     <span>{Math.round(block.vines / block.rows)}</span>
                   </div>
                 )}
               </CardContent>
               <CardFooter className="flex justify-between">
-                <Button variant="outline" size="sm" onClick={() => navigate(`/customer/blocks/edit/${block.id}`)}>Edit</Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate(`/customer/blocks/${block.id}`)}>
-                  View Details</Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate(`/customer/blocks/edit/${block._id}`)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate(`/customer/blocks/${block._id}`)}
+                >
+                  View Details
+                </Button>
               </CardFooter>
             </Card>
           ))

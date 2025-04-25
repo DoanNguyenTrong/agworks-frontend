@@ -5,8 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import WorkerForm from "@/components/WorkerForm";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@/lib/types";
-import { findUserById } from "@/lib/utils/dataManagement";
-import { MAP_ROLE } from "@/lib/utils/role";
 import { get } from "lodash";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -50,7 +48,7 @@ export default function AdminWorkerEdit() {
   const handleSave = async (data: any) => {
     try {
       // Simulate API call
-      await apiUpdateAcc({ ...data, id: id });
+      await apiUpdateAcc({ ...data, _id: id });
       toast({
         title: "Worker updated",
         description: "Worker information has been updated successfully.",

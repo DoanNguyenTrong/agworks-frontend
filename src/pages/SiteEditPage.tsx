@@ -1,3 +1,5 @@
+import { apiGetAllAccOrganization } from "@/api/account";
+import { apiGetDetailSite, apiUpdateSite } from "@/api/site";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,8 +20,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { sites, users } from "@/lib/data";
-import { MAP_ROLE } from "@/lib/utils/role";
+import { User } from "@/lib/types";
+import { get, uniq } from "lodash";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -29,41 +31,75 @@ export default function SiteEditPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [siteData, setSiteData] = useState<any>(null);
+  const [siteManagers, setSiteManagers] = useState<Array<User>>([]);
+  const [curentManager, setCurentManager] = useState<Array<User>>([]);
 
   // Form state
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [managerId, setManagerId] = useState("");
 
-  // Get site managers for dropdown
-  const siteManagers = users.filter(
-    (user) => user.role === MAP_ROLE.SITE_MANAGER
-  );
+  const getSiteManager = async () => {
+    try {
+      const { data } = await apiGetAllAccOrganization();
+      // console.log("apiGetAllAccOrganization :>> ", data);
+      setSiteManagers(get(data, "metaData", []));
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  };
 
   useEffect(() => {
-    if (!id) return;
+    const getDetail = async (id: string) => {
+      try {
+        setIsLoading(true);
+        const { data } = await apiGetDetailSite(id);
+        console.log("data :>> ", data);
+        console.log(
+          'get(data, "metaData.userIds", "") :>> ',
+          get(data, "metaData.userIds", "")
+        );
+        setSiteData(get(data, "metaData", {}));
+        setName(get(data, "metaData.name", ""));
+        setAddress(get(data, "metaData.address", ""));
+        setCurentManager(get(data, "metaData.userIds", ""));
+        // setManagerId(get(data, "metaData.userIds", ""));
+      } catch (error) {
+        console.log("error :>> ", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-    const site = sites.find((s) => s.id === id);
-    if (site) {
-      setSiteData(site);
-      setName(site.name);
-      setAddress(site.address);
-      setManagerId(site.managerId || "");
-    }
-
+    getDetail(id);
+    getSiteManager();
     setIsLoading(false);
   }, [id]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     // In a real app, this would make an API call
-    toast({
-      title: "Site updated",
-      description: `${name} has been updated successfully.`,
-    });
-
-    navigate(`/customer/sites/${id}`);
+    try {
+      const { userIds, ...cloneSiteData } = siteData;
+      const newData = {
+        ...cloneSiteData,
+        name,
+        address,
+        userId: uniq([
+          ...curentManager.map((i: any) => i._id),
+          managerId,
+        ]).filter((item) => item !== ""),
+      };
+      console.log("object :>> ", newData);
+      await apiUpdateSite(newData, id);
+      toast({
+        title: "Site updated",
+        description: `${name} has been updated successfully.`,
+      });
+      navigate(`/customer/sites/${id}`);
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   };
 
   if (isLoading) {
@@ -137,14 +173,39 @@ export default function SiteEditPage() {
                     <SelectValue placeholder="Select a manager" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">No manager assigned</SelectItem>
-                    {siteManagers.map((manager) => (
-                      <SelectItem key={manager.id} value={manager.id}>
-                        {manager.name}
-                      </SelectItem>
-                    ))}
+                    {/* <SelectItem value="none">No manager assigned</SelectItem> */}
+                    {siteManagers
+                      .filter(
+                        (i: User) =>
+                          !curentManager.map((u) => u._id).includes(i._id)
+                      )
+                      .map((manager) => (
+                        <SelectItem key={manager._id} value={manager._id}>
+                          {manager.name}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
+                <div className="py-4 text-[14px] flex justify-start items-center gap-2">
+                  <div>Site Manager selected:</div>
+                  {curentManager.map((i: User, idx) => (
+                    <div
+                      key={i._id}
+                      onDoubleClick={() =>
+                        setCurentManager(
+                          curentManager.filter((u: User) => u._id !== i._id)
+                        )
+                      }
+                      className="flex items-center gap-1"
+                    >
+                      <div className="bg-blue-200 hover:bg-red-500 px-5 py-1 rounded-full font-bold cursor-pointer delete-user">
+                        <div className="name">{i.name}</div>
+                        <div className="des hidden text-[#FFF]">Xóa</div>
+                      </div>
+                      {idx < curentManager.length - 1 && <>,</>}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 

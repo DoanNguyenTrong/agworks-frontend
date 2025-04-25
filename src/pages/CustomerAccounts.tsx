@@ -1,3 +1,9 @@
+import {
+  apiCreateAcc,
+  apiDeleteAcc,
+  apiGetAllAccOrganization,
+} from "@/api/account";
+import { apiUpdateByFieldUserIds } from "@/api/site";
 import AccountResetDialog from "@/components/AccountResetDialog";
 import MainLayout from "@/components/MainLayout";
 import ManagerForm from "@/components/ManagerForm";
@@ -30,10 +36,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
-import { users } from "@/lib/data";
 import { User } from "@/lib/types";
-import { addUser } from "@/lib/utils/dataManagement";
 import { MAP_ROLE } from "@/lib/utils/role";
+import { filter, get } from "lodash";
 import {
   Edit,
   KeyRound,
@@ -43,7 +48,7 @@ import {
   Search,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function CustomerAccounts() {
@@ -52,49 +57,44 @@ export default function CustomerAccounts() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [selectedManager, setSelectedManager] = useState<User | null>(null);
-  const [siteManagers, setSiteManagers] = useState<User[]>(
-    users.filter((user) => user.role === MAP_ROLE.SITE_MANAGER)
-  );
+  const [managers, setManagers] = useState<User[]>([]);
 
-  // Filter managers by search term
-  const filteredManagers = siteManagers.filter((manager) => {
-    const searchStr = `${manager.name} ${manager.email} ${
-      manager.phone || ""
-    }`.toLowerCase();
-    return searchStr.includes(searchTerm.toLowerCase());
-  });
-
-  const handleAddManager = (data: any) => {
+  const handleAddManager = async (data: any) => {
     // Create a new site manager
-    const newManager = addUser({
-      name: data.name,
-      email: data.email,
-      phone: data.phone,
-      role: MAP_ROLE.SITE_MANAGER,
-      customerId: users.find((u) => u.role === MAP_ROLE.CUSTOIMER)?.id,
-    });
-
-    // Update local state
-    setSiteManagers((prev) => [...prev, newManager]);
-
-    toast({
-      title: "Site manager invited",
-      description: `${data.name} has been invited as a site manager.`,
-    });
-
-    setIsDialogOpen(false);
+    try {
+      const newManagerSite = {
+        ...data,
+        role: MAP_ROLE.SITE_MANAGER,
+      };
+      const res = await apiCreateAcc(newManagerSite);
+      await apiUpdateByFieldUserIds(
+        { userId: [get(res, "data.metaData.user._id")] },
+        data.siteId
+      );
+      await fetchData();
+      // Update local state
+      toast({
+        title: "Site manager invited",
+        description: `${data.name} has been invited as a site manager.`,
+      });
+      setIsDialogOpen(false);
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   };
 
-  const handleDelete = (managerToDelete: User) => {
+  const handleDelete = async (managerToDelete: User) => {
     // Update local state by removing the manager
-    setSiteManagers((prev) =>
-      prev.filter((manager) => manager.id !== managerToDelete.id)
-    );
-
-    toast({
-      title: "Site manager deleted",
-      description: `${managerToDelete.name} has been removed as a site manager.`,
-    });
+    try {
+      await apiDeleteAcc(managerToDelete);
+      await fetchData();
+      toast({
+        title: "Site manager deleted",
+        description: `${managerToDelete.name} has been removed as a site manager.`,
+      });
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   };
 
   const handleRowDoubleClick = (id: string) => {
@@ -105,6 +105,31 @@ export default function CustomerAccounts() {
     setSelectedManager(manager);
     setShowResetDialog(true);
   };
+
+  const fetchData = async () => {
+    try {
+      const { data } = await apiGetAllAccOrganization();
+      // console.log("data :>> ", data);
+      setManagers(get(data, "metaData"));
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  };
+
+  const searchUsersByName = (data: Array<User>, keyword: string) => {
+    if (keyword) {
+      const lowerKeyword = keyword.toLowerCase();
+
+      return filter(data, (user) =>
+        user.name.toLowerCase().includes(lowerKeyword)
+      );
+    }
+    return data;
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   return (
     <MainLayout pageTitle="Site Managers">
@@ -137,11 +162,11 @@ export default function CustomerAccounts() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredManagers.length > 0 ? (
-                filteredManagers.map((manager) => (
+              {managers.length > 0 ? (
+                searchUsersByName(managers, searchTerm).map((manager) => (
                   <TableRow
-                    key={manager.id}
-                    onDoubleClick={() => handleRowDoubleClick(manager.id)}
+                    key={manager._id}
+                    onDoubleClick={() => handleRowDoubleClick(manager._id)}
                     className="cursor-pointer"
                   >
                     <TableCell className="font-medium">
@@ -177,7 +202,7 @@ export default function CustomerAccounts() {
                           size="icon"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/customer/managers/edit/${manager.id}`);
+                            navigate(`/customer/managers/edit/${manager._id}`);
                           }}
                         >
                           <Edit className="h-4 w-4" />
@@ -257,11 +282,15 @@ export default function CustomerAccounts() {
 
       {selectedManager && (
         <AccountResetDialog
+          onComplete={() => {
+            setSelectedManager(null);
+            setShowResetDialog(false);
+          }}
           open={showResetDialog}
           onOpenChange={setShowResetDialog}
           userName={selectedManager.name}
           userEmail={selectedManager.email}
-          userId={selectedManager.id}
+          userId={selectedManager._id}
         />
       )}
     </MainLayout>

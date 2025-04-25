@@ -1,6 +1,6 @@
 // Site Manager type
 export interface SiteManager {
-  id: string;
+  _id: string;
   name: string;
   email: string;
   phone?: string | null;
@@ -11,7 +11,7 @@ export interface SiteManager {
 
 // User type
 export interface User {
-  id: string;
+  _id: string;
   email: string;
   name: string;
   role: string
@@ -21,22 +21,24 @@ export interface User {
   address?: string;
   logo?: string;
   profileImage?: string;
-  customerId?: string; // Added this property for site managers
+  customerId?: string;
+  siteId?: string;
 }
 
 // Site type
 export interface Site {
-  id: string;
+  _id: string;
   name: string;
   address: string;
   customerId: string;
   managerId?: string;
+  userIds?: Array<User>;
   createdAt: string;
 }
 
 // Block type
 export interface Block {
-  id: string;
+  _id: string;
   name: string;
   siteId: string;
   acres?: number;
@@ -48,7 +50,7 @@ export interface Block {
 
 // Work Order type
 export interface WorkOrder {
-  id: string;
+  _id: string;
   siteId: string;
   blockId: string;
   address: string;
@@ -70,7 +72,7 @@ export interface WorkOrder {
 
 // Worker Application type
 export interface WorkerApplication {
-  id: string;
+  _id: string;
   workerId: string;
   workerName: string;
   orderId: string; // Fixed typo from orderrId to orderId
@@ -80,7 +82,7 @@ export interface WorkerApplication {
 
 // Worker Task type
 export interface WorkerTask {
-  id: string;
+  _id: string;
   workerId: string;
   workerName: string;
   orderId: string;

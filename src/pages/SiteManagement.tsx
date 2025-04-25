@@ -1,3 +1,5 @@
+import { apiGetAllAccOrganization } from "@/api/account";
+import { apiCreateSite, apiDeleteSite, apiGetListSite } from "@/api/site";
 import MainLayout from "@/components/MainLayout";
 import {
   AlertDialog,
@@ -48,13 +50,11 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { sites, users } from "@/lib/data";
 import { Site } from "@/lib/types";
-import { addSite } from "@/lib/utils/dataManagement";
-import { MAP_ROLE } from "@/lib/utils/role";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { get, join } from "lodash";
 import { MapPin, PlusCircle, Trash, User } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import * as z from "zod";
@@ -73,18 +73,10 @@ export default function SiteManagement() {
   const { currentUser } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [siteToDelete, setSiteToDelete] = useState<Site | null>(null);
-  const [customerSites, setCustomerSites] = useState(
-    currentUser
-      ? sites.filter((site) => site.customerId === currentUser.id)
-      : []
-  );
+  const [customerSites, setCustomerSites] = useState([]);
+  const [managers, setManagers] = useState<Array<any>>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  // Get available site managers
-  const siteManagers = users.filter(
-    (user) => user.role === MAP_ROLE.SITE_MANAGER
-  );
 
   const form = useForm<z.infer<typeof siteFormSchema>>({
     resolver: zodResolver(siteFormSchema),
@@ -95,54 +87,88 @@ export default function SiteManagement() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof siteFormSchema>) {
-    if (!currentUser) return;
+  async function onSubmit(values: z.infer<typeof siteFormSchema>) {
+    try {
+      if (!currentUser) return;
+      // Create new site
+      const newSite = {
+        name: values.name,
+        address: values.address,
+        userId: values.managerId,
+      };
 
-    // Create new site
-    const newSite = addSite({
-      name: values.name,
-      address: values.address,
-      customerId: currentUser.id,
-      managerId:
-        values.managerId && values.managerId !== "no-manager"
-          ? values.managerId
-          : undefined,
-    });
+      const { data } = await apiCreateSite(newSite);
+      // console.log("data :>> ", data);
+      // Update local state
+      await fetchData();
 
-    // Update local state
-    setCustomerSites((prev) => [...prev, newSite]);
+      toast({
+        title: "Site created",
+        description: `"${values.name}" has been added to your vineyard.`,
+      });
 
-    toast({
-      title: "Site created",
-      description: `"${values.name}" has been added to your vineyard.`,
-    });
-
-    setIsDialogOpen(false);
-    form.reset();
+      setIsDialogOpen(false);
+      form.reset();
+    } catch (error) {
+      toast({
+        title: "Site created",
+        description: `Created faild`,
+      });
+    }
   }
 
-  const handleDeleteSite = () => {
+  const handleDeleteSite = async () => {
     if (!siteToDelete) return;
 
     // In a real app, this would delete via API
     // For now, we'll just update local state
-    setCustomerSites((prev) =>
-      prev.filter((site) => site.id !== siteToDelete.id)
-    );
-
-    toast({
-      title: "Site deleted",
-      description: `"${siteToDelete.name}" has been removed from your vineyard.`,
-    });
-
-    setSiteToDelete(null);
+    try {
+      await apiDeleteSite(siteToDelete._id);
+      await fetchData();
+      toast({
+        title: "Site deleted",
+        description: `"${siteToDelete.name}" has been removed from your vineyard.`,
+      });
+      setSiteToDelete(null);
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   };
 
-  const getManagerName = (managerId: string | undefined) => {
-    if (!managerId) return "Unassigned";
-    const manager = users.find((user) => user.id === managerId);
-    return manager ? manager.name : "Unknown Manager";
+  const getManagerName = (siteId: Array<any>) => {
+    if (siteId.length <= 0) return "Unassigned";
+    return managers.length > 0
+      ? join(
+          siteId.map((i) => i.name),
+          ", "
+        )
+      : "Unknown Manager";
   };
+
+  const getSiteManager = async () => {
+    try {
+      const { data } = await apiGetAllAccOrganization();
+      // console.log("apiGetAllAccOrganization :>> ", data);
+      setManagers(get(data, "metaData", []));
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  };
+
+  const fetchData = async () => {
+    try {
+      const { data } = await apiGetListSite({ number_of_page: 1000 });
+      // console.log("data :>> ", data);
+      setCustomerSites(get(data, "metaData", []));
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  };
+
+  useEffect(() => {
+    getSiteManager();
+    fetchData();
+  }, []);
 
   return (
     <MainLayout pageTitle="Site Management">
@@ -224,11 +250,8 @@ export default function SiteManagement() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="no-manager">
-                            No manager assigned
-                          </SelectItem>
-                          {siteManagers.map((manager) => (
-                            <SelectItem key={manager.id} value={manager.id}>
+                          {managers.map((manager) => (
+                            <SelectItem key={manager._id} value={manager._id}>
                               {manager.name}
                             </SelectItem>
                           ))}
@@ -254,10 +277,10 @@ export default function SiteManagement() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {customerSites.length > 0 ? (
           customerSites.map((site: Site) => (
-            <Card key={site.id}>
+            <Card key={site._id}>
               <CardHeader>
                 <CardTitle>{site.name}</CardTitle>
-                <CardDescription>Site ID: {site.id}</CardDescription>
+                <CardDescription>Site ID: {site._id}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-start">
@@ -274,7 +297,7 @@ export default function SiteManagement() {
                   <div>
                     <p className="text-sm font-medium">Site Manager</p>
                     <p className="text-sm text-muted-foreground">
-                      {getManagerName(site.managerId)}
+                      {getManagerName(site.userIds)}
                     </p>
                   </div>
                 </div>
@@ -282,15 +305,23 @@ export default function SiteManagement() {
               <CardFooter className="flex justify-between">
                 <div className="flex space-x-2">
                   <Button variant="outline" size="sm" asChild>
-                    <Link to={`/customer/sites/edit/${site.id}`}>Edit</Link>
+                    <Link to={`/customer/sites/edit/${site._id}`}>Edit</Link>
                   </Button>
                   <Button variant="ghost" size="sm" asChild>
-                    <Link to={`/customer/sites/${site.id}`}>View Details</Link>
+                    <Link to={`/customer/sites/${site._id}`}>View Details</Link>
                   </Button>
                 </div>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-red-500">
+                    <Button
+                      onClick={() => {
+                        setSiteToDelete(site);
+                        handleDeleteSite();
+                      }}
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-500"
+                    >
                       <Trash className="h-4 w-4" />
                     </Button>
                   </AlertDialogTrigger>

@@ -1,15 +1,14 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { apiGetAccDetail, apiUpdateAcc } from "@/api/account";
+import CustomerForm from "@/components/CustomerForm";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import CustomerForm from "@/components/CustomerForm";
 import { User } from "@/lib/types";
-import { findUserById } from "@/lib/utils/dataManagement";
-import { apiGetAccDetail, apiUpdateAcc } from "@/api/account";
 import { get } from "lodash";
+import { ArrowLeft } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 export default function AdminCustomerEdit() {
   const { id } = useParams<{ id: string }>();
@@ -54,7 +53,7 @@ export default function AdminCustomerEdit() {
   const handleSave = async (data: any) => {
     try {
       console.log("update data", data);
-      await apiUpdateAcc({ ...data, id: id });
+      await apiUpdateAcc({ ...data, _id: id });
 
       toast({
         title: "Customer updated",

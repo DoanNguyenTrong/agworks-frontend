@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { apiResetAcc, apiUpdateAcc } from "@/api/account";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -7,17 +8,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
-import { apiResetAcc, apiUpdateAcc } from "@/api/account";
+import React, { useState } from "react";
 
 interface AccountResetDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onComplete: () => void;
+  onComplete?: () => void;
   userName: string;
   userEmail: string;
   userId: string;
@@ -26,7 +26,7 @@ interface AccountResetDialogProps {
 export default function AccountResetDialog({
   open,
   onOpenChange,
-  onComplete,
+  onComplete = () => {},
   userName,
   userEmail,
   userId,
@@ -101,7 +101,7 @@ export default function AccountResetDialog({
       // In a real app, this would call an API to change the email
       apiUpdateAcc({
         email: email,
-        id: userId,
+        _id: userId,
         name: userName,
       });
 

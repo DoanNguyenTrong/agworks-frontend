@@ -1,3 +1,4 @@
+import { apiGetAccDetail, apiUpdateAcc } from "@/api/account";
 import AccountResetDialog from "@/components/AccountResetDialog";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -11,8 +12,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { users } from "@/lib/data";
-import { MAP_ROLE } from "@/lib/utils/role";
+import { User } from "@/lib/types";
+import { get } from "lodash";
 import { ArrowLeft, KeyRound, UserCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -21,7 +22,7 @@ export default function CustomerManagerEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
-  const [manager, setManager] = useState<any>(null);
+  const [manager, setManager] = useState<User | null>(null);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   // Form state
@@ -29,27 +30,45 @@ export default function CustomerManagerEdit() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
 
-  useEffect(() => {
-    const foundManager = users.find(
-      (user) => user.id === id && user.role === MAP_ROLE.SITE_MANAGER
-    );
-    if (foundManager) {
-      setManager(foundManager);
-      setName(foundManager.name);
-      setEmail(foundManager.email);
-      setPhone(foundManager.phone || "");
+  const getDetailUser = async (id: string) => {
+    try {
+      const { data } = await apiGetAccDetail({ id });
+      // console.log("data :>> ", data);
+      setManager(get(data, "metaData"));
+      setName(get(data, "metaData.name", ""));
+      setEmail(get(data, "metaData.email", ""));
+      setPhone(get(data, "metaData.phone", ""));
+    } catch (error) {
+      console.log("error :>> ", error);
     }
-    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    if (id) {
+      setIsLoading(false);
+      getDetailUser(id);
+    }
   }, [id]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // In a real app, this would make an API call
-    toast({
-      title: "Manager updated",
-      description: "Site manager information has been updated successfully.",
-    });
-    navigate("/customer/accounts");
+    try {
+      const newAcc = {
+        ...manager,
+        name,
+        email,
+        phone,
+      };
+      await apiUpdateAcc(newAcc);
+      toast({
+        title: "Manager updated",
+        description: "Site manager information has been updated successfully.",
+      });
+      navigate("/customer/accounts");
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   };
 
   if (isLoading) {
@@ -171,7 +190,8 @@ export default function CustomerManagerEdit() {
         onOpenChange={setResetDialogOpen}
         userName={manager.name}
         userEmail={manager.email}
-        userId={manager.id}
+        userId={manager._id}
+        onComplete={() => getDetailUser(id)}
       />
     </MainLayout>
   );

@@ -1,3 +1,5 @@
+import { apiGetAllAccOrganization } from "@/api/account";
+import { apiCreateSite } from "@/api/site";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,11 +22,12 @@ import {
 } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { sites, users } from "@/lib/data";
-import { MAP_ROLE } from "@/lib/utils/role";
+import { sites } from "@/lib/data";
+import { User } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { get } from "lodash";
 import { ArrowLeft } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
@@ -40,11 +43,7 @@ export default function SiteForm() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const isEditMode = !!id;
-
-  // Get site managers
-  const siteManagers = users.filter(
-    (user) => user.role === MAP_ROLE.SITE_MANAGER
-  );
+  const [siteManagers, setSiteManagers] = useState<Array<User>>([]);
 
   const form = useForm<z.infer<typeof siteSchema>>({
     resolver: zodResolver(siteSchema),
@@ -58,7 +57,7 @@ export default function SiteForm() {
   // Load data if in edit mode
   useEffect(() => {
     if (isEditMode && id) {
-      const site = sites.find((s) => s.id === id);
+      const site = sites.find((s) => s._id === id);
       if (site) {
         form.reset({
           name: site.name,
@@ -69,14 +68,15 @@ export default function SiteForm() {
     }
   }, [isEditMode, id, form]);
 
-  const onSubmit = (data: z.infer<typeof siteSchema>) => {
+  const onSubmit = async (data: z.infer<typeof siteSchema>) => {
     // Convert "none" value back to empty string or undefined for backend
+    const { managerId, ...cloneData } = data;
     const formattedData = {
-      ...data,
-      managerId: data.managerId === "none" ? undefined : data.managerId,
+      ...cloneData,
+      userId: [managerId],
     };
 
-    console.log("Form data:", formattedData);
+    await apiCreateSite(formattedData);
 
     // In a real app, you would save this data to your backend
     toast({
@@ -88,6 +88,20 @@ export default function SiteForm() {
 
     navigate("/customer/sites");
   };
+
+  useEffect(() => {
+    const getDataManagerSite = async () => {
+      try {
+        const { data } = await apiGetAllAccOrganization();
+        // console.log("data :>> ", data);
+        setSiteManagers(get(data, "metaData", []));
+      } catch (error) {
+        console.log("error :>> ", error);
+      }
+    };
+
+    getDataManagerSite();
+  }, []);
 
   return (
     <MainLayout pageTitle={isEditMode ? "Edit Site" : "Add New Site"}>
@@ -163,9 +177,9 @@ export default function SiteForm() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="none">None</SelectItem>
+                        {/* <SelectItem value="none">None</SelectItem> */}
                         {siteManagers.map((manager) => (
-                          <SelectItem key={manager.id} value={manager.id}>
+                          <SelectItem key={manager._id} value={manager._id}>
                             {manager.name}
                           </SelectItem>
                         ))}

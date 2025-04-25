@@ -1,24 +1,7 @@
-import { useState, useEffect } from "react";
+import { apiCreateAcc, apiDeleteAcc, apiGetAccList } from "@/api/account";
+import AccountResetDialog from "@/components/AccountResetDialog";
+import CustomerForm, { CustomerFormData } from "@/components/CustomerForm";
 import MainLayout from "@/components/MainLayout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,21 +13,35 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Card, CardContent } from "@/components/ui/card";
-import { Search, PlusCircle, Trash, Edit, Eye, KeyRound } from "lucide-react";
-import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import CustomerForm, { CustomerFormData } from "@/components/CustomerForm";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { users, sites } from "@/lib/data";
-import { addUser } from "@/lib/utils/dataManagement";
+import { sites, users } from "@/lib/data";
 import { User } from "@/lib/types";
-import AccountResetDialog from "@/components/AccountResetDialog";
-import { apiCreateAcc, apiGetAccList, apiDeleteAcc } from "@/api/account";
-import { profile } from "console";
 import { get } from "lodash";
+import { Edit, Eye, KeyRound, PlusCircle, Search, Trash } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function AdminCustomers() {
   const { currentUser } = useAuth();
@@ -139,7 +136,7 @@ export default function AdminCustomers() {
 
     try {
       setIsDeleting(true);
-      await apiDeleteAcc({ id: customerToDelete });
+      await apiDeleteAcc({ _id: customerToDelete });
       getList();
 
       toast({

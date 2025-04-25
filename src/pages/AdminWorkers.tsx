@@ -133,7 +133,7 @@ export default function AdminWorkers() {
 
     try {
       setIsDeleting(true);
-      await apiDeleteAcc({ id: workerToDelete });
+      await apiDeleteAcc({ _id: workerToDelete });
       getList();
 
       toast({

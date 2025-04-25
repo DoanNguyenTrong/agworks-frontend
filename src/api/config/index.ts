@@ -5,7 +5,7 @@ import axios, { AxiosRequestConfig } from "axios";
 import { get } from "lodash";
 
 const PORT = "3100";
-const BASE_URL = `http://localhost:${PORT}`;
+const BASE_URL = `http://192.168.11.59:${PORT}`;
 
 const timeout = 10000;
 const ACCESS_TOKEN = "accessToken";
@@ -133,7 +133,7 @@ const _handleSucess = (response: any, option: any) => {
 const _handleError = (err: any, option: any) => {
   toast({
     title: "Error",
-    description: err.message || "error",
+    description: get(err, "response.data.message", "error") || "error",
     variant: "destructive",
   });
   if (option?.showError) {
@@ -212,3 +212,4 @@ const apiClient = {
 // };
 
 export { apiClient };
+
