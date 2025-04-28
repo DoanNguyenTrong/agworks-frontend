@@ -68,7 +68,6 @@ export default function AdminCustomers() {
     try {
       const { data } = await apiGetAccList({ filter: { role: "Customer" } });
       // const data = response.metaData;
-      console.log("list data: ", data);
       setCustomersList(get(data, "metaData", []));
     } catch (error) {
       console.error("Error fetching customer list:", error);

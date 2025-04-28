@@ -53,17 +53,17 @@ import { useToast } from "@/hooks/use-toast";
 import { Site } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { get, join } from "lodash";
-import { MapPin, PlusCircle, Trash, User } from "lucide-react";
+import { ArrowLeft, MapPin, PlusCircle, Trash, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import * as z from "zod";
 
 const siteFormSchema = z.object({
-  name: z.string().min(2, {
-    message: "Site name must be at least 2 characters.",
+  name: z.string().trim().min(1, {
+    message: "Please enter a valid.",
   }),
-  address: z.string().min(5, {
+  address: z.string().trim().min(1, {
     message: "Please enter a valid address.",
   }),
   managerId: z.string().optional(),
@@ -75,6 +75,7 @@ export default function SiteManagement() {
   const [siteToDelete, setSiteToDelete] = useState<Site | null>(null);
   const [customerSites, setCustomerSites] = useState([]);
   const [managers, setManagers] = useState<Array<any>>([]);
+  const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -94,8 +95,9 @@ export default function SiteManagement() {
       const newSite = {
         name: values.name,
         address: values.address,
-        userId: values.managerId,
+        userId: values.managerId ? [values.managerId] : [],
       };
+      console.log("New site data :>> ", newSite);
 
       const { data } = await apiCreateSite(newSite);
       // console.log("data :>> ", data);
@@ -112,7 +114,7 @@ export default function SiteManagement() {
     } catch (error) {
       toast({
         title: "Site created",
-        description: `Created faild`,
+        description: `Created failed`,
       });
     }
   }
@@ -172,6 +174,16 @@ export default function SiteManagement() {
 
   return (
     <MainLayout pageTitle="Site Management">
+      {location.pathname.includes("admin") && (
+        <Button
+          variant="ghost"
+          className="p-0 mb-6"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Button>
+      )}
       <div className="flex justify-between items-center mb-6">
         <p className="text-muted-foreground">
           Manage your vineyard properties and locations
@@ -305,10 +317,26 @@ export default function SiteManagement() {
               <CardFooter className="flex justify-between">
                 <div className="flex space-x-2">
                   <Button variant="outline" size="sm" asChild>
-                    <Link to={`/customer/sites/edit/${site._id}`}>Edit</Link>
+                    <Link
+                      to={
+                        location.pathname.includes("customer")
+                          ? `/customer/sites/edit/${site._id}`
+                          : `/admin/sites/edit/${site._id}`
+                      }
+                    >
+                      Edit
+                    </Link>
                   </Button>
                   <Button variant="ghost" size="sm" asChild>
-                    <Link to={`/customer/sites/${site._id}`}>View Details</Link>
+                    <Link
+                      to={
+                        location.pathname.includes("customer")
+                          ? `/customer/sites/${site._id}`
+                          : `/admin/sites/${site._id}`
+                      }
+                    >
+                      View Details
+                    </Link>
                   </Button>
                 </div>
                 <AlertDialog>

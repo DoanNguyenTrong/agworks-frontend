@@ -1,4 +1,4 @@
-import { apiGetAllAccOrganization } from "@/api/account";
+import { apiGetAccList, apiGetAllAccOrganization } from "@/api/account";
 import { apiGetDetailSite, apiUpdateSite } from "@/api/site";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { User } from "@/lib/types";
-import { get, uniq } from "lodash";
+import { add, get, uniq } from "lodash";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -39,15 +39,30 @@ export default function SiteEditPage() {
   const [address, setAddress] = useState("");
   const [managerId, setManagerId] = useState("");
 
-  const getSiteManager = async () => {
-    try {
-      const { data } = await apiGetAllAccOrganization();
-      // console.log("apiGetAllAccOrganization :>> ", data);
-      setSiteManagers(get(data, "metaData", []));
-    } catch (error) {
-      console.log("error :>> ", error);
-    }
-  };
+  useEffect(() => {
+    const getSiteManager = async () => {
+      try {
+        // const { data } = await apiGetAllAccOrganization();
+        // // console.log("apiGetAllAccOrganization :>> ", data);
+        // setSiteManagers(get(data, "metaData", []));
+
+        //get manager list in current organazation
+        const { data } = await apiGetAccList({
+          filter: {
+            role: "SiteManager",
+            organizationId: siteData.organizationId,
+          },
+        });
+
+        setSiteManagers(get(data, "metaData", []));
+      } catch (error) {
+        console.log("error :>> ", error);
+      }
+    };
+    getSiteManager();
+  }, [siteData]);
+
+  console.log("site manager: ", siteManagers);
 
   useEffect(() => {
     const getDetail = async (id: string) => {
@@ -72,7 +87,6 @@ export default function SiteEditPage() {
     };
 
     getDetail(id);
-    getSiteManager();
     setIsLoading(false);
   }, [id]);
 
@@ -83,8 +97,8 @@ export default function SiteEditPage() {
       const { userIds, ...cloneSiteData } = siteData;
       const newData = {
         ...cloneSiteData,
-        name,
-        address,
+        name: name.trim(),
+        address: address.trim(),
         userId: uniq([
           ...curentManager.map((i: any) => i._id),
           managerId,
@@ -96,7 +110,7 @@ export default function SiteEditPage() {
         title: "Site updated",
         description: `${name} has been updated successfully.`,
       });
-      navigate(`/customer/sites/${id}`);
+      navigate(-1);
     } catch (error) {
       console.log("error :>> ", error);
     }
@@ -127,11 +141,7 @@ export default function SiteEditPage() {
 
   return (
     <MainLayout pageTitle="Edit Site">
-      <Button
-        variant="ghost"
-        className="p-0 mb-6"
-        onClick={() => navigate(`/customer/sites/${id}`)}
-      >
+      <Button variant="ghost" className="p-0 mb-6" onClick={() => navigate(-1)}>
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Site Details
       </Button>
@@ -173,11 +183,13 @@ export default function SiteEditPage() {
                     <SelectValue placeholder="Select a manager" />
                   </SelectTrigger>
                   <SelectContent>
-                    {/* <SelectItem value="none">No manager assigned</SelectItem> */}
+                    {/* <SelectItem value="none">None</SelectItem> */}
                     {siteManagers
                       .filter(
-                        (i: User) =>
-                          !curentManager.map((u) => u._id).includes(i._id)
+                        (manager: User) =>
+                          !curentManager.some(
+                            (selected: User) => selected._id === manager._id
+                          )
                       )
                       .map((manager) => (
                         <SelectItem key={manager._id} value={manager._id}>
@@ -213,7 +225,7 @@ export default function SiteEditPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate(`/customer/sites/${id}`)}
+                onClick={() => navigate(-1)}
               >
                 Cancel
               </Button>

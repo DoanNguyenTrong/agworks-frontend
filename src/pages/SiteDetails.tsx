@@ -20,10 +20,11 @@ import { Block, Site } from "@/lib/types";
 import { get } from "lodash";
 import { ArrowLeft, Edit, MapPin, Trash, User } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 
 export default function SiteDetails() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const [site, setSite] = useState<Site | null>(null);
   const [siteBlocks, setSiteBlocks] = useState<any[]>([]);
@@ -94,7 +95,7 @@ export default function SiteDetails() {
         title: "Site deleted",
         description: `${site.name} has been deleted.`,
       });
-      navigate("/customer/sites");
+      navigate(-1);
     } catch (error) {
       console.log("error :>> ", error);
     }
@@ -113,11 +114,7 @@ export default function SiteDetails() {
   return (
     <MainLayout>
       <div className="mb-8">
-        <Button
-          variant="ghost"
-          className="p-0"
-          onClick={() => navigate("/customer/sites")}
-        >
+        <Button variant="ghost" className="p-0" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Sites
         </Button>
@@ -132,7 +129,14 @@ export default function SiteDetails() {
           <div className="flex gap-2 mt-4 sm:mt-0">
             <Button
               variant="outline"
-              onClick={() => navigate(`/customer/sites/edit/${site._id}`)}
+              onClick={() => {
+                if (location.pathname.includes("customer")) {
+                  navigate(`/customer/sites/edit/${site._id}`);
+                } else {
+                  navigate(`/admin/sites/edit/${site._id}`);
+                }
+                // navigate(`/customer/sites/edit/${site._id}`);
+              }}
             >
               <Edit className="h-4 w-4 mr-2" />
               Edit Site
@@ -216,8 +220,8 @@ export default function SiteDetails() {
             <div className="h-[220px] overflow-x-auto">
               {manager.length > 0 ? (
                 <div className="flex flex-col gap-3">
-                  {manager.map((item) => (
-                    <div className="flex items-center gap-4">
+                  {manager.map((item, index) => (
+                    <div key={index} className="flex items-center gap-4">
                       <Avatar className="h-16 w-16">
                         <AvatarImage src={item?.logo} />
                         <AvatarFallback className="text-lg">
@@ -241,9 +245,6 @@ export default function SiteDetails() {
                   <p className="text-muted-foreground mb-4">
                     Assign a site manager to oversee work orders.
                   </p>
-                  <Button onClick={() => navigate("/customer/accounts")}>
-                    Assign Manager
-                  </Button>
                 </div>
               )}
             </div>

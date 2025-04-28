@@ -57,7 +57,6 @@ export default function AdminDashboard() {
     try {
       const { data } = await apiGetAccList({ number_of_page: 1000 });
       // const data = response.metaData;
-      console.log("list data: ", data);
       setUserList(get(data, "metaData", []));
     } catch (error) {
       console.error("Error fetching customer list:", error);
@@ -67,6 +66,8 @@ export default function AdminDashboard() {
   useEffect(() => {
     getList();
   }, []);
+
+  console.log("User List:", userList);
 
   // Customer and worker counts
   const customerCount = userList.filter(

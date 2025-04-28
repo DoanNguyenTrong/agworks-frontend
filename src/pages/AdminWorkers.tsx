@@ -80,7 +80,6 @@ export default function AdminWorkers() {
     try {
       const { data } = await apiGetAccList({ filter: { role: "Worker" } });
       // const data = response.metaData;
-      console.log("list data: ", data);
       setWorkersList(get(data, "metaData", []));
     } catch (error) {
       console.error("Error fetching worker list:", error);

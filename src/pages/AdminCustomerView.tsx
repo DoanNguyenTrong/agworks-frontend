@@ -1,4 +1,5 @@
 import { apiDeleteAcc, apiGetAccDetail } from "@/api/account";
+import { apiGetListSite } from "@/api/site";
 import MainLayout from "@/components/MainLayout";
 import {
   AlertDialog,
@@ -39,6 +40,8 @@ export default function AdminCustomerView() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  console.log("id= ", id);
+
   useEffect(() => {
     const fetchCustomerData = async () => {
       if (!id) return;
@@ -47,6 +50,14 @@ export default function AdminCustomerView() {
         setIsLoading(true);
 
         // Fetch customer from local data
+        const { data: siteList } = await apiGetListSite({
+          number_of_page: 1000,
+          filter: {
+            organizationId: id,
+          },
+        });
+        setCustomerSites(get(siteList, "metaData", []));
+
         const { data } = await apiGetAccDetail({ id: id });
         setCustomer(get(data, "metaData", {}));
 
@@ -54,8 +65,6 @@ export default function AdminCustomerView() {
         //   throw new Error("Customer not found");
         // }
         // Fetch customer sites from local data
-        const customerSites = sites.filter((site) => site.customerId === id);
-        setCustomerSites(customerSites);
       } catch (error: any) {
         console.error("Error fetching customer data:", error);
         toast({
@@ -71,7 +80,6 @@ export default function AdminCustomerView() {
     fetchCustomerData();
   }, [id]);
 
-  console.log("customer", customer);
   const handleDeleteCustomer = async () => {
     if (!customer) return;
 
@@ -235,7 +243,7 @@ export default function AdminCustomerView() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="max-h-[460px] overflow-auto">
             {customerSites.length > 0 ? (
               <Table>
                 <TableHeader>

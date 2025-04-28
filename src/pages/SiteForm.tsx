@@ -1,4 +1,4 @@
-import { apiGetAllAccOrganization } from "@/api/account";
+import { apiGetAccList, apiGetAllAccOrganization } from "@/api/account";
 import { apiCreateSite } from "@/api/site";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -25,16 +25,17 @@ import { toast } from "@/hooks/use-toast";
 import { sites } from "@/lib/data";
 import { User } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
+import clsx from "clsx";
 import { get } from "lodash";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CodeSquare } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 
 const siteSchema = z.object({
-  name: z.string().min(1, "Site name is required"),
-  address: z.string().min(1, "Address is required"),
+  name: z.string().trim().min(1, "Site name is required"),
+  address: z.string().trim().min(1, "Address is required"),
   managerId: z.string().optional(),
 });
 
@@ -44,6 +45,8 @@ export default function SiteForm() {
   const { currentUser } = useAuth();
   const isEditMode = !!id;
   const [siteManagers, setSiteManagers] = useState<Array<User>>([]);
+  const [searchParams] = useSearchParams();
+  const customerId = searchParams.get("customerId");
 
   const form = useForm<z.infer<typeof siteSchema>>({
     resolver: zodResolver(siteSchema),
@@ -62,7 +65,7 @@ export default function SiteForm() {
         form.reset({
           name: site.name,
           address: site.address,
-          managerId: site.managerId || "none",
+          managerId: site.managerId || "",
         });
       }
     }
@@ -71,10 +74,15 @@ export default function SiteForm() {
   const onSubmit = async (data: z.infer<typeof siteSchema>) => {
     // Convert "none" value back to empty string or undefined for backend
     const { managerId, ...cloneData } = data;
+    console.log("data->", data);
+
     const formattedData = {
       ...cloneData,
-      userId: [managerId],
+      userId: managerId ? [managerId] : [],
+      organizationId: customerId,
     };
+
+    console.log("formatted data = ", formattedData);
 
     await apiCreateSite(formattedData);
 
@@ -86,15 +94,27 @@ export default function SiteForm() {
       }`,
     });
 
-    navigate("/customer/sites");
+    navigate(-1);
   };
 
   useEffect(() => {
     const getDataManagerSite = async () => {
       try {
-        const { data } = await apiGetAllAccOrganization();
-        // console.log("data :>> ", data);
+        // const { data } = await apiGetAllAccOrganization();
+        // console.log("data list=> ", data);
+        // setSiteManagers(get(data, "metaData", []));
+
+        //get list with manager role in current organizationId
+        const { data } = await apiGetAccList({
+          filter: {
+            role: "SiteManager",
+            organizationId: customerId,
+          },
+        });
+
         setSiteManagers(get(data, "metaData", []));
+
+        console.log("data manager: ", data);
       } catch (error) {
         console.log("error :>> ", error);
       }
@@ -105,13 +125,9 @@ export default function SiteForm() {
 
   return (
     <MainLayout pageTitle={isEditMode ? "Edit Site" : "Add New Site"}>
-      <Button
-        variant="ghost"
-        className="p-0 mb-6"
-        onClick={() => navigate("/customer/sites")}
-      >
+      <Button variant="ghost" className="p-0 mb-6" onClick={() => navigate(-1)}>
         <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Sites
+        Back
       </Button>
 
       <Card>
@@ -170,6 +186,7 @@ export default function SiteForm() {
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
+                      // disabled={!!customerId}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -197,7 +214,7 @@ export default function SiteForm() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate("/customer/sites")}
+                  onClick={() => navigate(-1)}
                 >
                   Cancel
                 </Button>

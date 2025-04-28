@@ -1,7 +1,7 @@
 import { apiClient } from "./config";
 
 export const apiLogin = async (payload: any) => {
-  return await apiClient.post("/auth/login", payload)
+  return await apiClient.post("/auth/login", payload);
 };
 
 export const apiCreateAcc = async (payload: any) => {

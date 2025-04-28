@@ -5,7 +5,7 @@ import axios, { AxiosRequestConfig } from "axios";
 import { get } from "lodash";
 
 const PORT = "3100";
-const BASE_URL = `http://192.168.11.59:${PORT}`;
+const BASE_URL = `http://localhost:${PORT}`;
 
 const timeout = 10000;
 const ACCESS_TOKEN = "accessToken";
@@ -212,4 +212,3 @@ const apiClient = {
 // };
 
 export { apiClient };
-
