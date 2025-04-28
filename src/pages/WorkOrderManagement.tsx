@@ -1,68 +1,49 @@
-
-import { useState } from "react";
+import { apiGetAllWorkOrder } from "@/api/workOrder";
 import MainLayout from "@/components/MainLayout";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
+import { Input } from "@/components/ui/input";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { PlusCircle, Search } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
-import { sites, workOrders, blocks } from "@/lib/data";
 import { WorkOrder } from "@/lib/types";
 import { format } from "date-fns";
+import { get } from "lodash";
+import { PlusCircle, Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function WorkOrderManagement() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  
-  // Get work orders for the sites this manager is responsible for
-  const managedSites = sites.filter(site => site.managerId === currentUser?.id);
-  const managedSiteIds = managedSites.map(site => site.id);
-  
-  // Filter work orders by search term and status
-  const filteredOrders = workOrders
-    .filter(order => managedSiteIds.includes(order.siteId))
-    .filter(order => {
-      if (statusFilter !== "all") {
-        return order.status === statusFilter;
-      }
-      return true;
-    })
-    .filter(order => {
-      const block = blocks.find(b => b.id === order.blockId);
-      const searchString = `${order.id} ${block?.name || ""} ${order.workType}`.toLowerCase();
-      return searchString.includes(searchTerm.toLowerCase());
-    })
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  
+  const [tableData, setTableData] = useState<Array<WorkOrder>>([]);
+
   const getStatusBadge = (status: WorkOrder["status"]) => {
     switch (status) {
-      case "draft":
+      case "Draft":
         return <Badge variant="outline">Draft</Badge>;
-      case "published":
+      case "Published":
         return <Badge variant="secondary">Published</Badge>;
-      case "inProgress":
+      case "InProgress":
         return <Badge>In Progress</Badge>;
-      case "completed":
+      case "Completed":
         return <Badge className="bg-agworks-green">Completed</Badge>;
-      case "cancelled":
+      case "Cancelled":
         return <Badge variant="destructive">Cancelled</Badge>;
       default:
         return null;
@@ -73,19 +54,58 @@ export default function WorkOrderManagement() {
     navigate(`/manager/orders/${orderId}`);
   };
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { data } = await apiGetAllWorkOrder();
+        console.log("data :>> ", data);
+        setTableData(get(data, "metaData", []));
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const filterDatatable = (
+    searchTerm: string,
+    statusFilter: string,
+    data: Array<WorkOrder>
+  ) => {
+    let result = data;
+
+    // Lọc theo searchTerm
+    if (searchTerm !== "") {
+      result = result.filter((workOrder: WorkOrder) =>
+        workOrder.ID.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Lọc theo statusFilter
+    if (statusFilter !== "all") {
+      result = result.filter(
+        (workOrder) =>
+          workOrder.status.toLowerCase() === statusFilter.toLowerCase()
+      );
+    }
+
+    return result;
+  };
+
   return (
     <MainLayout pageTitle="Work Order Management">
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
         <div className="relative w-full md:w-64">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search orders..."
+            placeholder="Search orders by ID..."
             className="pl-8"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        
+
         <div className="flex items-center gap-4 w-full md:w-auto">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="md:w-[180px]">
@@ -100,7 +120,7 @@ export default function WorkOrderManagement() {
               <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
-          
+
           <Button asChild>
             <Link to="/manager/orders/new">
               <PlusCircle className="mr-2 h-4 w-4" />
@@ -109,7 +129,7 @@ export default function WorkOrderManagement() {
           </Button>
         </div>
       </div>
-      
+
       <div className="border rounded-md overflow-hidden">
         <Table>
           <TableHeader>
@@ -124,31 +144,38 @@ export default function WorkOrderManagement() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredOrders.length > 0 ? (
-              filteredOrders.map((order) => {
-                const block = blocks.find(b => b.id === order.blockId);
-                return (
-                  <TableRow key={order.id} className="cursor-pointer" onClick={() => handleOrderClick(order.id)}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
-                    <TableCell>{block?.name || "Unknown Block"}</TableCell>
-                    <TableCell>
-                      {order.workType.charAt(0).toUpperCase() + order.workType.slice(1)}
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(order.startDate), "MMM d")} - {format(new Date(order.endDate), "MMM d")}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(order.status)}</TableCell>
-                    <TableCell>${order.payRate.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link to={`/manager/orders/${order.id}`}>
-                          View
-                        </Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
+            {filterDatatable(searchTerm, statusFilter, tableData).length > 0 ? (
+              filterDatatable(searchTerm, statusFilter, tableData).map(
+                (order: WorkOrder) => {
+                  return (
+                    <TableRow
+                      key={order._id}
+                      className="cursor-pointer"
+                      onClick={() => handleOrderClick(order._id)}
+                    >
+                      <TableCell className="font-medium">{order.ID}</TableCell>
+                      <TableCell>
+                        {get(order, "blockId.name", "Unknown Block")}
+                      </TableCell>
+                      <TableCell>
+                        {order.workType.charAt(0).toUpperCase() +
+                          order.workType.slice(1)}
+                      </TableCell>
+                      <TableCell>
+                        {format(new Date(order.startDate), "MMM d")} -{" "}
+                        {format(new Date(order.endDate), "MMM d")}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(order.status)}</TableCell>
+                      <TableCell>${order.payRate.toFixed(2)}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm" asChild>
+                          <Link to={`/manager/orders/${order._id}`}>View</Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                }
+              )
             ) : (
               <TableRow>
                 <TableCell colSpan={7} className="h-24 text-center">

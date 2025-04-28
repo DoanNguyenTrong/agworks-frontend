@@ -1,22 +1,44 @@
-import { useEffect, useState } from "react";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { format } from "date-fns";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { apiGetBlockByFiled } from "@/api/block";
+import { apiGetSreachSiteByUser } from "@/api/site";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { CalendarIcon, Clock } from "lucide-react";
-import { sites, blocks, users } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
 import { Block } from "@/lib/types";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import dayjs from "dayjs";
+import { get } from "lodash";
+import { CalendarIcon, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 // Work order schema
 const workOrderSchema = z.object({
+  ID: z.string().min(1, "Name is required"),
   siteId: z.string().min(1, "Site is required"),
   blockId: z.string().min(1, "Block is required"),
   workDate: z.date({
@@ -41,19 +63,29 @@ interface WorkOrderFormProps {
   isSubmitting?: boolean;
 }
 
-export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOrderFormProps) {
+export default function WorkOrderForm({
+  onSubmit,
+  isSubmitting = false,
+}: WorkOrderFormProps) {
   const { currentUser } = useAuth();
   const [managedSites, setManagedSites] = useState<any[]>([]);
   const [availableBlocks, setAvailableBlocks] = useState<Block[]>([]);
-  
+
   // Get sites managed by this manager
   useEffect(() => {
-    if (currentUser) {
-      const userSites = sites.filter(site => site.managerId === currentUser.id);
-      setManagedSites(userSites);
-    }
+    const getAllSite = async () => {
+      try {
+        const res = await apiGetSreachSiteByUser();
+        console.log("data :>> ", res);
+        setManagedSites(get(res, "data", []));
+      } catch (error) {
+        console.log("error :>> ", error);
+      }
+    };
+
+    getAllSite();
   }, [currentUser]);
-  
+
   // Get form control
   const form = useForm<z.infer<typeof workOrderSchema>>({
     resolver: zodResolver(workOrderSchema),
@@ -65,7 +97,7 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
       endTime: "17:00",
       workType: "pruning",
       neededWorkers: 1,
-      payRate: 0.50,
+      payRate: 0.5,
       acres: undefined,
       rows: undefined,
       vines: undefined,
@@ -73,55 +105,129 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
       notes: "",
     },
   });
-  
+
   // Watch for siteId changes
   const selectedSiteId = form.watch("siteId");
-  
+
   // Update available blocks when site changes
   useEffect(() => {
-    if (selectedSiteId) {
-      const siteBlocks = blocks.filter(block => block.siteId === selectedSiteId);
-      setAvailableBlocks(siteBlocks);
-      
-      // Reset block selection if current selection is not in the new site
-      const currentBlockId = form.getValues("blockId");
-      if (currentBlockId && !siteBlocks.some(block => block.id === currentBlockId)) {
-        form.setValue("blockId", "");
+    const getDataBlock = async () => {
+      if (selectedSiteId) {
+        let siteBlocks = [];
+        try {
+          const { data } = await apiGetBlockByFiled({
+            siteId: selectedSiteId,
+          });
+          siteBlocks = get(data, "metaData", []);
+        } catch (error) {
+          console.log("error :>> ", error);
+        }
+        setAvailableBlocks(siteBlocks);
+      } else {
+        setAvailableBlocks([]);
       }
-    } else {
-      setAvailableBlocks([]);
-      form.setValue("blockId", "");
-    }
+      form.setValue("blockId", undefined);
+      form.setValue("acres", undefined);
+      form.setValue("rows", undefined);
+      form.setValue("vines", undefined);
+      form.setValue("vinesPerRow", undefined);
+    };
+    getDataBlock();
   }, [selectedSiteId, form]);
-  
+
   // Watch for blockId changes
   const selectedBlockId = form.watch("blockId");
-  
+
   // Update block info when block changes
   useEffect(() => {
     if (selectedBlockId) {
-      const selectedBlock = blocks.find(block => block.id === selectedBlockId);
+      const selectedBlock = availableBlocks.find(
+        (block) => block._id === selectedBlockId
+      );
       if (selectedBlock) {
         form.setValue("acres", selectedBlock.acres);
         form.setValue("rows", selectedBlock.rows);
         form.setValue("vines", selectedBlock.vines);
-        
+
         if (selectedBlock.rows && selectedBlock.vines) {
-          const vinesPerRow = Math.round(selectedBlock.vines / selectedBlock.rows);
+          const vinesPerRow = Math.round(
+            selectedBlock.vines / selectedBlock.rows
+          );
           form.setValue("vinesPerRow", vinesPerRow);
         }
+      } else {
+        form.setValue("acres", undefined);
+        form.setValue("rows", undefined);
+        form.setValue("vines", undefined);
+        form.setValue("vinesPerRow", undefined);
       }
     }
   }, [selectedBlockId, form]);
-  
-  const handleFormSubmit = (data: z.infer<typeof workOrderSchema>) => {
-    onSubmit(data);
+
+  const convertToStartEnd = (
+    workDate: any,
+    startTime: string,
+    endTime: string
+  ) => {
+    // Parse workDate
+    const baseDate = dayjs(workDate);
+
+    // Tách giờ phút từ startTime
+    const [startHour, startMinute] = startTime.split(":").map(Number);
+    const startDate = baseDate
+      .set("hour", startHour)
+      .set("minute", startMinute)
+      .set("second", 0)
+      .set("millisecond", 0)
+      .toISOString();
+
+    // Tách giờ phút từ endTime
+    const [endHour, endMinute] = endTime.split(":").map(Number);
+    const endDate = baseDate
+      .set("hour", endHour)
+      .set("minute", endMinute)
+      .set("second", 0)
+      .set("millisecond", 0)
+      .toISOString();
+
+    return {
+      startDate,
+      endDate,
+    };
   };
-  
+
+  const handleFormSubmit = (data: z.infer<typeof workOrderSchema>) => {
+    const { workDate, startTime, endTime, ...cloneData } = data;
+    const time = convertToStartEnd(workDate, startTime, endTime);
+    const dataSubmit = {
+      ...cloneData,
+      ...time,
+    };
+    onSubmit(dataSubmit);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form
+        onSubmit={form.handleSubmit(handleFormSubmit)}
+        className="space-y-8"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Site Selection */}
+          <FormField
+            control={form.control}
+            name="ID"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>ID Work Order*</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="ID work order" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           {/* Site Selection */}
           <FormField
             control={form.control}
@@ -129,15 +235,18 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Vineyard Site*</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select site" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {managedSites.map(site => (
-                      <SelectItem key={site.id} value={site.id}>
+                    {managedSites.map((site) => (
+                      <SelectItem key={site._id} value={site._id}>
                         {site.name}
                       </SelectItem>
                     ))}
@@ -150,7 +259,7 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
               </FormItem>
             )}
           />
-          
+
           {/* Block Selection */}
           <FormField
             control={form.control}
@@ -158,19 +267,25 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Block*</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
+                <Select
+                  onValueChange={field.onChange}
                   defaultValue={field.value}
                   disabled={availableBlocks.length === 0}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder={availableBlocks.length === 0 ? "Select a site first" : "Select block"} />
+                      <SelectValue
+                        placeholder={
+                          availableBlocks.length === 0
+                            ? "Select a site first"
+                            : "Select block"
+                        }
+                      />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {availableBlocks.map(block => (
-                      <SelectItem key={block.id} value={block.id}>
+                    {availableBlocks.map((block) => (
+                      <SelectItem key={block._id} value={block._id}>
                         {block.name}
                       </SelectItem>
                     ))}
@@ -184,14 +299,14 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
             )}
           />
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Work Date */}
           <FormField
             control={form.control}
             name="workDate"
             render={({ field }) => (
-              <FormItem className="flex flex-col">
+              <FormItem className="flex flex-col justify-end">
                 <FormLabel>Work Date*</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -225,7 +340,7 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
               </FormItem>
             )}
           />
-          
+
           {/* Start Time */}
           <FormField
             control={form.control}
@@ -236,11 +351,7 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
                 <div className="relative">
                   <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <FormControl>
-                    <Input 
-                      {...field} 
-                      type="time" 
-                      className="pl-10"
-                    />
+                    <Input {...field} type="time" className="pl-10" />
                   </FormControl>
                 </div>
                 <FormDescription>
@@ -250,7 +361,7 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
               </FormItem>
             )}
           />
-          
+
           {/* End Time */}
           <FormField
             control={form.control}
@@ -261,11 +372,7 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
                 <div className="relative">
                   <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <FormControl>
-                    <Input 
-                      {...field} 
-                      type="time" 
-                      className="pl-10"
-                    />
+                    <Input {...field} type="time" className="pl-10" />
                   </FormControl>
                 </div>
                 <FormDescription>
@@ -276,7 +383,7 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
             )}
           />
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Work Type */}
           <FormField
@@ -285,7 +392,10 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Work Type*</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select work type" />
@@ -293,7 +403,9 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="pruning">Pruning</SelectItem>
-                    <SelectItem value="shootThinning">Shoot Thinning</SelectItem>
+                    <SelectItem value="shootThinning">
+                      Shoot Thinning
+                    </SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
@@ -304,7 +416,7 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
               </FormItem>
             )}
           />
-          
+
           {/* Needed Workers */}
           <FormField
             control={form.control}
@@ -322,7 +434,7 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
               </FormItem>
             )}
           />
-          
+
           {/* Pay Rate */}
           <FormField
             control={form.control}
@@ -333,15 +445,13 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
                 <FormControl>
                   <Input type="number" step="0.01" min="0.01" {...field} />
                 </FormControl>
-                <FormDescription>
-                  Payment rate per vine.
-                </FormDescription>
+                <FormDescription>Payment rate per vine.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Block Details */}
           <FormField
@@ -357,7 +467,7 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="rows"
@@ -371,7 +481,7 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="vines"
@@ -385,7 +495,7 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="vinesPerRow"
@@ -400,7 +510,7 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
             )}
           />
         </div>
-        
+
         {/* Notes */}
         <FormField
           control={form.control}
@@ -409,8 +519,8 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
             <FormItem>
               <FormLabel>Notes</FormLabel>
               <FormControl>
-                <Textarea 
-                  placeholder="Add any special instructions or notes for workers here..." 
+                <Textarea
+                  placeholder="Add any special instructions or notes for workers here..."
                   className="min-h-32"
                   {...field}
                 />
@@ -419,9 +529,13 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
             </FormItem>
           )}
         />
-        
+
         <div className="flex justify-end gap-4 pt-4">
-          <Button type="button" variant="outline" onClick={() => window.history.back()}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => window.history.back()}
+          >
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>

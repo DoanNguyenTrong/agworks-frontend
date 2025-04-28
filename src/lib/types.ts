@@ -51,6 +51,7 @@ export interface Block {
 // Work Order type
 export interface WorkOrder {
   _id: string;
+  ID: string;
   siteId: string;
   blockId: string;
   address: string;
@@ -65,7 +66,7 @@ export interface WorkOrder {
   vines?: number;
   vinesPerRow?: number;
   notes?: string;
-  status: 'draft' | 'published' | 'inProgress' | 'completed' | 'cancelled';
+  status: 'Draft' | 'Published' | 'InProgress' | 'Completed' | 'Cancelled';
   createdAt: string;
   createdBy: string;
 }

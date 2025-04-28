@@ -5,6 +5,11 @@ export const apiGetAllSite = async () => {
     return res;
 }
 
+export const apiGetSreachSiteByUser = async () => {
+    const res = await apiClient.get('/site/search/by-user-id');
+    return res;
+}
+
 export const apiGetDetailSite = async (id: string) => {
     const res = await apiClient.get(`/site/${id}`);
     return res;

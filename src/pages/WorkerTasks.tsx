@@ -1,59 +1,58 @@
-
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import MainLayout from "@/components/MainLayout";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { 
+import { Input } from "@/components/ui/input";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
 import { workerTasks, workOrders } from "@/lib/data";
 import { format } from "date-fns";
+import { Search } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function WorkerTasks() {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  
+
   // Get tasks for the current worker
-  const myTasks = workerTasks.filter(task => task.workerId === currentUser?.id);
-  
+  const myTasks = workerTasks;
+
   // Filter tasks by search term and status
-  const filteredTasks = myTasks.filter(task => {
+  const filteredTasks = myTasks.filter((task) => {
     // Status filter
     if (statusFilter !== "all" && task.status !== statusFilter) {
       return false;
     }
-    
+
     // Search filter (by work order ID for demo)
     if (searchTerm !== "") {
-      const order = workOrders.find(order => order.id === task.orderId);
+      const order = workOrders.find((order) => order.id === task.orderId);
       const searchString = `${task.id} ${order?.workType || ""}`.toLowerCase();
       if (!searchString.includes(searchTerm.toLowerCase())) {
         return false;
       }
     }
-    
+
     return true;
   });
-  
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
@@ -66,7 +65,7 @@ export default function WorkerTasks() {
         return null;
     }
   };
-  
+
   const handleRowClick = (taskId: string) => {
     navigate(`/worker/tasks/${taskId}`);
   };
@@ -83,7 +82,7 @@ export default function WorkerTasks() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        
+
         <div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="md:w-[180px]">
@@ -98,7 +97,7 @@ export default function WorkerTasks() {
           </Select>
         </div>
       </div>
-      
+
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -115,27 +114,36 @@ export default function WorkerTasks() {
             <TableBody>
               {filteredTasks.length > 0 ? (
                 filteredTasks.map((task) => {
-                  const order = workOrders.find(order => order.id === task.orderId);
+                  const order = workOrders.find(
+                    (order) => order.id === task.orderId
+                  );
                   return (
-                    <TableRow 
-                      key={task.id} 
+                    <TableRow
+                      key={task.id}
                       className="cursor-pointer"
                       onClick={() => handleRowClick(task.id)}
                     >
                       <TableCell className="font-medium">{task.id}</TableCell>
                       <TableCell>{task.orderId}</TableCell>
                       <TableCell>
-                        {order?.workType 
-                          ? order.workType.charAt(0).toUpperCase() + order.workType.slice(1) 
+                        {order?.workType
+                          ? order.workType.charAt(0).toUpperCase() +
+                            order.workType.slice(1)
                           : "Unknown"}
                       </TableCell>
-                      <TableCell>{format(new Date(task.completedAt), "MMM d, yyyy")}</TableCell>
+                      <TableCell>
+                        {format(new Date(task.completedAt), "MMM d, yyyy")}
+                      </TableCell>
                       <TableCell>{getStatusBadge(task.status)}</TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/worker/tasks/${task.id}`);
-                        }}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/worker/tasks/${task.id}`);
+                          }}
+                        >
                           View
                         </Button>
                       </TableCell>
