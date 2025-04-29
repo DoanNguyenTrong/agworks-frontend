@@ -385,8 +385,12 @@ export default function CustomerDashboard() {
       <div className="space-y-4 max-h-[560px] overflow-y-auto">
         {workOrders.length > 0 ? (
           workOrders.map((order) => {
-            const orderBlock = order.blockId;
-            const orderSite = order.siteId;
+            const orderBlock = customerBlocks.find(
+              (block) => block._id === order.blockId
+            );
+            const orderSite = customerSites.find(
+              (site) => site._id === order.siteId
+            );
             return (
               <Card key={order._id} className="max-h-[120px] overflow-y-auto">
                 <CardContent className="p-6">
