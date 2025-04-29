@@ -1,5 +1,10 @@
 import { apiGetAllAccOrganization } from "@/api/account";
-import { apiCreateSite, apiDeleteSite, apiGetListSite } from "@/api/site";
+import {
+  apiCreateSite,
+  apiDeleteSite,
+  apiGetListSite,
+  apiGetSearchSiteByUser,
+} from "@/api/site";
 import MainLayout from "@/components/MainLayout";
 import {
   AlertDialog,
@@ -157,20 +162,35 @@ export default function SiteManagement() {
     }
   };
 
+  useEffect(() => {
+    getSiteManager();
+    fetchData();
+  }, []);
+
   const fetchData = async () => {
     try {
-      const { data } = await apiGetListSite({ number_of_page: 1000 });
-      // console.log("data :>> ", data);
-      setCustomerSites(get(data, "metaData", []));
+      if (location.pathname.includes("admin")) {
+        const { data } = await apiGetListSite({ number_of_page: 1000 });
+        setCustomerSites(get(data, "metaData", []));
+      } else {
+        // const { data } = await apiGetListSite({
+        //   number_of_page: 1000,
+        //   filter: {
+        //     organizationId: managers[0].organizationId,
+        //   },
+        // });
+        // setCustomerSites(get(data, "metaData", []));
+
+        const { data } = await apiGetSearchSiteByUser();
+        setCustomerSites(data);
+      }
     } catch (error) {
       console.log("error :>> ", error);
     }
   };
 
-  useEffect(() => {
-    getSiteManager();
-    fetchData();
-  }, []);
+  console.log("managers =>>>>", managers);
+  console.log("customerSites :>> ", customerSites);
 
   return (
     <MainLayout pageTitle="Site Management">

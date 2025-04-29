@@ -1,18 +1,24 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -33,26 +39,29 @@ interface WorkOrderTabsProps {
   tasks: WorkerTask[];
 }
 
-export default function WorkOrderTabs({ workOrder, tasks }: WorkOrderTabsProps) {
+export default function WorkOrderTabs({
+  workOrder,
+  tasks,
+}: WorkOrderTabsProps) {
   const [activeTab, setActiveTab] = useState("overview");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  
-  const paymentCalculations = getPaymentCalculations(workOrder.id);
-  
+
+  const paymentCalculations = getPaymentCalculations(workOrder._id);
+
   const handleApproveTask = (taskId: string) => {
     toast({
       title: "Task approved",
       description: "The task has been approved for payment.",
     });
   };
-  
+
   const handleRejectTask = (taskId: string) => {
     toast({
       title: "Task rejected",
       description: "The task has been rejected.",
     });
   };
-  
+
   const completeWorkOrder = () => {
     toast({
       title: "Work order completed",
@@ -61,40 +70,57 @@ export default function WorkOrderTabs({ workOrder, tasks }: WorkOrderTabsProps) 
   };
 
   return (
-    <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
+    <Tabs
+      defaultValue="overview"
+      value={activeTab}
+      onValueChange={setActiveTab}
+    >
       <TabsList className="grid w-full grid-cols-4 md:grid-cols-5 lg:w-auto">
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="tasks">Completed Tasks</TabsTrigger>
         <TabsTrigger value="payslip">Payslip</TabsTrigger>
         <TabsTrigger value="details">Details</TabsTrigger>
-        <TabsTrigger value="workers" className="hidden md:block">Workers</TabsTrigger>
+        <TabsTrigger value="workers" className="hidden md:block">
+          Workers
+        </TabsTrigger>
       </TabsList>
-      
+
       {/* Overview Tab */}
       <TabsContent value="overview">
-        <WorkerPerformance id={workOrder.id} tasks={tasks} payRate={workOrder.payRate} />
+        <WorkerPerformance
+          id={workOrder._id}
+          tasks={tasks}
+          payRate={workOrder.payRate}
+        />
       </TabsContent>
-      
+
       {/* Tasks Tab */}
       <TabsContent value="tasks">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {tasks.length > 0 ? (
             tasks.map((task) => (
-              <Card key={task.id} className="overflow-hidden">
-                <div className="relative aspect-video overflow-hidden bg-muted cursor-pointer"
-                  onClick={() => setSelectedImage(task.imageUrl)}>
-                  <img 
-                    src={task.imageUrl} 
-                    alt="Task evidence" 
+              <Card key={task._id} className="overflow-hidden">
+                <div
+                  className="relative aspect-video overflow-hidden bg-muted cursor-pointer"
+                  onClick={() => setSelectedImage(task.imageUrl)}
+                >
+                  <img
+                    src={task.imageUrl}
+                    alt="Task evidence"
                     className="object-cover w-full h-full"
                   />
                   <div className="absolute top-2 right-2">
-                    <Badge className={
-                      task.status === "approved" ? "bg-green-500" : 
-                      task.status === "rejected" ? "bg-red-500" :
-                      "bg-yellow-500"
-                    }>
-                      {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
+                    <Badge
+                      className={
+                        task.status === "approved"
+                          ? "bg-green-500"
+                          : task.status === "rejected"
+                          ? "bg-red-500"
+                          : "bg-yellow-500"
+                      }
+                    >
+                      {task.status.charAt(0).toUpperCase() +
+                        task.status.slice(1)}
                     </Badge>
                   </div>
                 </div>
@@ -103,24 +129,27 @@ export default function WorkOrderTabs({ workOrder, tasks }: WorkOrderTabsProps) 
                     <div>
                       <p className="font-medium">{task.workerName}</p>
                       <p className="text-sm text-muted-foreground">
-                        {format(new Date(task.completedAt), "MMM d, yyyy h:mm a")}
+                        {format(
+                          new Date(task.completedAt),
+                          "MMM d, yyyy h:mm a"
+                        )}
                       </p>
                     </div>
                     {task.status === "pending" && (
                       <div className="flex gap-1">
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
+                        <Button
+                          variant="outline"
+                          size="icon"
                           className="h-7 w-7 text-green-500"
-                          onClick={() => handleApproveTask(task.id)}
+                          onClick={() => handleApproveTask(task._id)}
                         >
                           <Check className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
+                        <Button
+                          variant="outline"
+                          size="icon"
                           className="h-7 w-7 text-red-500"
-                          onClick={() => handleRejectTask(task.id)}
+                          onClick={() => handleRejectTask(task._id)}
                         >
                           <X className="h-4 w-4" />
                         </Button>
@@ -135,23 +164,27 @@ export default function WorkOrderTabs({ workOrder, tasks }: WorkOrderTabsProps) 
               <ImageIcon className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium">No Completed Tasks</h3>
               <p className="text-muted-foreground max-w-md mt-2">
-                Workers haven't submitted any completed tasks for this work order yet.
+                Workers haven't submitted any completed tasks for this work
+                order yet.
               </p>
             </div>
           )}
         </div>
-        
+
         {/* Image Preview Dialog */}
-        <Dialog open={!!selectedImage} onOpenChange={(open) => !open && setSelectedImage(null)}>
+        <Dialog
+          open={!!selectedImage}
+          onOpenChange={(open) => !open && setSelectedImage(null)}
+        >
           <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Task Image</DialogTitle>
             </DialogHeader>
             <div className="overflow-hidden rounded-md">
               {selectedImage && (
-                <img 
-                  src={selectedImage} 
-                  alt="Task evidence" 
+                <img
+                  src={selectedImage}
+                  alt="Task evidence"
                   className="w-full object-contain"
                 />
               )}
@@ -159,7 +192,7 @@ export default function WorkOrderTabs({ workOrder, tasks }: WorkOrderTabsProps) 
           </DialogContent>
         </Dialog>
       </TabsContent>
-      
+
       {/* Payslip Tab */}
       <TabsContent value="payslip">
         <Card>
@@ -191,10 +224,16 @@ export default function WorkOrderTabs({ workOrder, tasks }: WorkOrderTabsProps) 
                 {paymentCalculations.length > 0 ? (
                   paymentCalculations.map((payment) => (
                     <TableRow key={payment.workerId}>
-                      <TableCell className="font-medium">{payment.workerName}</TableCell>
+                      <TableCell className="font-medium">
+                        {payment.workerName}
+                      </TableCell>
                       <TableCell>{payment.taskCount}</TableCell>
-                      <TableCell>${workOrder.payRate.toFixed(2)} per task</TableCell>
-                      <TableCell className="text-right font-bold">${payment.totalAmount.toFixed(2)}</TableCell>
+                      <TableCell>
+                        ${workOrder.payRate.toFixed(2)} per task
+                      </TableCell>
+                      <TableCell className="text-right font-bold">
+                        ${payment.totalAmount.toFixed(2)}
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
@@ -206,9 +245,14 @@ export default function WorkOrderTabs({ workOrder, tasks }: WorkOrderTabsProps) 
                 )}
                 {paymentCalculations.length > 0 && (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-right font-bold">Total Payment</TableCell>
+                    <TableCell colSpan={3} className="text-right font-bold">
+                      Total Payment
+                    </TableCell>
                     <TableCell className="text-right font-bold">
-                      ${paymentCalculations.reduce((sum, payment) => sum + payment.totalAmount, 0).toFixed(2)}
+                      $
+                      {paymentCalculations
+                        .reduce((sum, payment) => sum + payment.totalAmount, 0)
+                        .toFixed(2)}
                     </TableCell>
                   </TableRow>
                 )}
@@ -217,7 +261,7 @@ export default function WorkOrderTabs({ workOrder, tasks }: WorkOrderTabsProps) 
           </CardContent>
         </Card>
       </TabsContent>
-      
+
       {/* Details Tab */}
       <TabsContent value="details">
         <Card>
@@ -232,38 +276,51 @@ export default function WorkOrderTabs({ workOrder, tasks }: WorkOrderTabsProps) 
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Work Type:</dt>
                     <dd className="font-medium">
-                      {workOrder.workType.charAt(0).toUpperCase() + workOrder.workType.slice(1)}
+                      {workOrder.workType.charAt(0).toUpperCase() +
+                        workOrder.workType.slice(1)}
                     </dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Start Date:</dt>
-                    <dd className="font-medium">{format(new Date(workOrder.startDate), "MMMM d, yyyy")}</dd>
+                    <dd className="font-medium">
+                      {format(new Date(workOrder.startDate), "MMMM d, yyyy")}
+                    </dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">End Date:</dt>
-                    <dd className="font-medium">{format(new Date(workOrder.endDate), "MMMM d, yyyy")}</dd>
+                    <dd className="font-medium">
+                      {format(new Date(workOrder.endDate), "MMMM d, yyyy")}
+                    </dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Status:</dt>
                     <dd>
-                      <Badge variant={
-                        workOrder.status === "completed" ? "default" : 
-                        workOrder.status === "cancelled" ? "destructive" : 
-                        "secondary"
-                      }>
-                        {workOrder.status.charAt(0).toUpperCase() + workOrder.status.slice(1)}
+                      <Badge
+                        variant={
+                          workOrder.status === "Completed"
+                            ? "default"
+                            : workOrder.status === "Cancelled"
+                            ? "destructive"
+                            : "secondary"
+                        }
+                      >
+                        {workOrder.status.charAt(0).toUpperCase() +
+                          workOrder.status.slice(1)}
                       </Badge>
                     </dd>
                   </div>
                 </dl>
               </div>
-              
+
               <div>
                 <h3 className="font-medium mb-4">Work Details</h3>
                 <dl className="space-y-2">
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Expected Hours:</dt>
-                    <dd className="font-medium">{workOrder.expectedHours} hours</dd>
+                    <dd className="font-medium">
+                      {workOrder.expectedHours ? workOrder.expectedHours : ""}
+                      hours
+                    </dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Needed Workers:</dt>
@@ -271,16 +328,20 @@ export default function WorkOrderTabs({ workOrder, tasks }: WorkOrderTabsProps) 
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Pay Rate:</dt>
-                    <dd className="font-medium">${workOrder.payRate.toFixed(2)} per task</dd>
+                    <dd className="font-medium">
+                      ${workOrder.payRate.toFixed(2)} per task
+                    </dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Address:</dt>
-                    <dd className="font-medium text-right">{workOrder.address}</dd>
+                    <dd className="font-medium text-right">
+                      {workOrder.address}
+                    </dd>
                   </div>
                 </dl>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <h3 className="font-medium mb-4">Block Details</h3>
@@ -299,11 +360,13 @@ export default function WorkOrderTabs({ workOrder, tasks }: WorkOrderTabsProps) 
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Vines Per Row:</dt>
-                    <dd className="font-medium">{workOrder.vinesPerRow || "—"}</dd>
+                    <dd className="font-medium">
+                      {workOrder.vinesPerRow || "—"}
+                    </dd>
                   </div>
                 </dl>
               </div>
-              
+
               <div className="md:col-span-2">
                 <h3 className="font-medium mb-4">Notes</h3>
                 {workOrder.notes ? (
@@ -315,8 +378,8 @@ export default function WorkOrderTabs({ workOrder, tasks }: WorkOrderTabsProps) 
                 )}
               </div>
             </div>
-            
-            {workOrder.status === "inProgress" && (
+
+            {workOrder.status === "InProgress" && (
               <div className="flex justify-end pt-4">
                 <Button onClick={completeWorkOrder}>
                   <Check className="mr-2 h-4 w-4" />
@@ -327,7 +390,7 @@ export default function WorkOrderTabs({ workOrder, tasks }: WorkOrderTabsProps) 
           </CardContent>
         </Card>
       </TabsContent>
-      
+
       {/* Workers Tab */}
       <TabsContent value="workers">
         <Card>
@@ -356,7 +419,9 @@ export default function WorkOrderTabs({ workOrder, tasks }: WorkOrderTabsProps) 
                       <TableCell>{format(new Date(), "MMM d, yyyy")}</TableCell>
                       <TableCell>24</TableCell>
                       <TableCell>
-                        <Button variant="outline" size="sm">Remove</Button>
+                        <Button variant="outline" size="sm">
+                          Remove
+                        </Button>
                       </TableCell>
                     </TableRow>
                     <TableRow>
@@ -364,13 +429,15 @@ export default function WorkOrderTabs({ workOrder, tasks }: WorkOrderTabsProps) 
                       <TableCell>{format(new Date(), "MMM d, yyyy")}</TableCell>
                       <TableCell>18</TableCell>
                       <TableCell>
-                        <Button variant="outline" size="sm">Remove</Button>
+                        <Button variant="outline" size="sm">
+                          Remove
+                        </Button>
                       </TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
               </div>
-              
+
               <div>
                 <h3 className="font-medium mb-4">Pending Applications</h3>
                 <Table>
@@ -387,11 +454,19 @@ export default function WorkOrderTabs({ workOrder, tasks }: WorkOrderTabsProps) 
                       <TableCell>{format(new Date(), "MMM d, yyyy")}</TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm" className="text-green-500">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-green-500"
+                          >
                             <Check className="h-4 w-4 mr-1" />
                             Approve
                           </Button>
-                          <Button variant="outline" size="sm" className="text-red-500">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-500"
+                          >
                             <X className="h-4 w-4 mr-1" />
                             Reject
                           </Button>
@@ -401,7 +476,7 @@ export default function WorkOrderTabs({ workOrder, tasks }: WorkOrderTabsProps) 
                   </TableBody>
                 </Table>
               </div>
-              
+
               <div className="flex justify-end pt-4">
                 <Button variant="outline">
                   <Clock className="mr-2 h-4 w-4" />

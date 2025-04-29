@@ -1,6 +1,11 @@
-import { apiCreateAcc } from "@/api/account";
+import { apiCreateAcc, apiGetAllAccOrganization } from "@/api/account";
+import { apiGetWorkOrderByUser } from "@/api/workOrder";
 import { apiGetListBlock } from "@/api/block";
-import { apiGetListSite, apiUpdateByFieldUserIds } from "@/api/site";
+import {
+  apiGetListSite,
+  apiGetSearchSiteByUser,
+  apiUpdateByFieldUserIds,
+} from "@/api/site";
 import MainLayout from "@/components/MainLayout";
 import ManagerForm from "@/components/ManagerForm";
 import { Button } from "@/components/ui/button";
@@ -31,53 +36,81 @@ export default function CustomerDashboard() {
   const { currentUser } = useAuth();
   const [customerSites, setCustomerSites] = useState([]);
   const [customerBlocks, setCustomerBlocks] = useState([]);
-  const [activeOrders, setActiveOrders] = useState([]);
+  const [workOrders, setWorkOrders] = useState([]);
   const [isAddManagerDialogOpen, setIsAddManagerDialogOpen] = useState(false);
+  const [managers, setManagers] = useState([]);
+
+  const getDataBlocks = async () => {
+    try {
+      const { data } = await apiGetListBlock({ number_of_page: 1000 });
+      setCustomerBlocks(get(data, "metaData", []));
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  };
+  const getDataSite = async () => {
+    try {
+      // const { data } = await apiGetListSite({
+      //   number_of_page: 1000,
+      //   filter: {
+      //     organizationId: managers[0].organizationId,
+      //   },
+      // });
+      // setCustomerSites(get(data, "metaData", []));
+      const { data } = await apiGetSearchSiteByUser();
+      setCustomerSites(data);
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  };
+
+  const getAllManagers = async () => {
+    try {
+      const { data } = await apiGetAllAccOrganization();
+      setManagers(get(data, "metaData"));
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  };
 
   useEffect(() => {
-    if (currentUser) {
-      const getDataSite = async () => {
-        try {
-          const { data } = await apiGetListSite({ number_of_page: 1000 });
-          // console.log("data :>> ", data);
-          setCustomerSites(get(data, "metaData", []));
-        } catch (error) {
-          console.log("error :>> ", error);
-        }
-      };
-      const getDataBlocks = async () => {
-        try {
-          const { data } = await apiGetListBlock({ number_of_page: 1000 });
-          // console.log("data :>> ", data);
-          setCustomerBlocks(get(data, "metaData", []));
-        } catch (error) {
-          console.log("error :>> ", error);
-        }
-      };
+    getDataBlocks();
+    getAllManagers();
+    getDataSite();
+    // const getDataManagerSite = async () => {
+    //   try {
+    //     const { data } = await apiGetAllAccOrganization();
+    //     // console.log("data :>> ", data);
+    //     setManagers(get(data, "metaData"));
+    //   } catch (error) {
+    //     console.log("error :>> ", error);
+    //   }
+    // };
 
-      // const getDataManagerSite = async () => {
-      //   try {
-      //     const { data } = await apiGetAllAccOrganization();
-      //     // console.log("data :>> ", data);
-      //     setManagers(get(data, "metaData"));
-      //   } catch (error) {
-      //     console.log("error :>> ", error);
-      //   }
-      // };
+    // getDataManagerSite();
 
-      getDataSite();
-      getDataBlocks();
-      // getDataManagerSite();
+    // Get active work orders for these sites
+    // const userOrders = workOrders.filter(
+    //   (order) =>
+    //     siteIds.includes(order.siteId) &&
+    //     ["published", "inProgress"].includes(order.status)
+    // );
+    // setworkOrders(userOrders);
+  }, []);
 
-      // Get active work orders for these sites
-      // const userOrders = workOrders.filter(
-      //   (order) =>
-      //     siteIds.includes(order.siteId) &&
-      //     ["published", "inProgress"].includes(order.status)
-      // );
-      // setActiveOrders(userOrders);
-    }
-  }, [currentUser]);
+  useEffect(() => {
+    const getDataWorkOrders = async () => {
+      const { data } = await apiGetWorkOrderByUser({
+        userIds: managers.map((manager) => manager._id),
+      });
+      setWorkOrders(get(data, "metaData", []));
+    };
+
+    getDataWorkOrders();
+  }, [managers]);
+
+  console.log("workorders -> -> ", workOrders);
+  console.log("managers -> -> ", managers);
 
   const handleAddManager = async (data: any) => {
     // In a real app, this would make an API call
@@ -135,7 +168,7 @@ export default function CustomerDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{activeOrders.length}</div>
+            <div className="text-2xl font-bold">{workOrders.length}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Currently in progress
             </p>
@@ -157,7 +190,7 @@ export default function CustomerDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
         {customerSites.length > 0 ? (
           customerSites.slice(0, 3).map((site) => (
-            <Card key={site.id} className="overflow-hidden">
+            <Card key={site._id} className="overflow-hidden">
               <div className="h-1 bg-primary"></div>
               <CardHeader>
                 <CardTitle>{site.name}</CardTitle>
@@ -241,7 +274,7 @@ export default function CustomerDashboard() {
           customerBlocks.slice(0, 3).map((block) => {
             const blockSite = get(block, "siteId", null);
             return (
-              <Card key={block.id}>
+              <Card key={block._id}>
                 <CardHeader>
                   <CardTitle>{block.name}</CardTitle>
                   <CardDescription>
@@ -349,15 +382,13 @@ export default function CustomerDashboard() {
 
       {/* Recent Activity */}
       <h2 className="text-xl font-semibold mb-6">Recent Work Orders</h2>
-      <div className="space-y-4">
-        {activeOrders.length > 0 ? (
-          activeOrders.slice(0, 3).map((order) => {
-            const orderBlock = blocks.find(
-              (block) => block._id === order.blockId
-            );
-            const orderSite = sites.find((site) => site._id === order.siteId);
+      <div className="space-y-4 max-h-[560px] overflow-y-auto">
+        {workOrders.length > 0 ? (
+          workOrders.map((order) => {
+            const orderBlock = order.blockId;
+            const orderSite = order.siteId;
             return (
-              <Card key={order.id}>
+              <Card key={order._id} className="max-h-[120px] overflow-y-auto">
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
                     <div>
@@ -367,13 +398,17 @@ export default function CustomerDashboard() {
                         - {orderBlock?.name || "Unknown Block"}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        {orderSite?.name || "Unknown Site"} •
+                        {orderSite?.name || "Unknown Site"}
+                        <span> • </span>
                         {format(new Date(order.startDate), "MMM d")} -{" "}
                         {format(new Date(order.endDate), "MMM d")}
                       </p>
                     </div>
+
                     <Button variant="outline" className="mt-2 md:mt-0">
-                      View Details
+                      <Link to={`/customer/work-order/detail/${order._id}`}>
+                        View Details
+                      </Link>
                     </Button>
                   </div>
                 </CardContent>

@@ -1,5 +1,5 @@
 import { apiGetBlockByFiled } from "@/api/block";
-import { apiGetSreachSiteByUser } from "@/api/site";
+import { apiGetSearchSiteByUser } from "@/api/site";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -46,7 +46,7 @@ const workOrderSchema = z.object({
   }),
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
-  workType: z.enum(["pruning", "shootThinning", "other"], {
+  workType: z.enum(["pruning", "shoot thinning", "other"], {
     required_error: "Work type is required",
   }),
   neededWorkers: z.coerce.number().min(1, "At least 1 worker is required"),
@@ -75,7 +75,7 @@ export default function WorkOrderForm({
   useEffect(() => {
     const getAllSite = async () => {
       try {
-        const res = await apiGetSreachSiteByUser();
+        const res = await apiGetSearchSiteByUser();
         console.log("data :>> ", res);
         setManagedSites(get(res, "data", []));
       } catch (error) {
@@ -403,7 +403,7 @@ export default function WorkOrderForm({
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="pruning">Pruning</SelectItem>
-                    <SelectItem value="shootThinning">
+                    <SelectItem value="shoot thinning">
                       Shoot Thinning
                     </SelectItem>
                     <SelectItem value="other">Other</SelectItem>

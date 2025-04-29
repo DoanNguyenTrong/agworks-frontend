@@ -119,6 +119,10 @@ function App() {
             <Route path="blocks/:id" element={<BlockDetails />} />
             <Route path="blocks/new" element={<BlockForm />} />
             <Route path="blocks/edit/:id" element={<BlockEditPage />} />
+            <Route
+              path="work-order/detail/:id"
+              element={<WorkOrderDetails />}
+            />
           </Route>
 
           {/* Site Manager routes */}
