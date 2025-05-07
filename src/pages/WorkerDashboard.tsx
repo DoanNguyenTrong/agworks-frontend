@@ -1,7 +1,12 @@
-
 import { Link } from "react-router-dom";
 import MainLayout from "@/components/MainLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,36 +20,63 @@ import {
   Bell,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { workerApplications, workOrders, workerTasks, sites, blocks } from "@/lib/data";
+import {
+  workerApplications,
+  workOrders,
+  workerTasks,
+  sites,
+  blocks,
+} from "@/lib/data";
 import { format } from "date-fns";
+import { useState, useEffect } from "react";
+import { apiGetWorkerTasksById } from "@/api/workerTask";
+import { get } from "lodash";
+import { apiGetAllImage } from "@/api/image";
+import { StatusType } from "@/lib/utils/constant";
+import dayjs from "dayjs";
+import { BASE_URL } from "@/api/config";
 
 export default function WorkerDashboard() {
   const { currentUser } = useAuth();
+  const [workerTasks, setWorkerTasks] = useState([]);
+  const [listImage, setlistImage] = useState([]);
 
-  // Get worker applications
-  const applications = currentUser
-    ? workerApplications.filter(app => app.workerId === currentUser.id)
-    : [];
-  
-  // Get approved jobs - Fixed orderrId to orderId
-  const approvedJobs = applications.filter(app => app.status === "approved");
-  const approvedOrderIds = approvedJobs.map(job => job.orderId);
-  const workerOrders = workOrders.filter(order => 
-    approvedOrderIds.includes(order.id) && 
-    order.status === "inProgress"
-  );
+  const getAllImage = async (payload: string[]) => {
+    const { data } = await apiGetAllImage({ filter: { taskId: payload } });
+    console.log("data", data.metaData);
+    setlistImage(get(data, "metaData", []));
+  };
+
+  // console.log("Current user:", currentUser);
+
+  const getWorkerTasks = async () => {
+    try {
+      const { data } = await apiGetWorkerTasksById();
+      setWorkerTasks(get(data, "metaData", []));
+      await getAllImage(get(data, "metaData", []).map((task) => task._id));
+      // console.log("Worker tasks:", data.metaData);
+    } catch (error) {
+      console.error("Error fetching worker tasks:", error);
+    }
+  };
+
+  useEffect(() => {
+    getWorkerTasks();
+  }, []);
+
+  // console.log("Worker tasks:", workerTasks);
 
   // Get completed tasks
-  const completedTasks = currentUser
-    ? workerTasks.filter(task => task.workerId === currentUser.id)
-    : [];
+  const completedTasks =
+    workerTasks.filter((task) => task.status === StatusType.APPROVED) || [];
 
-  // Calculate earnings
-  const earnings = completedTasks.reduce((total, task) => {
-    const order = workOrders.find(o => o.id === task.orderId);
-    if (order && task.status === "approved") {
-      const photoCount = task.photoUrls ? task.photoUrls.length : 1;
-      return total + (order.payRate * photoCount);
+  const earnings = listImage.reduce((total, task) => {
+    const currtTask = completedTasks.find(
+      (o) => o._id === get(task, "taskId._id")
+    );
+    console.log("currtTask  ", currtTask);
+    if (currtTask) {
+      return total + get(currtTask, "orderId.payRate", 0);
     }
     return total;
   }, 0);
@@ -55,9 +87,9 @@ export default function WorkerDashboard() {
         <div className="mr-4">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
             {currentUser?.profileImage ? (
-              <img 
-                src={currentUser.profileImage} 
-                alt={currentUser.name} 
+              <img
+                src={currentUser.profileImage}
+                alt={currentUser.name}
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -77,7 +109,7 @@ export default function WorkerDashboard() {
             <CardTitle className="text-sm font-medium">Active Jobs</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{workerOrders.length}</div>
+            <div className="text-2xl font-bold">{workerTasks.length}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Currently assigned
             </p>
@@ -85,7 +117,9 @@ export default function WorkerDashboard() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Tasks Completed</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Tasks Completed
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{completedTasks.length}</div>
@@ -96,7 +130,9 @@ export default function WorkerDashboard() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total Earnings
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${earnings.toFixed(2)}</div>
@@ -108,21 +144,23 @@ export default function WorkerDashboard() {
       </div>
 
       <h2 className="text-xl font-semibold mb-6">My Active Jobs</h2>
-      
-      <div className="space-y-6">
-        {workerOrders.length > 0 ? (
-          workerOrders.map(order => {
-            const site = sites.find(site => site.id === order.siteId);
-            const block = blocks.find(block => block.id === order.blockId);
-            
+
+      <div className="space-y-6 max-h-[480px] overflow-auto">
+        {workerTasks.length > 0 ? (
+          workerTasks.map(({ orderId: order }, i) => {
+            const site = order.siteId;
+            const block = order;
+
             return (
-              <Card key={order.id} className="overflow-hidden">
+              <Card key={i} className="overflow-hidden">
                 <div className="p-1 bg-primary/10 border-b"></div>
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row justify-between mb-4">
                     <div>
                       <h3 className="text-lg font-semibold">
-                        {order.workType.charAt(0).toUpperCase() + order.workType.slice(1)} - {block?.name || ""}
+                        {order.workType.charAt(0).toUpperCase() +
+                          order.workType.slice(1)}{" "}
+                        - {block?.name || ""}
                       </h3>
                       <p className="text-sm text-muted-foreground">
                         {site?.name || ""} • Job #{order.id}
@@ -130,13 +168,15 @@ export default function WorkerDashboard() {
                     </div>
                     <Badge className="w-fit mt-2 md:mt-0">In Progress</Badge>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div className="flex items-start">
                       <MapPin className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground" />
                       <div>
                         <p className="text-sm font-medium">Location</p>
-                        <p className="text-sm text-muted-foreground">{order.address}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {order.address}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-start">
@@ -144,7 +184,8 @@ export default function WorkerDashboard() {
                       <div>
                         <p className="text-sm font-medium">Dates</p>
                         <p className="text-sm text-muted-foreground">
-                          {format(new Date(order.startDate), "MMM d")} - {format(new Date(order.endDate), "MMM d, yyyy")}
+                          {format(new Date(order.startDate), "MMM d")} -{" "}
+                          {format(new Date(order.endDate), "MMM d, yyyy")}
                         </p>
                       </div>
                     </div>
@@ -152,18 +193,22 @@ export default function WorkerDashboard() {
                       <Clock className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground" />
                       <div>
                         <p className="text-sm font-medium">Expected Hours</p>
-                        <p className="text-sm text-muted-foreground">{order.expectedHours} hours</p>
+                        <p className="text-sm text-muted-foreground">
+                          {order.expectedHours} hours
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-start">
                       <DollarSign className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground" />
                       <div>
                         <p className="text-sm font-medium">Pay Rate</p>
-                        <p className="text-sm text-muted-foreground">${order.payRate.toFixed(2)} per photo</p>
+                        <p className="text-sm text-muted-foreground">
+                          ${order.payRate.toFixed(2)} per photo
+                        </p>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-col sm:flex-row gap-3">
                     <Button className="sm:flex-1">
                       <Camera className="mr-2 h-4 w-4" />
@@ -187,36 +232,35 @@ export default function WorkerDashboard() {
             <p className="text-muted-foreground mb-4">
               You don't have any active jobs assigned at the moment
             </p>
-            <Button>
-              Browse Available Jobs
-            </Button>
+            <Button>Browse Available Jobs</Button>
           </div>
         )}
       </div>
 
-      {applications.filter(app => app.status === "pending").length > 0 && (
+      {workerTasks.filter((task) => task.status === "pending").length > 0 && (
         <>
-          <h2 className="text-xl font-semibold mb-6 mt-10">Pending Applications</h2>
+          <h2 className="text-xl font-semibold mb-6 mt-10">
+            Pending Applications
+          </h2>
           <div className="space-y-4">
-            {applications
-              .filter(app => app.status === "pending")
-              .map(app => {
-                // Fixed orderrId to orderId
-                const order = workOrders.find(o => o.id === app.orderId);
-                if (!order) return null;
-                
-                const site = sites.find(site => site.id === order.siteId);
-                
+            {workerTasks
+              .filter((task) => task.status === "pending")
+              .map(({ orderId: order }, i) => {
+                const site = order.siteId;
+
                 return (
-                  <Card key={app.id}>
+                  <Card key={i}>
                     <CardContent className="p-6">
                       <div className="flex flex-col md:flex-row justify-between">
                         <div>
                           <h3 className="font-medium">
-                            {order.workType.charAt(0).toUpperCase() + order.workType.slice(1)} Job
+                            {order.workType.charAt(0).toUpperCase() +
+                              order.workType.slice(1)}{" "}
+                            Job
                           </h3>
                           <p className="text-sm text-muted-foreground">
-                            {site?.name || ""} • Applied on {format(new Date(app.createdAt), "MMM d, yyyy")}
+                            {site?.name || ""} • Applied on{" "}
+                            {format(new Date(order.createdAt), "MMM d, yyyy")}
                           </p>
                         </div>
                         <Badge variant="outline" className="w-fit mt-2 md:mt-0">
@@ -233,21 +277,37 @@ export default function WorkerDashboard() {
 
       {completedTasks.length > 0 && (
         <>
-          <h2 className="text-xl font-semibold mb-6 mt-10">Recent Task Photos</h2>
+          <h2 className="text-xl font-semibold mb-6 mt-10">
+            Recent Task Photos
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {completedTasks.slice(0, 8).map(task => {
-              const photoUrl = task.photoUrls && task.photoUrls.length > 0 ? task.photoUrls[0] : null;
+            {completedTasks.slice(0, 8).map((task) => {
+              const photo = listImage.find(
+                (image) => get(image, "taskId._id") === get(task, "_id")
+              );
               return (
-                <div key={task.id} className="border rounded-lg overflow-hidden">
+                <div
+                  key={get(task, "_id")}
+                  className="border rounded-lg overflow-hidden"
+                >
                   <div className="aspect-square relative bg-muted">
                     <div className="absolute top-2 right-2">
-                      <Badge variant={task.status === "approved" ? "default" : task.status === "rejected" ? "destructive" : "secondary"}>
-                        {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
+                      <Badge
+                        variant={
+                          get(task, "status") === "approved"
+                            ? "default"
+                            : get(task, "status") === "rejected"
+                            ? "destructive"
+                            : "secondary"
+                        }
+                      >
+                        {get(task, "status").charAt(0).toUpperCase() +
+                          get(task, "status").slice(1)}
                       </Badge>
                     </div>
-                    {photoUrl ? (
+                    {get(photo, "_id") ? (
                       <img
-                        src={photoUrl}
+                        src={`${BASE_URL}${get(photo, "imageData")}`}
                         alt="Task completion"
                         className="object-cover w-full h-full"
                       />
@@ -258,9 +318,11 @@ export default function WorkerDashboard() {
                     )}
                   </div>
                   <div className="p-3">
-                    <p className="text-sm font-medium truncate">Task #{task.id}</p>
+                    <p className="text-sm font-medium truncate">
+                      Task #{get(task, "_id")}
+                    </p>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(task.completedAt), "MMM d, yyyy")}
+                      {dayjs(get(task, "createdAt")).format("YYYY/MM/DD HH:mm")}
                     </p>
                   </div>
                 </div>

@@ -1,3 +1,4 @@
+import { apiGetWorkerTasksById } from "@/api/workerTask";
 import MainLayout from "@/components/MainLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,10 +20,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
-import { workerTasks, workOrders } from "@/lib/data";
 import { format } from "date-fns";
+import { get } from "lodash";
 import { Search } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function WorkerTasks() {
@@ -30,21 +31,33 @@ export default function WorkerTasks() {
   const { currentUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [workerTasks, setWorkerTasks] = useState([]);
 
-  // Get tasks for the current worker
-  const myTasks = workerTasks;
+  const getWorkerTasks = async () => {
+    try {
+      const { data } = await apiGetWorkerTasksById();
+      setWorkerTasks(get(data, "metaData", []));
+    } catch (error) {
+      console.error("Error fetching worker tasks:", error);
+    }
+  };
+
+  useEffect(() => {
+    getWorkerTasks();
+  }, []);
+
+  console.log("workerTasks", workerTasks);
 
   // Filter tasks by search term and status
-  const filteredTasks = myTasks.filter((task) => {
+  const filteredTasks = workerTasks.filter((task) => {
     // Status filter
     if (statusFilter !== "all" && task.status !== statusFilter) {
       return false;
     }
 
-    // Search filter (by work order ID for demo)
+    // Search filter (by task ID or work order ID)
     if (searchTerm !== "") {
-      const order = workOrders.find((order) => order.id === task.orderId);
-      const searchString = `${task.id} ${order?.workType || ""}`.toLowerCase();
+      const searchString = `${task._id} ${task.orderId || ""}`.toLowerCase();
       if (!searchString.includes(searchTerm.toLowerCase())) {
         return false;
       }
@@ -103,7 +116,7 @@ export default function WorkerTasks() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Task ID</TableHead>
+                {/* <TableHead>Task ID</TableHead> */}
                 <TableHead>Work Order</TableHead>
                 <TableHead>Task Type</TableHead>
                 <TableHead>Date Completed</TableHead>
@@ -114,17 +127,15 @@ export default function WorkerTasks() {
             <TableBody>
               {filteredTasks.length > 0 ? (
                 filteredTasks.map((task) => {
-                  const order = workOrders.find(
-                    (order) => order.id === task.orderId
-                  );
+                  const order = task.orderId;
                   return (
                     <TableRow
-                      key={task.id}
+                      key={task._id}
                       className="cursor-pointer"
-                      onClick={() => handleRowClick(task.id)}
+                      onClick={() => handleRowClick(task._id)}
                     >
-                      <TableCell className="font-medium">{task.id}</TableCell>
-                      <TableCell>{task.orderId}</TableCell>
+                      {/* <TableCell className="font-medium">{task._id}</TableCell> */}
+                      <TableCell>{order.ID}</TableCell>
                       <TableCell>
                         {order?.workType
                           ? order.workType.charAt(0).toUpperCase() +
@@ -132,7 +143,9 @@ export default function WorkerTasks() {
                           : "Unknown"}
                       </TableCell>
                       <TableCell>
-                        {format(new Date(task.completedAt), "MMM d, yyyy")}
+                        {task.completedAt
+                          ? format(new Date(task.completedAt), "MMM d, yyyy")
+                          : "N/A"}
                       </TableCell>
                       <TableCell>{getStatusBadge(task.status)}</TableCell>
                       <TableCell className="text-right">
@@ -141,7 +154,7 @@ export default function WorkerTasks() {
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/worker/tasks/${task.id}`);
+                            navigate(`/worker/tasks/${task._id}`);
                           }}
                         >
                           View

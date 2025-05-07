@@ -6,6 +6,19 @@ export const apiGetAllWorkerTask = async (payload: any) => {
 };
 
 export const apiChangeStatusTask = async (payload: any, id: string) => {
-  const res = await apiClient.patch(`/worker-tasks/change-status/${id}`, payload);
+  const res = await apiClient.patch(
+    `/worker-tasks/change-status/${id}`,
+    payload
+  );
+  return res;
+};
+
+export const apiGetTaskDetails = async (taskId: string) => {
+  const res = await apiClient.get(`/worker-tasks/${taskId}`);
+  return res;
+};
+
+export const apiGetWorkerTasksById = async () => {
+  const res = await apiClient.get(`/worker-tasks`);
   return res;
 };
