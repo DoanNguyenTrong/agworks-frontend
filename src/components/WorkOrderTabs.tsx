@@ -1,5 +1,6 @@
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BASE_URL } from "@/api/config";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,8 +8,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -17,33 +22,34 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { format } from "date-fns";
-import { Check, X, Clock, DollarSign, Image as ImageIcon } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-import { WorkOrder, WorkerTask } from "@/lib/types";
-import { getPaymentCalculations } from "@/lib/data";
 import WorkerPerformance from "@/components/WorkerPerformance";
+import { toast } from "@/hooks/use-toast";
+import { getPaymentCalculations } from "@/lib/data";
+import { WorkOrder, WorkerApplication, WorkerTask } from "@/lib/types";
+import { format } from "date-fns";
+import dayjs from "dayjs";
+import { get } from "lodash";
+import { Check, Clock, DollarSign, ImageIcon, X } from "lucide-react";
+import { useEffect, useState } from "react";
 
 interface WorkOrderTabsProps {
   workOrder: WorkOrder;
   tasks: WorkerTask[];
+  worker: WorkerApplication[];
+  image: any[];
 }
 
 export default function WorkOrderTabs({
   workOrder,
   tasks,
+  worker,
+  image,
 }: WorkOrderTabsProps) {
+  const listImage = image;
   const [activeTab, setActiveTab] = useState("overview");
+  const [totalEarnings, setTotalEarnings] = useState<number>(0);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const paymentCalculations = getPaymentCalculations(workOrder._id);
@@ -69,6 +75,20 @@ export default function WorkOrderTabs({
     });
   };
 
+  useEffect(() => {
+    if (tasks.length > 0 && image.length > 0) {
+      let earnings = 0;
+      const listImage = image;
+      listImage.forEach((image: any) => {
+        const currentTask = tasks.filter((t) => t?._id === image?.taskId?._id);
+        if (currentTask) {
+          earnings += get(currentTask, "[0]orderId.payRate", 0);
+        }
+      });
+      setTotalEarnings(earnings);
+    }
+  }, [tasks, image]);
+
   return (
     <Tabs
       defaultValue="overview"
@@ -88,76 +108,78 @@ export default function WorkOrderTabs({
       {/* Overview Tab */}
       <TabsContent value="overview">
         <WorkerPerformance
-          id={workOrder._id}
+          image={listImage}
           tasks={tasks}
-          payRate={workOrder.payRate}
+          worker={worker}
+          payRate={totalEarnings}
         />
       </TabsContent>
 
       {/* Tasks Tab */}
       <TabsContent value="tasks">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {tasks.length > 0 ? (
-            tasks.map((task) => (
-              <Card key={task._id} className="overflow-hidden">
-                <div
-                  className="relative aspect-video overflow-hidden bg-muted cursor-pointer"
-                  onClick={() => setSelectedImage(task.imageUrl)}
-                >
-                  <img
-                    src={task.imageUrl}
-                    alt="Task evidence"
-                    className="object-cover w-full h-full"
-                  />
-                  <div className="absolute top-2 right-2">
-                    <Badge
-                      className={
-                        task.status === "approved"
-                          ? "bg-green-500"
-                          : task.status === "rejected"
-                          ? "bg-red-500"
-                          : "bg-yellow-500"
-                      }
-                    >
-                      {task.status.charAt(0).toUpperCase() +
-                        task.status.slice(1)}
-                    </Badge>
+          {listImage.length > 0 ? (
+            listImage.map((image) => (
+              <div key={image._id}>
+                <Card className="overflow-hidden">
+                  <div
+                    className="relative aspect-video overflow-hidden bg-muted cursor-pointer"
+                    onClick={() => setSelectedImage(image)}
+                  >
+                    <img
+                      src={`${BASE_URL}${image.imageData}`}
+                      alt="Task evidence"
+                      className="object-cover w-full h-full"
+                    />
+                    {/* <div className="absolute top-2 right-2">
+                        <Badge
+                          className={
+                            task.status === "approved"
+                              ? "bg-green-500"
+                              : task.status === "rejected"
+                              ? "bg-red-500"
+                              : "bg-yellow-500"
+                          }
+                        >
+                          {task.status.charAt(0).toUpperCase() +
+                            task.status.slice(1)}
+                        </Badge>
+                      </div> */}
                   </div>
-                </div>
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <p className="font-medium">{task.workerName}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {format(
-                          new Date(task.completedAt),
-                          "MMM d, yyyy h:mm a"
-                        )}
-                      </p>
-                    </div>
-                    {task.status === "pending" && (
-                      <div className="flex gap-1">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 text-green-500"
-                          onClick={() => handleApproveTask(task._id)}
-                        >
-                          <Check className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7 text-red-500"
-                          onClick={() => handleRejectTask(task._id)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="font-medium">
+                          {get(image, "fileName", "-")}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {dayjs(image.timestamp).format("YYYY/MM/DD HH:mm")}
+                        </p>
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                      {/* {task.status === "pending" && (
+                          <div className="flex gap-1">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-7 w-7 text-green-500"
+                              onClick={() => handleApproveTask(task._id)}
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-7 w-7 text-red-500"
+                              onClick={() => handleRejectTask(task._id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )} */}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             ))
           ) : (
             <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
@@ -283,13 +305,13 @@ export default function WorkOrderTabs({
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Start Date:</dt>
                     <dd className="font-medium">
-                      {format(new Date(workOrder.startDate), "MMMM d, yyyy")}
+                      {dayjs(workOrder.startDate).format("YYYY/MM/DD-HH:mm")}
                     </dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">End Date:</dt>
                     <dd className="font-medium">
-                      {format(new Date(workOrder.endDate), "MMMM d, yyyy")}
+                      {dayjs(workOrder.endDate).format("YYYY/MM/DD-HH:mm")}
                     </dd>
                   </div>
                   <div className="flex justify-between">
@@ -329,13 +351,13 @@ export default function WorkOrderTabs({
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Pay Rate:</dt>
                     <dd className="font-medium">
-                      ${workOrder.payRate.toFixed(2)} per task
+                      ${workOrder?.payRate.toFixed(2)} per task
                     </dd>
                   </div>
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Address:</dt>
                     <dd className="font-medium text-right">
-                      {workOrder.address}
+                      {get(workOrder, "siteId.address", "-")}
                     </dd>
                   </div>
                 </dl>

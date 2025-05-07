@@ -1,20 +1,16 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { apiGetAllImage } from "@/api/image";
+import { apiGetWorkOderById } from "@/api/workOrder";
+import { apiGetAllWorkerTask } from "@/api/workerTask";
 import MainLayout from "@/components/MainLayout";
 import WorkOrderTabs from "@/components/WorkOrderTabs";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Pencil, AlertTriangle } from "lucide-react";
-import {
-  workOrders,
-  blocks,
-  sites,
-  workerTasks,
-  getPaymentCalculations,
-} from "@/lib/data";
+import { Button } from "@/components/ui/button";
 import { WorkOrder, WorkerTask } from "@/lib/types";
-import { apiGetWorkOderById } from "@/api/workOrder";
-import { get } from "lodash";
+import { StatusType } from "@/lib/utils/constant";
+import { get, groupBy, map, merge } from "lodash";
+import { AlertTriangle, ArrowLeft, Pencil } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 export default function WorkOrderDetails() {
   const { id } = useParams<{ id: string }>();
@@ -22,17 +18,56 @@ export default function WorkOrderDetails() {
   const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
   const [tasks, setTasks] = useState<WorkerTask[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
+  const [worker, setWorker] = useState<any[]>([]);
+  const [image, setImage] = useState<any[]>([]);
 
-  console.log("workOrder => ", workOrder);
-  useEffect(() => {
-    // Get work order data
-
-    const getWorkOder = async () => {
+  const getWorkOder = async () => {
+    try {
       const { data } = await apiGetWorkOderById({ id });
-      setWorkOrder(get(data, "metaData", {}));
-    };
+      setWorkOrder(get(data, "metaData", []));
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  };
 
+  const getDataTask = async (payload: string[]) => {
+    try {
+      if (payload.length > 0) {
+        const { data } = await apiGetAllWorkerTask({
+          filter: { orderId: payload },
+        });
+        console.log("getDataTask :>> ", data);
+        const task = get(data, "metaData", []).filter(
+          (t) => t?.status === StatusType.APPROVED
+        );
+        setTasks(task);
+        const wokers = map(
+          groupBy(
+            task.map((t) => t.workerId),
+            "_id"
+          ),
+          (items) => merge({}, ...items)
+        );
+        // console.log("wokers :>> ", wokers);
+        setWorker(wokers);
+
+        // get list image to task
+        const res = await apiGetAllImage({
+          filter: {
+            taskId: task.map((t: any) => t?._id),
+          },
+        });
+        console.log("image :>> ", get(res, "data.metaData", []));
+        setImage(get(res, "data.metaData", []));
+      }
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  };
+
+  useEffect(() => {
     getWorkOder();
+    getDataTask([id]);
   }, [id]);
 
   if (!workOrder) {
@@ -60,8 +95,8 @@ export default function WorkOrderDetails() {
     switch (status) {
       case "Draft":
         return <Badge variant="outline">Draft</Badge>;
-      case "Published":
-        return <Badge variant="secondary">Published</Badge>;
+      case "New":
+        return <Badge variant="secondary">New</Badge>;
       case "InProgress":
         return <Badge>In Progress</Badge>;
       case "Completed":
@@ -93,7 +128,7 @@ export default function WorkOrderDetails() {
               <h2 className="text-xl font-semibold">
                 {workOrder.workType.charAt(0).toUpperCase() +
                   workOrder.workType.slice(1)}{" "}
-                - {workOrder.blockId["name"]}
+                - {workOrder.blockId["ID"]}
               </h2>
               {getStatusBadge(workOrder.status)}
             </div>
@@ -107,20 +142,25 @@ export default function WorkOrderDetails() {
               <Pencil className="mr-2 h-4 w-4" />
               Edit
             </Button>
-            <Button>
+            {/* <Button>
               {workOrder.status === "Draft"
-                ? "Publish"
-                : workOrder.status === "Published"
+                ? "New"
+                : workOrder.status === "New"
                 ? "Start Work"
                 : workOrder.status === "InProgress"
                 ? "Complete"
                 : "Reopen"}
-            </Button>
+            </Button> */}
           </div>
         </div>
       </div>
 
-      <WorkOrderTabs workOrder={workOrder} tasks={tasks} />
+      <WorkOrderTabs
+        workOrder={workOrder}
+        tasks={tasks}
+        worker={worker}
+        image={image}
+      />
     </MainLayout>
   );
 }

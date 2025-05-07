@@ -66,7 +66,7 @@ export interface WorkOrder {
   vines?: number;
   vinesPerRow?: number;
   notes?: string;
-  status: 'Draft' | 'Published' | 'InProgress' | 'Completed' | 'Cancelled';
+  status: 'Draft' | 'New' | 'InProgress' | 'Completed' | 'Cancelled';
   createdAt: string;
   createdBy: string;
 }

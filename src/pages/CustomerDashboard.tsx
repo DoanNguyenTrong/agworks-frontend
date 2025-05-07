@@ -1,11 +1,7 @@
 import { apiCreateAcc, apiGetAllAccOrganization } from "@/api/account";
-import { apiGetWorkOrderByUser } from "@/api/workOrder";
 import { apiGetListBlock } from "@/api/block";
-import {
-  apiGetListSite,
-  apiGetSearchSiteByUser,
-  apiUpdateByFieldUserIds,
-} from "@/api/site";
+import { apiGetSearchSiteByUser, apiUpdateByFieldUserIds } from "@/api/site";
+import { apiGetWorkOrderByUser } from "@/api/workOrder";
 import MainLayout from "@/components/MainLayout";
 import ManagerForm from "@/components/ManagerForm";
 import { Button } from "@/components/ui/button";
@@ -24,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { blocks, sites, workOrders } from "@/lib/data";
+import { blocks } from "@/lib/data";
 import { MAP_ROLE } from "@/lib/utils/role";
 import { format } from "date-fns";
 import { get } from "lodash";
@@ -218,7 +214,7 @@ export default function CustomerDashboard() {
                         workOrders.filter(
                           (order) =>
                             order.siteId === site.id &&
-                            ["published", "inProgress"].includes(order.status)
+                            ["New", "InProgress"].includes(order.status)
                         ).length
                       }
                     </span>

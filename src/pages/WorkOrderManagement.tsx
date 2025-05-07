@@ -37,8 +37,8 @@ export default function WorkOrderManagement() {
     switch (status) {
       case "Draft":
         return <Badge variant="outline">Draft</Badge>;
-      case "Published":
-        return <Badge variant="secondary">Published</Badge>;
+      case "New":
+        return <Badge variant="secondary">New</Badge>;
       case "InProgress":
         return <Badge>In Progress</Badge>;
       case "Completed":
@@ -57,7 +57,7 @@ export default function WorkOrderManagement() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data } = await apiGetAllWorkOrder();
+        const { data } = await apiGetAllWorkOrder({});
         console.log("data :>> ", data);
         setTableData(get(data, "metaData", []));
       } catch (error) {
@@ -113,11 +113,11 @@ export default function WorkOrderManagement() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="published">Published</SelectItem>
-              <SelectItem value="inProgress">In Progress</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
+              <SelectItem value="Draft">Draft</SelectItem>
+              <SelectItem value="New">New</SelectItem>
+              <SelectItem value="InProgress">In Progress</SelectItem>
+              <SelectItem value="Completed">Completed</SelectItem>
+              <SelectItem value="Cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
 
@@ -162,8 +162,8 @@ export default function WorkOrderManagement() {
                           order.workType.slice(1)}
                       </TableCell>
                       <TableCell>
-                        {format(new Date(order.startDate), "MMM d")} -{" "}
-                        {format(new Date(order.endDate), "MMM d")}
+                        {format(new Date(order.startDate), "MMM-d  HH:mm")} -{" "}
+                        {format(new Date(order.endDate), "MMM d  HH:mm")}
                       </TableCell>
                       <TableCell>{getStatusBadge(order.status)}</TableCell>
                       <TableCell>${order.payRate.toFixed(2)}</TableCell>

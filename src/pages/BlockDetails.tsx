@@ -197,9 +197,7 @@ export default function BlockDetails() {
                       order.status === "inProgress" ? "default" : "secondary"
                     }
                   >
-                    {order.status === "inProgress"
-                      ? "In Progress"
-                      : "Published"}
+                    {order.status === "inProgress" ? "In Progress" : "New"}
                   </Badge>
                 </div>
                 <div className="flex flex-wrap gap-4 text-sm">

@@ -1,7 +1,7 @@
 import { apiClient } from "./config";
 
 export const apiGetAllWorkOrder = async (payload: any) => {
-  const res = await apiClient.post("/work-order/list");
+  const res = await apiClient.post("/work-order/list", payload);
   return res;
 };
 

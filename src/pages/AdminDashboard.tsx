@@ -25,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { sites, users, workOrders } from "@/lib/data";
+import { sites, workOrders } from "@/lib/data";
 import { User } from "@/lib/types";
 import { MAP_ROLE } from "@/lib/utils/role";
 import { get } from "lodash";
@@ -283,10 +283,10 @@ export default function AdminDashboard() {
                   </Badge>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>Published</span>
+                  <span>New</span>
                   <Badge variant="secondary">
                     {
-                      workOrders.filter((order) => order.status === "published")
+                      workOrders.filter((order) => order.status === "New")
                         .length
                     }
                   </Badge>

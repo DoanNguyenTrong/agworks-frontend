@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { Block } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -70,13 +71,14 @@ export default function WorkOrderForm({
   const { currentUser } = useAuth();
   const [managedSites, setManagedSites] = useState<any[]>([]);
   const [availableBlocks, setAvailableBlocks] = useState<Block[]>([]);
+  const { toast } = useToast();
 
   // Get sites managed by this manager
   useEffect(() => {
     const getAllSite = async () => {
       try {
         const res = await apiGetSearchSiteByUser();
-        console.log("data :>> ", res);
+        // console.log("data :>> ", res);
         setManagedSites(get(res, "data", []));
       } catch (error) {
         console.log("error :>> ", error);
@@ -199,11 +201,24 @@ export default function WorkOrderForm({
   const handleFormSubmit = (data: z.infer<typeof workOrderSchema>) => {
     const { workDate, startTime, endTime, ...cloneData } = data;
     const time = convertToStartEnd(workDate, startTime, endTime);
-    const dataSubmit = {
-      ...cloneData,
-      ...time,
-    };
-    onSubmit(dataSubmit);
+    const durationInHours = dayjs(time.endDate).diff(
+      dayjs(time.startDate),
+      "hour"
+    );
+    if (durationInHours >= 0) {
+      const dataSubmit = {
+        ...cloneData,
+        ...time,
+        expectedHours: durationInHours,
+      };
+      // console.log("object :>> ", dataSubmit);
+      onSubmit(dataSubmit);
+    } else {
+      toast({
+        title: "Warning",
+        description: "Start time must not be less than end time.",
+      });
+    }
   };
 
   return (

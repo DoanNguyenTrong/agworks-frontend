@@ -32,6 +32,18 @@ const USER_STATUS = {
   REJECTED: "REJECTED",
 };
 
+export enum StatusType {
+  INPROGRESS = 'InProgress',
+  NEW = 'New',
+  DRAFT = 'Draft',
+  COMPLETED = 'Completed',
+  CANCELLED = 'Cancelled',
+  // =============================
+  APPROVED = 'approved',
+  PENDING = 'pending',
+  REJECTED = 'rejected',
+}
+
 const URL_DONT_SHOW_MENU = ['login', "404"]
 
 export { DateFormatType, EncryptConstants, ResponseStatusCode, URL_DONT_SHOW_MENU, USER_STATUS };

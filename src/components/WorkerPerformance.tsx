@@ -1,66 +1,96 @@
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { WorkerApplication, WorkerTask } from "@/lib/types";
+import { StatusType } from "@/lib/utils/constant";
+import { get, groupBy, isEmpty } from "lodash";
+import { useEffect, useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
   ResponsiveContainer,
-  Legend
+  Tooltip,
+  XAxis,
+  YAxis,
 } from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { WorkerTask } from "@/lib/types";
-import { format } from "date-fns";
-import { workerTasks } from "@/lib/data";
 
 interface WorkerPerformanceProps {
-  id: string;  // Worker ID
   tasks?: WorkerTask[];
+  image?: any[];
+  worker?: WorkerApplication[];
   payRate?: number;
 }
 
-export default function WorkerPerformance({ id, tasks: providedTasks, payRate = 15 }: WorkerPerformanceProps) {
-  const tasks = providedTasks || workerTasks.filter(task => task.workerId === id);
-  
-  const workerMap = new Map<string, { id: string; name: string; tasks: number; earnings: number }>();
-  
-  tasks.forEach(task => {
-    if (!workerMap.has(task.workerId)) {
-      workerMap.set(task.workerId, {
-        id: task.workerId,
-        name: task.workerName,
-        tasks: 0,
-        earnings: 0
-      });
+export default function WorkerPerformance({
+  tasks,
+  worker = [],
+  image = [],
+  payRate = 0,
+}: WorkerPerformanceProps) {
+  const [WorkerPerformance, setWorkerPerformance] = useState([]);
+  const [DailyProgress, setDailyProgress] = useState([]);
+
+  const totalEarnings = (listImage: any, listTask: any) => {
+    // Calculate total earnings from all completed tasks
+    let earnings = 0;
+    listImage.forEach((image: any) => {
+      const currentTask = listTask.filter((t) => t?._id === image?.taskId?._id);
+      if (currentTask) {
+        earnings += get(currentTask, "[0]orderId.payRate", 0);
+      }
+    });
+    return earnings;
+  };
+
+  useEffect(() => {
+    const workerMap = groupBy(image, (item: any) => item?.taskId?._id);
+
+    const completedItems = tasks.filter(
+      (item) => get(item, "status", null) === StatusType.COMPLETED
+    );
+    const groupedByDate = groupBy(completedItems, (item: WorkerTask) =>
+      get(item, "createdAt", "").slice(0, 10)
+    );
+
+    //Worker Performance
+    // console.log("workerMap :>> ", workerMap, image);
+    if (!isEmpty(workerMap)) {
+      const result = [];
+      for (const [_, data] of Object.entries(workerMap)) {
+        // console.log("data :>> ", data);
+        const convertData = {
+          id: get(data, "[0]._id", "-"),
+          name: get(data, "[0].workerId.name"),
+          tasks: data.length,
+          earnings: totalEarnings(image, tasks).toFixed(2),
+        };
+        result.push(convertData);
+        // console.log("convertData :>> ", convertData);
+      }
+      setWorkerPerformance(result);
     }
-    
-    const workerData = workerMap.get(task.workerId)!;
-    workerData.tasks += 1;
-    workerData.earnings = workerData.tasks * payRate;
-  });
-  
-  const workerData = Array.from(workerMap.values());
-  
-  const dateMap = new Map<string, { date: string, tasks: number }>();
-  
-  tasks.forEach(task => {
-    const dateStr = format(new Date(task.completedAt), "MMM d");
-    
-    if (!dateMap.has(dateStr)) {
-      dateMap.set(dateStr, {
-        date: dateStr,
-        tasks: 0
-      });
+
+    // Daily Progress
+    if (!isEmpty(groupedByDate)) {
+      // console.log("groupedByDate :>> ", groupedByDate);
+      const result = [];
+      for (const [key, data] of Object.entries(groupedByDate)) {
+        const convertData = {
+          date: key,
+          tasks: data.length,
+        };
+        result.push(convertData);
+      }
+      setDailyProgress(result);
     }
-    
-    const dayData = dateMap.get(dateStr)!;
-    dayData.tasks += 1;
-  });
-  
-  const dailyData = Array.from(dateMap.values()).sort((a, b) => 
-    new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
-  
+  }, [image, tasks]);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -69,10 +99,10 @@ export default function WorkerPerformance({ id, tasks: providedTasks, payRate = 
             <CardTitle className="text-sm font-medium">Total Workers</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{workerData.length}</div>
+            <div className="text-2xl font-bold">{worker?.length}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
@@ -81,43 +111,43 @@ export default function WorkerPerformance({ id, tasks: providedTasks, payRate = 
             <div className="text-2xl font-bold">{tasks.length}</div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Average Per Worker</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Average Per Worker
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {workerData.length > 0 
-                ? Math.round(tasks.length / workerData.length) 
-                : 0}
+              {worker.length > 0 ? Math.round(tasks.length / worker.length) : 0}
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total Earnings
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${(tasks.length * payRate).toFixed(2)}</div>
+            <div className="text-2xl font-bold">${payRate.toFixed(2)}</div>
           </CardContent>
         </Card>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle>Worker Performance</CardTitle>
-            <CardDescription>
-              Tasks completed by each worker
-            </CardDescription>
+            <CardDescription>Tasks completed by each worker</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={workerData}
+                  data={WorkerPerformance}
                   margin={{
                     top: 20,
                     right: 30,
@@ -130,8 +160,14 @@ export default function WorkerPerformance({ id, tasks: providedTasks, payRate = 
                   <YAxis />
                   <Tooltip
                     formatter={(value, name) => {
-                      if (name === 'tasks') return [`${value} tasks`, 'Tasks'];
-                      if (name === 'earnings') return [`$${typeof value === 'number' ? value.toFixed(2) : value}`, 'Earnings'];
+                      if (name === "tasks") return [`${value} tasks`, "Tasks"];
+                      if (name === "earnings")
+                        return [
+                          `$${
+                            typeof value === "number" ? value.toFixed(2) : value
+                          }`,
+                          "Earnings",
+                        ];
                       return [value, name];
                     }}
                   />
@@ -143,19 +179,17 @@ export default function WorkerPerformance({ id, tasks: providedTasks, payRate = 
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Daily Progress</CardTitle>
-            <CardDescription>
-              Tasks completed per day
-            </CardDescription>
+            <CardDescription>Tasks completed per day</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={dailyData}
+                  data={DailyProgress}
                   margin={{
                     top: 20,
                     right: 30,
@@ -166,9 +200,7 @@ export default function WorkerPerformance({ id, tasks: providedTasks, payRate = 
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis />
-                  <Tooltip
-                    formatter={(value) => [`${value} tasks`, 'Tasks']}
-                  />
+                  <Tooltip formatter={(value) => [`${value} tasks`, "Tasks"]} />
                   <Bar dataKey="tasks" name="Tasks" fill="#8884d8" />
                 </BarChart>
               </ResponsiveContainer>
