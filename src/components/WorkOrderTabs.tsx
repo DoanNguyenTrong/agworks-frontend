@@ -1,4 +1,5 @@
 import { BASE_URL } from "@/api/config";
+import { apiChangeStatusTask } from "@/api/workerTask";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,7 +29,7 @@ import WorkerPerformance from "@/components/WorkerPerformance";
 import { toast } from "@/hooks/use-toast";
 import { getPaymentCalculations } from "@/lib/data";
 import { WorkOrder, WorkerApplication, WorkerTask } from "@/lib/types";
-import { format } from "date-fns";
+import { StatusType } from "@/lib/utils/constant";
 import dayjs from "dayjs";
 import { get } from "lodash";
 import { Check, Clock, DollarSign, ImageIcon, X } from "lucide-react";
@@ -39,6 +40,7 @@ interface WorkOrderTabsProps {
   tasks: WorkerTask[];
   worker: WorkerApplication[];
   image: any[];
+  fetchData?: () => void;
 }
 
 export default function WorkOrderTabs({
@@ -46,7 +48,9 @@ export default function WorkOrderTabs({
   tasks,
   worker,
   image,
+  fetchData = () => {},
 }: WorkOrderTabsProps) {
+  const listTasks = tasks;
   const listImage = image;
   const [activeTab, setActiveTab] = useState("overview");
   const [totalEarnings, setTotalEarnings] = useState<number>(0);
@@ -54,18 +58,60 @@ export default function WorkOrderTabs({
 
   const paymentCalculations = getPaymentCalculations(workOrder._id);
 
-  const handleApproveTask = (taskId: string) => {
-    toast({
-      title: "Task approved",
-      description: "The task has been approved for payment.",
-    });
+  const handleApproveTask = async (taskId: string) => {
+    try {
+      const res = await apiChangeStatusTask(
+        {
+          status: StatusType.APPROVED,
+        },
+        taskId
+      );
+      console.log("res :>> ", res);
+      toast({
+        title: "Task approved",
+        description: "The task has been approved for payment.",
+      });
+      fetchData();
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   };
 
-  const handleRejectTask = (taskId: string) => {
-    toast({
-      title: "Task rejected",
-      description: "The task has been rejected.",
-    });
+  const handleRejectTask = async (taskId: string) => {
+    try {
+      const res = await apiChangeStatusTask(
+        {
+          status: StatusType.REJECTED,
+        },
+        taskId
+      );
+      console.log("res :>> ", res);
+      toast({
+        title: "Task rejected",
+        description: "The task has been rejected.",
+      });
+      fetchData();
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  };
+
+  const handleRemoveTask = async (taskId: string) => {
+    try {
+      await apiChangeStatusTask(
+        {
+          status: StatusType.PENDING,
+        },
+        taskId
+      );
+      toast({
+        title: "Task remove",
+        description: "The task has been remove.",
+      });
+      fetchData();
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   };
 
   const completeWorkOrder = () => {
@@ -243,21 +289,39 @@ export default function WorkOrderTabs({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paymentCalculations.length > 0 ? (
-                  paymentCalculations.map((payment) => (
-                    <TableRow key={payment.workerId}>
-                      <TableCell className="font-medium">
-                        {payment.workerName}
-                      </TableCell>
-                      <TableCell>{payment.taskCount}</TableCell>
-                      <TableCell>
-                        ${workOrder.payRate.toFixed(2)} per task
-                      </TableCell>
-                      <TableCell className="text-right font-bold">
-                        ${payment.totalAmount.toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                  ))
+                {listTasks.filter((t) => t.status === StatusType.APPROVED)
+                  .length > 0 ? (
+                  listTasks
+                    .filter((t) => t.status === StatusType.APPROVED)
+                    .map((task) => (
+                      <TableRow key={`${task._id}`}>
+                        <TableCell className="font-medium">
+                          {get(task, "workerId.name", "-")}
+                        </TableCell>
+                        <TableCell>
+                          {
+                            listImage.filter(
+                              (image) =>
+                                get(image, "taskId.workerId") ===
+                                get(task, "workerId._id")
+                            ).length
+                          }
+                        </TableCell>
+                        <TableCell>
+                          ${get(task, "orderId.payRate")} per task
+                        </TableCell>
+                        <TableCell className="text-right font-bold">
+                          $
+                          {(
+                            listImage.filter(
+                              (image) =>
+                                get(image, "taskId.workerId") ===
+                                get(task, "workerId._id")
+                            ).length * get(task, "orderId.payRate", 1)
+                          ).toFixed(2)}
+                        </TableCell>
+                      </TableRow>
+                    ))
                 ) : (
                   <TableRow>
                     <TableCell colSpan={4} className="h-24 text-center">
@@ -265,15 +329,27 @@ export default function WorkOrderTabs({
                     </TableCell>
                   </TableRow>
                 )}
-                {paymentCalculations.length > 0 && (
+                {listTasks.filter((t) => t.status === StatusType.APPROVED)
+                  .length > 0 && (
                   <TableRow>
                     <TableCell colSpan={3} className="text-right font-bold">
                       Total Payment
                     </TableCell>
                     <TableCell className="text-right font-bold">
                       $
-                      {paymentCalculations
-                        .reduce((sum, payment) => sum + payment.totalAmount, 0)
+                      {listTasks
+                        .filter((t) => t.status === StatusType.APPROVED)
+                        .reduce(
+                          (sum, task) =>
+                            sum +
+                            get(task, "orderId.payRate", 1) *
+                              listImage.filter(
+                                (image) =>
+                                  get(image, "taskId.workerId") ===
+                                  get(task, "workerId._id")
+                              ).length,
+                          0
+                        )
                         .toFixed(2)}
                     </TableCell>
                   </TableRow>
@@ -436,26 +512,45 @@ export default function WorkOrderTabs({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <TableRow>
-                      <TableCell>John Worker</TableCell>
-                      <TableCell>{format(new Date(), "MMM d, yyyy")}</TableCell>
-                      <TableCell>24</TableCell>
-                      <TableCell>
-                        <Button variant="outline" size="sm">
-                          Remove
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>Jane Worker</TableCell>
-                      <TableCell>{format(new Date(), "MMM d, yyyy")}</TableCell>
-                      <TableCell>18</TableCell>
-                      <TableCell>
-                        <Button variant="outline" size="sm">
-                          Remove
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                    {listTasks.filter((t) => t.status === StatusType.APPROVED)
+                      .length > 0 ? (
+                      listTasks
+                        .filter((t) => t.status === StatusType.APPROVED)
+                        .map((item) => (
+                          <TableRow key={item._id}>
+                            <TableCell>{get(item, "workerId.name")}</TableCell>
+                            <TableCell>
+                              {dayjs(get(item, "createdAt")).format(
+                                "YYYY/MM/DD HH:mm"
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {
+                                listImage.filter(
+                                  (image) =>
+                                    get(image, "taskId.workerId") ===
+                                    get(item, "workerId._id")
+                                ).length
+                              }
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleRemoveTask(item._id)}
+                              >
+                                Remove
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={4} className="h-24 text-center">
+                          No data.
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>
@@ -471,30 +566,49 @@ export default function WorkOrderTabs({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <TableRow>
-                      <TableCell>Sam Worker</TableCell>
-                      <TableCell>{format(new Date(), "MMM d, yyyy")}</TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-green-500"
-                          >
-                            <Check className="h-4 w-4 mr-1" />
-                            Approve
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-red-500"
-                          >
-                            <X className="h-4 w-4 mr-1" />
-                            Reject
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                    {listTasks.filter((t) => t.status === StatusType.PENDING)
+                      .length > 0 ? (
+                      listTasks
+                        .filter((t) => t.status === StatusType.PENDING)
+                        .map((item) => (
+                          <TableRow key={item._id}>
+                            <TableCell>{get(item, "workerId.name")}</TableCell>
+                            <TableCell>
+                              {dayjs(get(item, "createdAt")).format(
+                                "YYYY/MM/DD HH:mm"
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-green-500"
+                                  onClick={() => handleApproveTask(item._id)}
+                                >
+                                  <Check className="h-4 w-4 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-red-500"
+                                  onClick={() => handleRejectTask(item._id)}
+                                >
+                                  <X className="h-4 w-4 mr-1" />
+                                  Reject
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={4} className="h-24 text-center">
+                          No data.
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </div>

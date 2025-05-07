@@ -31,7 +31,7 @@ import { Block } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import dayjs from "dayjs";
-import { get } from "lodash";
+import { get, isEmpty } from "lodash";
 import { CalendarIcon, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -47,7 +47,7 @@ const workOrderSchema = z.object({
   }),
   startTime: z.string().min(1, "Start time is required"),
   endTime: z.string().min(1, "End time is required"),
-  workType: z.enum(["pruning", "shoot thinning", "other"], {
+  workType: z.enum(["pruning", "shoot_thinning", "other"], {
     required_error: "Work type is required",
   }),
   neededWorkers: z.coerce.number().min(1, "At least 1 worker is required"),
@@ -62,11 +62,13 @@ const workOrderSchema = z.object({
 interface WorkOrderFormProps {
   onSubmit: (data: z.infer<typeof workOrderSchema>) => void;
   isSubmitting?: boolean;
+  initForm?: any;
 }
 
 export default function WorkOrderForm({
   onSubmit,
   isSubmitting = false,
+  initForm = {},
 }: WorkOrderFormProps) {
   const { currentUser } = useAuth();
   const [managedSites, setManagedSites] = useState<any[]>([]);
@@ -128,12 +130,17 @@ export default function WorkOrderForm({
       } else {
         setAvailableBlocks([]);
       }
-      form.setValue("blockId", undefined);
+      if (isEmpty(initForm)) {
+        form.setValue("blockId", undefined);
+      } else {
+        form.setValue("blockId", get(initForm, "blockId._id"));
+      }
       form.setValue("acres", undefined);
       form.setValue("rows", undefined);
       form.setValue("vines", undefined);
       form.setValue("vinesPerRow", undefined);
     };
+
     getDataBlock();
   }, [selectedSiteId, form]);
 
@@ -143,6 +150,12 @@ export default function WorkOrderForm({
   // Update block info when block changes
   useEffect(() => {
     if (selectedBlockId) {
+      if (
+        !isEmpty(initForm) &&
+        selectedBlockId === get(initForm, "blockId._id")
+      ) {
+        form.setValue("blockId", get(initForm, "blockId._id"));
+      }
       const selectedBlock = availableBlocks.find(
         (block) => block._id === selectedBlockId
       );
@@ -221,6 +234,21 @@ export default function WorkOrderForm({
     }
   };
 
+  useEffect(() => {
+    if (!isEmpty(initForm)) {
+      // Convert string dates to Date object if necessary
+      const formData = {
+        ...initForm,
+        workDate: initForm.workDate ? new Date(initForm.workDate) : new Date(),
+        startTime: dayjs(initForm.startDate).format("HH:mm"),
+        endTime: dayjs(initForm.endDate).format("HH:mm"),
+        blockId: get(initForm, "blockId._id"),
+        siteId: get(initForm, "siteId._id"),
+      };
+      form.reset(formData);
+    }
+  }, [initForm]);
+
   return (
     <Form {...form}>
       <form
@@ -251,6 +279,7 @@ export default function WorkOrderForm({
               <FormItem>
                 <FormLabel>Vineyard Site*</FormLabel>
                 <Select
+                  value={field.value}
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
@@ -283,8 +312,8 @@ export default function WorkOrderForm({
               <FormItem>
                 <FormLabel>Block*</FormLabel>
                 <Select
+                  value={field.value}
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
                   disabled={availableBlocks.length === 0}
                 >
                   <FormControl>
@@ -408,8 +437,9 @@ export default function WorkOrderForm({
               <FormItem>
                 <FormLabel>Work Type*</FormLabel>
                 <Select
+                  value={field.value}
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  // defaultValue={field.value}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -418,7 +448,7 @@ export default function WorkOrderForm({
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="pruning">Pruning</SelectItem>
-                    <SelectItem value="shoot thinning">
+                    <SelectItem value="shoot_thinning">
                       Shoot Thinning
                     </SelectItem>
                     <SelectItem value="other">Other</SelectItem>
@@ -554,7 +584,11 @@ export default function WorkOrderForm({
             Cancel
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Creating..." : "Create Work Order"}
+            {isEmpty(initForm) ? (
+              <>{isSubmitting ? "Creating..." : "Create Work Order"}</>
+            ) : (
+              <>{isSubmitting ? "Updating..." : "Update Work Order"}</>
+            )}
           </Button>
         </div>
       </form>

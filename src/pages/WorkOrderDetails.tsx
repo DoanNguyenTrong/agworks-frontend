@@ -37,13 +37,13 @@ export default function WorkOrderDetails() {
           filter: { orderId: payload },
         });
         console.log("getDataTask :>> ", data);
-        const task = get(data, "metaData", []).filter(
-          (t) => t?.status === StatusType.APPROVED
-        );
+        const task = get(data, "metaData", []);
         setTasks(task);
         const wokers = map(
           groupBy(
-            task.map((t) => t.workerId),
+            task
+              .filter((t) => t?.status === StatusType.APPROVED)
+              .map((t) => t.workerId),
             "_id"
           ),
           (items) => merge({}, ...items)
@@ -54,7 +54,9 @@ export default function WorkOrderDetails() {
         // get list image to task
         const res = await apiGetAllImage({
           filter: {
-            taskId: task.map((t: any) => t?._id),
+            taskId: task
+              .filter((t) => t?.status === StatusType.APPROVED)
+              .map((t: any) => t?._id),
           },
         });
         console.log("image :>> ", get(res, "data.metaData", []));
@@ -69,6 +71,11 @@ export default function WorkOrderDetails() {
     getWorkOder();
     getDataTask([id]);
   }, [id]);
+
+  const callBackData = () => {
+    getWorkOder();
+    getDataTask([id]);
+  };
 
   if (!workOrder) {
     return (
@@ -138,7 +145,11 @@ export default function WorkOrderDetails() {
           </div>
 
           <div className="mt-4 md:mt-0">
-            <Button variant="outline" className="mr-2">
+            <Button
+              variant="outline"
+              className="mr-2"
+              onClick={() => navigate(`/manager/orders/edit/${id}`)}
+            >
               <Pencil className="mr-2 h-4 w-4" />
               Edit
             </Button>
@@ -160,6 +171,7 @@ export default function WorkOrderDetails() {
         tasks={tasks}
         worker={worker}
         image={image}
+        fetchData={() => callBackData()}
       />
     </MainLayout>
   );

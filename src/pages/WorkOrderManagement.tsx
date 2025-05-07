@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
 import { WorkOrder } from "@/lib/types";
-import { format } from "date-fns";
+import dayjs from "dayjs";
 import { get } from "lodash";
 import { PlusCircle, Search } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -162,8 +162,8 @@ export default function WorkOrderManagement() {
                           order.workType.slice(1)}
                       </TableCell>
                       <TableCell>
-                        {format(new Date(order.startDate), "MMM-d  HH:mm")} -{" "}
-                        {format(new Date(order.endDate), "MMM d  HH:mm")}
+                        {dayjs(order.startDate).format("YYYY/MM/DD HH:mm")} -{" "}
+                        {dayjs(order.endDate).format("YYYY/MM/DD HH:mm")}
                       </TableCell>
                       <TableCell>{getStatusBadge(order.status)}</TableCell>
                       <TableCell>${order.payRate.toFixed(2)}</TableCell>

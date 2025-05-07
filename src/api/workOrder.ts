@@ -15,6 +15,11 @@ export const apiGetWorkOderById = async (payload: any) => {
   return res;
 };
 
+export const apiUpdateWorkOderById = async (payload: any, id: string) => {
+  const res = await apiClient.patch(`/work-order/${id}`, payload);
+  return res;
+};
+
 export const apiGetWorkOrderByUser = async (payload: any) => {
   const res = await apiClient.get("/work-order/search/by-userId", payload);
   return res;

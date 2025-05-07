@@ -60,6 +60,7 @@ import WorkerTasks from "./pages/WorkerTasks";
 // Shared pages
 import SiteManagerHelp from "@/pages/SiteManagerHelp";
 import { MAP_ROLE } from "./lib/utils/role";
+import EditWorkOrder from "./pages/EidtWorkOrder";
 import HelpPage from "./pages/HelpPage";
 
 function App() {
@@ -137,6 +138,7 @@ function App() {
             <Route path="dashboard" element={<SiteManagerDashboard />} />
             <Route path="settings" element={<ManagerSettings />} />
             <Route path="orders/new" element={<CreateWorkOrder />} />
+            <Route path="orders/edit/:id" element={<EditWorkOrder />} />
             <Route path="orders" element={<WorkOrderManagement />} />
             <Route path="orders/:id" element={<WorkOrderDetails />} />
           </Route>
