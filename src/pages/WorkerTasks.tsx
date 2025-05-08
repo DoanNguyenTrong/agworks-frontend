@@ -46,7 +46,7 @@ export default function WorkerTasks() {
     getWorkerTasks();
   }, []);
 
-  console.log("workerTasks", workerTasks);
+  // console.log("workerTasks", workerTasks);
 
   // Filter tasks by search term and status
   const filteredTasks = workerTasks.filter((task) => {

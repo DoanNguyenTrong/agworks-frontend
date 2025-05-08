@@ -30,10 +30,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   const redirectBasedOnRole = (role: string) => {
-    console.log("role :>> ", role);
     switch (role) {
       case MAP_ROLE.ADMIN:
-        console.log("1 :>> ", 1);
         navigate("/admin/dashboard");
         break;
       case MAP_ROLE.CUSTOIMER:
@@ -70,8 +68,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     try {
       const { data } = await apiLogin({ email, password });
-      console.log("data :>> ", data);
-
       // Save user to state and localStorage
       setCurrentUser(data?.metaData?.user);
       localStorage.setItem(
@@ -160,6 +156,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         description: error.message || "Failed to log out",
         variant: "destructive",
       });
+    }
+  };
+
+  const updateInfoUser = async (id: string) => {
+    try {
+    } catch (error) {
+      console.log("error :>> ", error);
     }
   };
 

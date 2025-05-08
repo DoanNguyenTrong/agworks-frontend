@@ -1,14 +1,26 @@
-
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { format } from "date-fns";
-import { WorkOrder, WorkerTask } from "@/lib/types";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import WorkerPerformance from "@/components/WorkerPerformance";
+import { WorkOrder, WorkerTask } from "@/lib/types";
+import { format } from "date-fns";
+import { useState } from "react";
 
 interface WorkOrderTabsProps {
   workOrder: WorkOrder;
@@ -16,28 +28,32 @@ interface WorkOrderTabsProps {
   payments?: any[];
 }
 
-export default function WorkOrderTabs({ workOrder, tasks, payments = [] }: WorkOrderTabsProps) {
+export const RenderStatus = (status: string) => {
+  switch (status) {
+    case "pending":
+      return <Badge variant="outline">Pending</Badge>;
+    case "approved":
+      return <Badge className="bg-green-500">Approved</Badge>;
+    case "rejected":
+      return <Badge variant="destructive">Rejected</Badge>;
+    case "paid":
+      return <Badge className="bg-blue-500">Paid</Badge>;
+    default:
+      return null;
+  }
+};
+
+export default function WorkOrderTabs({
+  workOrder,
+  tasks,
+  payments = [],
+}: WorkOrderTabsProps) {
   const [activeTab, setActiveTab] = useState("details");
 
   // Group tasks by status
-  const pendingTasks = tasks.filter(task => task.status === "pending");
-  const approvedTasks = tasks.filter(task => task.status === "approved");
-  const rejectedTasks = tasks.filter(task => task.status === "rejected");
-
-  const renderStatus = (status: string) => {
-    switch (status) {
-      case "pending":
-        return <Badge variant="outline">Pending</Badge>;
-      case "approved":
-        return <Badge className="bg-green-500">Approved</Badge>;
-      case "rejected":
-        return <Badge variant="destructive">Rejected</Badge>;
-      case "paid":
-        return <Badge className="bg-blue-500">Paid</Badge>;
-      default:
-        return null;
-    }
-  };
+  const pendingTasks = tasks.filter((task) => task.status === "pending");
+  const approvedTasks = tasks.filter((task) => task.status === "approved");
+  const rejectedTasks = tasks.filter((task) => task.status === "rejected");
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -47,7 +63,8 @@ export default function WorkOrderTabs({ workOrder, tasks, payments = [] }: WorkO
           Tasks {tasks.length > 0 && `(${tasks.length})`}
         </TabsTrigger>
         <TabsTrigger value="workers">
-          Workers {workOrder.neededWorkers > 0 && `(${workOrder.neededWorkers})`}
+          Workers{" "}
+          {workOrder.neededWorkers > 0 && `(${workOrder.neededWorkers})`}
         </TabsTrigger>
         <TabsTrigger value="payslips">
           Payslips {payments.length > 0 && `(${payments.length})`}
@@ -65,72 +82,88 @@ export default function WorkOrderTabs({ workOrder, tasks, payments = [] }: WorkO
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Schedule</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  Schedule
+                </h3>
                 <p className="font-medium">
                   {format(new Date(workOrder.startDate), "MMM d")} -{" "}
                   {format(new Date(workOrder.endDate), "MMM d, yyyy")}
                 </p>
               </div>
-              
+
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Work Type</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  Work Type
+                </h3>
                 <p className="font-medium capitalize">{workOrder.workType}</p>
               </div>
-              
+
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Status</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  Status
+                </h3>
                 <p className="font-medium capitalize">{workOrder.status}</p>
               </div>
-              
+
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Pay Rate</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  Pay Rate
+                </h3>
                 <p className="font-medium">${workOrder.payRate}/hour</p>
               </div>
-              
+
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Expected Hours</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  Expected Hours
+                </h3>
                 <p className="font-medium">{workOrder.expectedHours} hours</p>
               </div>
-              
+
               <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Workers Needed</h3>
+                <h3 className="text-sm font-medium text-muted-foreground mb-1">
+                  Workers Needed
+                </h3>
                 <p className="font-medium">{workOrder.neededWorkers}</p>
               </div>
             </div>
-            
+
             <Separator />
-            
+
             <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-2">Vineyard Information</h3>
+              <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                Vineyard Information
+              </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
                   <h4 className="text-xs text-muted-foreground">Address</h4>
                   <p className="font-medium">{workOrder.address}</p>
                 </div>
-                
+
                 <div>
                   <h4 className="text-xs text-muted-foreground">Acres</h4>
                   <p className="font-medium">{workOrder.acres || "—"}</p>
                 </div>
-                
+
                 <div>
                   <h4 className="text-xs text-muted-foreground">Rows</h4>
                   <p className="font-medium">{workOrder.rows || "—"}</p>
                 </div>
-                
+
                 <div>
                   <h4 className="text-xs text-muted-foreground">Vines</h4>
                   <p className="font-medium">{workOrder.vines || "—"}</p>
                 </div>
               </div>
             </div>
-            
+
             {workOrder.notes && (
               <>
                 <Separator />
-                
+
                 <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Notes</h3>
+                  <h3 className="text-sm font-medium text-muted-foreground mb-2">
+                    Notes
+                  </h3>
                   <p>{workOrder.notes}</p>
                 </div>
               </>
@@ -152,7 +185,9 @@ export default function WorkOrderTabs({ workOrder, tasks, payments = [] }: WorkO
               <div className="space-y-6">
                 {pendingTasks.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-medium mb-3">Pending Review ({pendingTasks.length})</h3>
+                    <h3 className="text-sm font-medium mb-3">
+                      Pending Review ({pendingTasks.length})
+                    </h3>
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -163,30 +198,39 @@ export default function WorkOrderTabs({ workOrder, tasks, payments = [] }: WorkO
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {pendingTasks.map(task => (
-                          <TableRow key={task.id}>
+                        {pendingTasks.map((task) => (
+                          <TableRow key={task._id}>
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 <Avatar className="h-8 w-8">
                                   <AvatarImage src={task.imageUrl} />
-                                  <AvatarFallback>{task.workerName[0]}</AvatarFallback>
+                                  <AvatarFallback>
+                                    {task.workerName[0]}
+                                  </AvatarFallback>
                                 </Avatar>
                                 <span>{task.workerName}</span>
                               </div>
                             </TableCell>
-                            <TableCell>{format(new Date(task.completedAt), "MMM d, yyyy")}</TableCell>
+                            <TableCell>
+                              {format(
+                                new Date(task.completedAt),
+                                "MMM d, yyyy"
+                              )}
+                            </TableCell>
                             <TableCell>{task.photoUrls.length}</TableCell>
-                            <TableCell>{renderStatus(task.status)}</TableCell>
+                            <TableCell>{RenderStatus(task.status)}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
                   </div>
                 )}
-                
+
                 {approvedTasks.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-medium mb-3">Approved ({approvedTasks.length})</h3>
+                    <h3 className="text-sm font-medium mb-3">
+                      Approved ({approvedTasks.length})
+                    </h3>
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -197,30 +241,39 @@ export default function WorkOrderTabs({ workOrder, tasks, payments = [] }: WorkO
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {approvedTasks.map(task => (
-                          <TableRow key={task.id}>
+                        {approvedTasks.map((task) => (
+                          <TableRow key={task._id}>
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 <Avatar className="h-8 w-8">
                                   <AvatarImage src={task.imageUrl} />
-                                  <AvatarFallback>{task.workerName[0]}</AvatarFallback>
+                                  <AvatarFallback>
+                                    {task.workerName[0]}
+                                  </AvatarFallback>
                                 </Avatar>
                                 <span>{task.workerName}</span>
                               </div>
                             </TableCell>
-                            <TableCell>{format(new Date(task.completedAt), "MMM d, yyyy")}</TableCell>
+                            <TableCell>
+                              {format(
+                                new Date(task.completedAt),
+                                "MMM d, yyyy"
+                              )}
+                            </TableCell>
                             <TableCell>{task.photoUrls.length}</TableCell>
-                            <TableCell>{renderStatus(task.status)}</TableCell>
+                            <TableCell>{RenderStatus(task.status)}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
                   </div>
                 )}
-                
+
                 {rejectedTasks.length > 0 && (
                   <div>
-                    <h3 className="text-sm font-medium mb-3">Rejected ({rejectedTasks.length})</h3>
+                    <h3 className="text-sm font-medium mb-3">
+                      Rejected ({rejectedTasks.length})
+                    </h3>
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -231,20 +284,27 @@ export default function WorkOrderTabs({ workOrder, tasks, payments = [] }: WorkO
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {rejectedTasks.map(task => (
-                          <TableRow key={task.id}>
+                        {rejectedTasks.map((task) => (
+                          <TableRow key={task._id}>
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 <Avatar className="h-8 w-8">
                                   <AvatarImage src={task.imageUrl} />
-                                  <AvatarFallback>{task.workerName[0]}</AvatarFallback>
+                                  <AvatarFallback>
+                                    {task.workerName[0]}
+                                  </AvatarFallback>
                                 </Avatar>
                                 <span>{task.workerName}</span>
                               </div>
                             </TableCell>
-                            <TableCell>{format(new Date(task.completedAt), "MMM d, yyyy")}</TableCell>
+                            <TableCell>
+                              {format(
+                                new Date(task.completedAt),
+                                "MMM d, yyyy"
+                              )}
+                            </TableCell>
                             <TableCell>{task.photoUrls.length}</TableCell>
-                            <TableCell>{renderStatus(task.status)}</TableCell>
+                            <TableCell>{RenderStatus(task.status)}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -270,7 +330,7 @@ export default function WorkOrderTabs({ workOrder, tasks, payments = [] }: WorkO
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <WorkerPerformance id={workOrder.id} tasks={tasks} payRate={workOrder.payRate} />
+            <WorkerPerformance tasks={tasks} payRate={workOrder.payRate} />
           </CardContent>
         </Card>
       </TabsContent>
@@ -306,14 +366,16 @@ export default function WorkOrderTabs({ workOrder, tasks, payments = [] }: WorkO
                       <TableCell>{payment.totalHours}</TableCell>
                       <TableCell>${workOrder.payRate.toFixed(2)}/hr</TableCell>
                       <TableCell>${payment.totalAmount.toFixed(2)}</TableCell>
-                      <TableCell>{renderStatus(payment.status)}</TableCell>
+                      <TableCell>{RenderStatus(payment.status)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             ) : (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No payment data available yet</p>
+                <p className="text-muted-foreground">
+                  No payment data available yet
+                </p>
               </div>
             )}
           </CardContent>

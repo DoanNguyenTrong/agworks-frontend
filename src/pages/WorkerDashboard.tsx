@@ -1,53 +1,54 @@
-import { Link } from "react-router-dom";
+import { apiGetBlockByFiled } from "@/api/block";
+import { BASE_URL } from "@/api/config";
+import { apiGetAllImage } from "@/api/image";
+import { apiGetWorkerTasksById } from "@/api/workerTask";
 import MainLayout from "@/components/MainLayout";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RenderStatus } from "@/components/WorkOrderTabsUpdated";
+import { useAuth } from "@/contexts/AuthContext";
+import { StatusType } from "@/lib/utils/constant";
+import { format } from "date-fns";
+import dayjs from "dayjs";
+import { get, uniq } from "lodash";
 import {
   CalendarDays,
-  Clock,
-  MapPin,
-  DollarSign,
   Camera,
   ClipboardList,
+  Clock,
+  DollarSign,
+  MapPin,
   UserCircle,
-  Bell,
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import {
-  workerApplications,
-  workOrders,
-  workerTasks,
-  sites,
-  blocks,
-} from "@/lib/data";
-import { format } from "date-fns";
-import { useState, useEffect } from "react";
-import { apiGetWorkerTasksById } from "@/api/workerTask";
-import { get } from "lodash";
-import { apiGetAllImage } from "@/api/image";
-import { StatusType } from "@/lib/utils/constant";
-import dayjs from "dayjs";
-import { BASE_URL } from "@/api/config";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function WorkerDashboard() {
   const { currentUser } = useAuth();
   const [workerTasks, setWorkerTasks] = useState([]);
   const [listImage, setlistImage] = useState([]);
+  const [listBlock, setlistBlock] = useState([]);
 
   const getAllImage = async (payload: string[]) => {
-    const { data } = await apiGetAllImage({ filter: { taskId: payload } });
-    console.log("data", data.metaData);
-    setlistImage(get(data, "metaData", []));
+    try {
+      const { data } = await apiGetAllImage({ filter: { taskId: payload } });
+      // console.log("data", data.metaData);
+      setlistImage(get(data, "metaData", []));
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   };
 
-  // console.log("Current user:", currentUser);
+  const getListBlockByID = async (payload: any) => {
+    try {
+      const { data } = await apiGetBlockByFiled({ siteId: payload });
+      // console.log("Bloks :>> ", data.metaData);
+      setlistBlock(get(data, "metaData", []));
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  };
 
   const getWorkerTasks = async () => {
     try {
@@ -55,6 +56,10 @@ export default function WorkerDashboard() {
       setWorkerTasks(get(data, "metaData", []));
       await getAllImage(get(data, "metaData", []).map((task) => task._id));
       // console.log("Worker tasks:", data.metaData);
+      const blockIds = uniq(
+        get(data, "metaData", []).map((t) => get(t, "orderId.siteId"))
+      );
+      await getListBlockByID(blockIds);
     } catch (error) {
       console.error("Error fetching worker tasks:", error);
     }
@@ -74,7 +79,6 @@ export default function WorkerDashboard() {
     const currtTask = completedTasks.find(
       (o) => o._id === get(task, "taskId._id")
     );
-    console.log("currtTask  ", currtTask);
     if (currtTask) {
       return total + get(currtTask, "orderId.payRate", 0);
     }
@@ -147,9 +151,13 @@ export default function WorkerDashboard() {
 
       <div className="space-y-6 max-h-[480px] overflow-auto">
         {workerTasks.length > 0 ? (
-          workerTasks.map(({ orderId: order }, i) => {
+          workerTasks.map((task, i) => {
+            const order = get(task, "orderId");
             const site = order.siteId;
-            const block = order;
+            const block = listBlock.find(
+              (b) => b?._id === get(order, "blockId")
+            );
+            // console.log("block :>> ", block);
 
             return (
               <Card key={i} className="overflow-hidden">
@@ -163,10 +171,10 @@ export default function WorkerDashboard() {
                         - {block?.name || ""}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        {site?.name || ""} • Job #{order.id}
+                        {site?.name || ""} • Job #{order._id}
                       </p>
                     </div>
-                    <Badge className="w-fit mt-2 md:mt-0">In Progress</Badge>
+                    {RenderStatus(task.status)}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -175,7 +183,7 @@ export default function WorkerDashboard() {
                       <div>
                         <p className="text-sm font-medium">Location</p>
                         <p className="text-sm text-muted-foreground">
-                          {order.address}
+                          {get(block, "siteId.address")}
                         </p>
                       </div>
                     </div>

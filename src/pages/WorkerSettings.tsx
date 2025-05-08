@@ -1,40 +1,62 @@
-
-import { useState } from "react";
+import { apiUpdateAcc } from "@/api/account";
 import MainLayout from "@/components/MainLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/hooks/use-toast";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Bell, Shield, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
+import { Bell, LogOut, Shield, User } from "lucide-react";
+import { useState } from "react";
 
 export default function WorkerSettings() {
   const { currentUser } = useAuth();
   const [name, setName] = useState(currentUser?.name || "");
   const [email, setEmail] = useState(currentUser?.email || "");
   const [phone, setPhone] = useState(currentUser?.phone || "");
-  const [profileImage, setProfileImage] = useState(currentUser?.profileImage || "");
-  
+  const [profileImage, setProfileImage] = useState(
+    currentUser?.profileImage || ""
+  );
+
   // Notification settings
   const [newJobNotif, setNewJobNotif] = useState(true);
   const [applicationStatusNotif, setApplicationStatusNotif] = useState(true);
   const [paymentNotif, setPaymentNotif] = useState(true);
   const [generalNotif, setGeneralNotif] = useState(false);
-  
-  const handleUpdateProfile = (e: React.FormEvent) => {
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would make an API call
-    toast({
-      title: "Profile updated",
-      description: "Your profile information has been updated successfully.",
-    });
+    try {
+      const body = {
+        ...currentUser,
+        name: name,
+        email: email,
+        phone: phone,
+        profileImage: profileImage,
+      };
+      console.log("body :>> ", body);
+      // In a real app, this would make an API call
+      const res = await apiUpdateAcc(body);
+      console.log("res :>> ", res);
+      toast({
+        title: "Profile updated",
+        description: "Your profile information has been updated successfully.",
+      });
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   };
-  
+
   const handleUpdateNotifications = (e: React.FormEvent) => {
     e.preventDefault();
     // In a real app, this would make an API call
@@ -43,7 +65,7 @@ export default function WorkerSettings() {
       description: "Your notification preferences have been saved.",
     });
   };
-  
+
   const handleUpdatePassword = (e: React.FormEvent) => {
     e.preventDefault();
     // In a real app, this would make an API call
@@ -52,7 +74,31 @@ export default function WorkerSettings() {
       description: "Your password has been changed successfully.",
     });
   };
-  
+
+  const changeProfileImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ["image/jpeg", "image/png", "image/gif"];
+    if (!validTypes.includes(file.type)) {
+      alert("Only JPG, PNG, or GIF images are allowed.");
+      return;
+    }
+
+    const maxSizeInBytes = 1 * 1024 * 1024;
+    if (file.size > maxSizeInBytes) {
+      alert("Image size must be less than 1MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setProfileImage(base64String); // cập nhật state
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
     <MainLayout pageTitle="Worker Settings">
       <Tabs defaultValue="profile" className="space-y-6">
@@ -70,7 +116,7 @@ export default function WorkerSettings() {
             Security
           </TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="profile">
           <Card>
             <CardHeader>
@@ -83,24 +129,27 @@ export default function WorkerSettings() {
               <form onSubmit={handleUpdateProfile} className="space-y-6">
                 <div className="flex flex-col md:flex-row gap-6 items-start">
                   <div>
-                    <Avatar className="w-24 h-24">
+                    <Avatar className="w-32 h-32">
                       <AvatarImage src={profileImage} alt={name} />
-                      <AvatarFallback className="text-2xl">{name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback className="text-2xl">
+                        {name.charAt(0)}
+                      </AvatarFallback>
                     </Avatar>
                     <div className="mt-4">
                       <Label htmlFor="profile-image">Profile Image</Label>
-                      <Input 
+                      <Input
                         id="profile-image"
-                        type="file" 
-                        className="mt-1" 
-                        accept="image/*" 
+                        type="file"
+                        className="mt-1"
+                        accept="image/*"
+                        onChange={(e) => changeProfileImage(e)}
                       />
                       <p className="text-sm text-muted-foreground mt-1">
                         JPG, PNG or GIF. 1MB max.
                       </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex-1 space-y-4">
                     <div className="grid gap-2">
                       <Label htmlFor="name">Full Name</Label>
@@ -111,18 +160,19 @@ export default function WorkerSettings() {
                         onChange={(e) => setName(e.target.value)}
                       />
                     </div>
-                    
+
                     <div className="grid gap-2">
                       <Label htmlFor="email">Email Address</Label>
                       <Input
                         id="email"
                         type="email"
+                        disabled
                         placeholder="your.email@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                       />
                     </div>
-                    
+
                     <div className="grid gap-2">
                       <Label htmlFor="phone">Phone Number</Label>
                       <Input
@@ -134,7 +184,7 @@ export default function WorkerSettings() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex justify-end">
                   <Button type="submit">Save Changes</Button>
                 </div>
@@ -142,7 +192,7 @@ export default function WorkerSettings() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="notifications">
           <Card>
             <CardHeader>
@@ -156,52 +206,61 @@ export default function WorkerSettings() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label htmlFor="new-job-notif">New Job Opportunities</Label>
+                      <Label htmlFor="new-job-notif">
+                        New Job Opportunities
+                      </Label>
                       <p className="text-sm text-muted-foreground">
-                        Receive notifications when new jobs are posted in your area
+                        Receive notifications when new jobs are posted in your
+                        area
                       </p>
                     </div>
-                    <Switch 
-                      id="new-job-notif" 
+                    <Switch
+                      id="new-job-notif"
                       checked={newJobNotif}
                       onCheckedChange={setNewJobNotif}
                     />
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label htmlFor="application-notif">Application Status Updates</Label>
+                      <Label htmlFor="application-notif">
+                        Application Status Updates
+                      </Label>
                       <p className="text-sm text-muted-foreground">
-                        Get notified when your job applications are approved or rejected
+                        Get notified when your job applications are approved or
+                        rejected
                       </p>
                     </div>
-                    <Switch 
-                      id="application-notif" 
+                    <Switch
+                      id="application-notif"
                       checked={applicationStatusNotif}
                       onCheckedChange={setApplicationStatusNotif}
                     />
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
-                      <Label htmlFor="payment-notif">Payment Notifications</Label>
+                      <Label htmlFor="payment-notif">
+                        Payment Notifications
+                      </Label>
                       <p className="text-sm text-muted-foreground">
-                        Receive alerts when payments are processed for your completed work
+                        Receive alerts when payments are processed for your
+                        completed work
                       </p>
                     </div>
-                    <Switch 
-                      id="payment-notif" 
+                    <Switch
+                      id="payment-notif"
                       checked={paymentNotif}
                       onCheckedChange={setPaymentNotif}
                     />
                   </div>
-                  
+
                   <Separator />
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="space-y-0.5">
                       <Label htmlFor="general-notif">General Updates</Label>
@@ -209,14 +268,14 @@ export default function WorkerSettings() {
                         Updates about platform features and announcements
                       </p>
                     </div>
-                    <Switch 
-                      id="general-notif" 
+                    <Switch
+                      id="general-notif"
                       checked={generalNotif}
                       onCheckedChange={setGeneralNotif}
                     />
                   </div>
                 </div>
-                
+
                 <div className="flex justify-end">
                   <Button type="submit">Save Preferences</Button>
                 </div>
@@ -224,7 +283,7 @@ export default function WorkerSettings() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="security">
           <Card>
             <CardHeader>
@@ -244,7 +303,7 @@ export default function WorkerSettings() {
                       placeholder="Enter your current password"
                     />
                   </div>
-                  
+
                   <div className="grid gap-2">
                     <Label htmlFor="new-password">New Password</Label>
                     <Input
@@ -253,9 +312,11 @@ export default function WorkerSettings() {
                       placeholder="Enter your new password"
                     />
                   </div>
-                  
+
                   <div className="grid gap-2">
-                    <Label htmlFor="confirm-password">Confirm New Password</Label>
+                    <Label htmlFor="confirm-password">
+                      Confirm New Password
+                    </Label>
                     <Input
                       id="confirm-password"
                       type="password"
@@ -263,7 +324,7 @@ export default function WorkerSettings() {
                     />
                   </div>
                 </div>
-                
+
                 <div className="flex justify-between items-center">
                   <Button variant="destructive" type="button">
                     <LogOut className="h-4 w-4 mr-2" />
