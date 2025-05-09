@@ -131,13 +131,22 @@ const _handleSucess = (response: any, option: any) => {
   return response;
 };
 const _handleError = (err: any, option: any) => {
-  toast({
-    title: "Error",
-    description: get(err, "response.data.message", "error") || "error",
-    variant: "destructive",
-  });
-  if (option?.showError) {
+  console.log('err :>> ', err);
+  const data = get(err, "response.data", "error")
+  if (data?.message) {
+    toast({
+      title: "Error",
+      description: data?.message || "error",
+      variant: "destructive",
+    });
+  } else if (data?.code === 11000) {
+    toast({
+      title: "Error",
+      description: `Duplicate field name: [${Object.keys(data?.keyValue || {}).join(', ')}]`,
+      variant: "destructive",
+    });
   }
+
   throw err;
 };
 const optionDefault = {

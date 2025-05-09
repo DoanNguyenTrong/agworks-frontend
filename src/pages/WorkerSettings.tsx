@@ -1,4 +1,5 @@
-import { apiUpdateAcc } from "@/api/account";
+import { apiResetAcc, apiUpdateAcc } from "@/api/account";
+import { BASE_URL } from "@/api/config";
 import MainLayout from "@/components/MainLayout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,11 +17,12 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { includes } from "lodash";
 import { Bell, LogOut, Shield, User } from "lucide-react";
 import { useState } from "react";
 
 export default function WorkerSettings() {
-  const { currentUser } = useAuth();
+  const { currentUser, updateInfoUser, logout } = useAuth();
   const [name, setName] = useState(currentUser?.name || "");
   const [email, setEmail] = useState(currentUser?.email || "");
   const [phone, setPhone] = useState(currentUser?.phone || "");
@@ -34,6 +36,10 @@ export default function WorkerSettings() {
   const [paymentNotif, setPaymentNotif] = useState(true);
   const [generalNotif, setGeneralNotif] = useState(false);
 
+  // Change password word
+  const [password, setPassword] = useState("");
+  const [passwordCf, setPasswordCf] = useState("");
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -46,8 +52,10 @@ export default function WorkerSettings() {
       };
       console.log("body :>> ", body);
       // In a real app, this would make an API call
-      const res = await apiUpdateAcc(body);
-      console.log("res :>> ", res);
+      const { data } = await apiUpdateAcc(body);
+      if (data?.metaData?._id) {
+        updateInfoUser(data?.metaData?._id);
+      }
       toast({
         title: "Profile updated",
         description: "Your profile information has been updated successfully.",
@@ -60,19 +68,29 @@ export default function WorkerSettings() {
   const handleUpdateNotifications = (e: React.FormEvent) => {
     e.preventDefault();
     // In a real app, this would make an API call
-    toast({
-      title: "Notification settings updated",
-      description: "Your notification preferences have been saved.",
-    });
+    // toast({
+    //   title: "Notification settings updated",
+    //   description: "Your notification preferences have been saved.",
+    // });
   };
 
-  const handleUpdatePassword = (e: React.FormEvent) => {
+  const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     // In a real app, this would make an API call
-    toast({
-      title: "Password updated",
-      description: "Your password has been changed successfully.",
-    });
+    try {
+      const body = {
+        id: currentUser._id,
+        password: password,
+      };
+      await apiResetAcc(body);
+      toast({
+        title: "Password updated",
+        description: "Your password has been changed successfully.",
+      });
+      await logout();
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   };
 
   const changeProfileImage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,6 +115,15 @@ export default function WorkerSettings() {
       setProfileImage(base64String); // cập nhật state
     };
     reader.readAsDataURL(file);
+  };
+
+  const disableBtnChangePassword = () => {
+    if (password?.length === 0 || passwordCf.length === 0) {
+      return true;
+    } else if (password !== passwordCf) {
+      return true;
+    }
+    return false;
   };
 
   return (
@@ -130,7 +157,14 @@ export default function WorkerSettings() {
                 <div className="flex flex-col md:flex-row gap-6 items-start">
                   <div>
                     <Avatar className="w-32 h-32">
-                      <AvatarImage src={profileImage} alt={name} />
+                      <AvatarImage
+                        src={
+                          !includes(profileImage, "base64")
+                            ? `${BASE_URL}${profileImage}`
+                            : profileImage
+                        }
+                        alt={name}
+                      />
                       <AvatarFallback className="text-2xl">
                         {name.charAt(0)}
                       </AvatarFallback>
@@ -296,20 +330,12 @@ export default function WorkerSettings() {
               <form onSubmit={handleUpdatePassword} className="space-y-6">
                 <div className="space-y-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="current-password">Current Password</Label>
-                    <Input
-                      id="current-password"
-                      type="password"
-                      placeholder="Enter your current password"
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
                     <Label htmlFor="new-password">New Password</Label>
                     <Input
                       id="new-password"
                       type="password"
                       placeholder="Enter your new password"
+                      onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
 
@@ -321,16 +347,23 @@ export default function WorkerSettings() {
                       id="confirm-password"
                       type="password"
                       placeholder="Confirm your new password"
+                      onChange={(e) => setPasswordCf(e.target.value)}
                     />
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <Button variant="destructive" type="button">
+                  <Button
+                    onClick={() => logout()}
+                    variant="destructive"
+                    type="button"
+                  >
                     <LogOut className="h-4 w-4 mr-2" />
                     Sign Out
                   </Button>
-                  <Button type="submit">Update Password</Button>
+                  <Button disabled={disableBtnChangePassword()} type="submit">
+                    Update Password
+                  </Button>
                 </div>
               </form>
             </CardContent>

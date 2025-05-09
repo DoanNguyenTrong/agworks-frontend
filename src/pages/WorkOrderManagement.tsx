@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
 import { WorkOrder } from "@/lib/types";
+import { MAP_ROLE } from "@/lib/utils/role";
 import dayjs from "dayjs";
 import { get } from "lodash";
 import { PlusCircle, Search } from "lucide-react";
@@ -58,7 +59,7 @@ export default function WorkOrderManagement() {
     const fetchData = async () => {
       try {
         const { data } = await apiGetAllWorkOrder({});
-        console.log("data :>> ", data);
+        // console.log("data :>> ", data);
         setTableData(get(data, "metaData", []));
       } catch (error) {
         console.log(error);
@@ -120,13 +121,14 @@ export default function WorkOrderManagement() {
               <SelectItem value="Cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
-
-          <Button asChild>
-            <Link to="/manager/orders/new">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Create Order
-            </Link>
-          </Button>
+          {get(currentUser, "role") === MAP_ROLE.SITE_MANAGER && (
+            <Button asChild>
+              <Link to="/manager/orders/new">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Create Order
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -140,7 +142,9 @@ export default function WorkOrderManagement() {
               <TableHead>Dates</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Pay Rate</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              {get(currentUser, "role") === MAP_ROLE.SITE_MANAGER && (
+                <TableHead className="text-right">Actions</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -151,7 +155,10 @@ export default function WorkOrderManagement() {
                     <TableRow
                       key={order._id}
                       className="cursor-pointer"
-                      onClick={() => handleOrderClick(order._id)}
+                      onClick={() =>
+                        get(currentUser, "role") === MAP_ROLE.SITE_MANAGER &&
+                        handleOrderClick(order._id)
+                      }
                     >
                       <TableCell className="font-medium">{order.ID}</TableCell>
                       <TableCell>
@@ -167,11 +174,15 @@ export default function WorkOrderManagement() {
                       </TableCell>
                       <TableCell>{getStatusBadge(order.status)}</TableCell>
                       <TableCell>${order.payRate.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link to={`/manager/orders/${order._id}`}>View</Link>
-                        </Button>
-                      </TableCell>
+                      {get(currentUser, "role") === MAP_ROLE.SITE_MANAGER && (
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm" asChild>
+                            <Link to={`/manager/orders/${order._id}`}>
+                              View
+                            </Link>
+                          </Button>
+                        </TableCell>
+                      )}
                     </TableRow>
                   );
                 }

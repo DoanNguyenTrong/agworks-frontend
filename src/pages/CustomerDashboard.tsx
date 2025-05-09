@@ -1,6 +1,6 @@
 import { apiCreateAcc, apiGetAllAccOrganization } from "@/api/account";
 import { apiGetListBlock } from "@/api/block";
-import { apiGetSearchSiteByUser, apiUpdateByFieldUserIds } from "@/api/site";
+import { apiGetListSite, apiUpdateByFieldUserIds } from "@/api/site";
 import { apiGetWorkOrderByUser } from "@/api/workOrder";
 import MainLayout from "@/components/MainLayout";
 import ManagerForm from "@/components/ManagerForm";
@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { blocks } from "@/lib/data";
 import { MAP_ROLE } from "@/lib/utils/role";
 import { format } from "date-fns";
 import { get } from "lodash";
@@ -40,21 +39,18 @@ export default function CustomerDashboard() {
     try {
       const { data } = await apiGetListBlock({ number_of_page: 1000 });
       setCustomerBlocks(get(data, "metaData", []));
+      console.log("Block :>> ", get(data, "metaData", []));
     } catch (error) {
       console.log("error :>> ", error);
     }
   };
   const getDataSite = async () => {
     try {
-      // const { data } = await apiGetListSite({
-      //   number_of_page: 1000,
-      //   filter: {
-      //     organizationId: managers[0].organizationId,
-      //   },
-      // });
-      // setCustomerSites(get(data, "metaData", []));
-      const { data } = await apiGetSearchSiteByUser();
-      setCustomerSites(data);
+      const { data } = await apiGetListSite({});
+      console.log("Site :>> ", get(data, "metaData", []));
+      setCustomerSites(get(data, "metaData", []));
+      // const { data } = await apiGetSearchSiteByUser();
+      // setCustomerSites(data);
     } catch (error) {
       console.log("error :>> ", error);
     }
@@ -64,6 +60,7 @@ export default function CustomerDashboard() {
     try {
       const { data } = await apiGetAllAccOrganization();
       setManagers(get(data, "metaData"));
+      console.log("Acc :>> ", get(data, "metaData", []));
     } catch (error) {
       console.log("error :>> ", error);
     }
@@ -104,9 +101,6 @@ export default function CustomerDashboard() {
 
     getDataWorkOrders();
   }, [managers]);
-
-  console.log("workorders -> -> ", workOrders);
-  console.log("managers -> -> ", managers);
 
   const handleAddManager = async (data: any) => {
     // In a real app, this would make an API call
@@ -200,8 +194,9 @@ export default function CustomerDashboard() {
                     </span>
                     <span className="text-sm font-medium">
                       {
-                        blocks.filter((block) => block.siteId === site.id)
-                          .length
+                        customerBlocks.filter(
+                          (block) => get(block, "siteId._id") === site._id
+                        ).length
                       }
                     </span>
                   </div>

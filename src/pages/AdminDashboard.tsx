@@ -1,4 +1,6 @@
 import { apiGetAccList } from "@/api/account";
+import { apiGetListSite } from "@/api/site";
+import { apiGetAllWorkOrder } from "@/api/workOrder";
 import MainLayout from "@/components/MainLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,10 +27,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { sites, workOrders } from "@/lib/data";
 import { User } from "@/lib/types";
+import { StatusType } from "@/lib/utils/constant";
 import { MAP_ROLE } from "@/lib/utils/role";
-import { get } from "lodash";
+import { filter, get } from "lodash";
 import { PlusCircle, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -38,6 +40,8 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [userList, setUserList] = useState<User[]>([]);
+  const [sites, setSites] = useState<User[]>([]);
+  const [workOrders, setWorkOrders] = useState<any[]>([]);
 
   // Filter users by search term and role
   const filteredUsers = userList.filter((user) => {
@@ -63,11 +67,29 @@ export default function AdminDashboard() {
     }
   };
 
+  const getListSite = async () => {
+    try {
+      const { data } = await apiGetListSite({});
+      setSites(get(data, "metaData", []));
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  };
+
+  const getListWO = async () => {
+    try {
+      const { data } = await apiGetAllWorkOrder({});
+      setWorkOrders(get(data, "metaData", []));
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
+  };
+
   useEffect(() => {
     getList();
+    getListSite();
+    getListWO();
   }, []);
-
-  console.log("User List:", userList);
 
   // Customer and worker counts
   const customerCount = userList.filter(
@@ -239,18 +261,23 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span>Napa Valley</span>
-                  <Badge variant="outline">12 sites</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Sonoma</span>
-                  <Badge variant="outline">8 sites</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Central Coast</span>
-                  <Badge variant="outline">5 sites</Badge>
-                </div>
+                {userList
+                  .filter((user) => user.role === MAP_ROLE.CUSTOIMER)
+                  .slice(0, 3)
+                  .map((i) => (
+                    <div
+                      key={i._id}
+                      className="flex justify-between items-center"
+                    >
+                      <span>{get(i, "name", "-")}</span>
+                      <Badge variant="outline">
+                        {
+                          filter(sites, (s: any) => s?.organizationId === i._id)
+                            .length
+                        }
+                      </Badge>
+                    </div>
+                  ))}
                 <div className="flex justify-between items-center mt-2">
                   <Button
                     variant="outline"
@@ -277,7 +304,7 @@ export default function AdminDashboard() {
                   <Badge>
                     {
                       workOrders.filter(
-                        (order) => order.status === "inProgress"
+                        (order) => order.status === StatusType.INPROGRESS
                       ).length
                     }
                   </Badge>
@@ -286,8 +313,9 @@ export default function AdminDashboard() {
                   <span>New</span>
                   <Badge variant="secondary">
                     {
-                      workOrders.filter((order) => order.status === "New")
-                        .length
+                      workOrders.filter(
+                        (order) => order.status === StatusType.NEW
+                      ).length
                     }
                   </Badge>
                 </div>
@@ -295,8 +323,9 @@ export default function AdminDashboard() {
                   <span>Completed</span>
                   <Badge className="bg-agworks-green">
                     {
-                      workOrders.filter((order) => order.status === "completed")
-                        .length
+                      workOrders.filter(
+                        (order) => order.status === StatusType.COMPLETED
+                      ).length
                     }
                   </Badge>
                 </div>

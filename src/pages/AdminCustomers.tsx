@@ -121,11 +121,6 @@ export default function AdminCustomers() {
       setShowAddDialog(false);
     } catch (error: any) {
       console.error("Error adding customer:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add customer",
-        variant: "destructive",
-      });
     }
   };
 

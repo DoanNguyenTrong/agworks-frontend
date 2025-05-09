@@ -108,10 +108,7 @@ export default function BlockForm() {
 
       navigate("/customer/blocks");
     } catch (error) {
-      toast({
-        title: "Faild",
-        description: `Created faild`,
-      });
+      console.log("error :>> ", error);
     }
   };
 

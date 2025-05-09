@@ -59,7 +59,7 @@ const Index = () => {
             <Button
               size="lg"
               variant="outline"
-              className="border-white text-white hover:bg-white/10"
+              className="border-white text-agworks-green hover:bg-white/10"
               asChild
             >
               <a href="/register">Create Account</a>

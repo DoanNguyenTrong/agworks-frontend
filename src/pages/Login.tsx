@@ -46,6 +46,7 @@ export default function Login() {
       await login(values.email, values.password);
     } catch (error: any) {
       console.error("Login failed:", error);
+    } finally {
       setIsLoading(false);
     }
   }

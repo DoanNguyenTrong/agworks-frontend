@@ -1,6 +1,6 @@
 import { apiGetBlockByFiled } from "@/api/block";
 import { BASE_URL } from "@/api/config";
-import { apiGetAllImage } from "@/api/image";
+import { apiGetAllImage, apiUploadImage } from "@/api/image";
 import { apiGetWorkerTasksById } from "@/api/workerTask";
 import MainLayout from "@/components/MainLayout";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,7 @@ import {
   MapPin,
   UserCircle,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function WorkerDashboard() {
@@ -29,11 +29,14 @@ export default function WorkerDashboard() {
   const [workerTasks, setWorkerTasks] = useState([]);
   const [listImage, setlistImage] = useState([]);
   const [listBlock, setlistBlock] = useState([]);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [uploadImg, setUploadImg] = useState(null);
+  const [taskID, setTaskID] = useState(null);
 
   const getAllImage = async (payload: string[]) => {
     try {
       const { data } = await apiGetAllImage({ filter: { taskId: payload } });
-      // console.log("data", data.metaData);
+      console.log("data", data.metaData);
       setlistImage(get(data, "metaData", []));
     } catch (error) {
       console.log("error :>> ", error);
@@ -84,6 +87,58 @@ export default function WorkerDashboard() {
     }
     return total;
   }, 0);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ["image/jpeg", "image/png", "image/gif"];
+    if (!validTypes.includes(file.type)) {
+      alert("Only JPG, PNG, or GIF images are allowed.");
+      return;
+    }
+
+    const maxSizeInBytes = 1 * 1024 * 1024;
+    if (file.size > maxSizeInBytes) {
+      alert("Image must be less than 1MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setUploadImg(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const uploadImage = async (taskId: string, image: string) => {
+    try {
+      const payload = {
+        taskId: taskId,
+        fileName: "-",
+        imageData: image,
+        timestamp: dayjs().toISOString(),
+        altitude: 0,
+        longitude: 0,
+        latitude: 0,
+      };
+      await apiUploadImage(payload);
+      await getWorkerTasks();
+    } catch (error) {
+      console.log("error :>> ", error);
+    } finally {
+      setTaskID(null);
+      setUploadImg(null);
+    }
+  };
+
+  useEffect(() => {
+    if (taskID && uploadImg) {
+      console.log("1 :>> ", [taskID, uploadImg]);
+      uploadImage(taskID, uploadImg);
+    }
+  }, [taskID, uploadImg]);
 
   return (
     <MainLayout pageTitle="Worker Dashboard">
@@ -157,7 +212,6 @@ export default function WorkerDashboard() {
             const block = listBlock.find(
               (b) => b?._id === get(order, "blockId")
             );
-            // console.log("block :>> ", block);
 
             return (
               <Card key={i} className="overflow-hidden">
@@ -218,12 +272,19 @@ export default function WorkerDashboard() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <Button className="sm:flex-1">
+                    <Button
+                      disabled={task.status !== StatusType.APPROVED}
+                      className="sm:flex-1"
+                      onClick={() => {
+                        setTaskID(task?._id);
+                        fileInputRef.current?.click();
+                      }}
+                    >
                       <Camera className="mr-2 h-4 w-4" />
                       Upload Task Photo
                     </Button>
                     <Button variant="outline" className="sm:flex-1" asChild>
-                      <Link to="/worker/tasks">
+                      <Link to={`/worker/tasks/${task._id}`}>
                         <ClipboardList className="mr-2 h-4 w-4" />
                         View My Tasks
                       </Link>
@@ -255,7 +316,6 @@ export default function WorkerDashboard() {
               .filter((task) => task.status === "pending")
               .map(({ orderId: order }, i) => {
                 const site = order.siteId;
-
                 return (
                   <Card key={i}>
                     <CardContent className="p-6">
@@ -289,55 +349,70 @@ export default function WorkerDashboard() {
             Recent Task Photos
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {completedTasks.slice(0, 8).map((task) => {
-              const photo = listImage.find(
-                (image) => get(image, "taskId._id") === get(task, "_id")
-              );
-              return (
-                <div
-                  key={get(task, "_id")}
-                  className="border rounded-lg overflow-hidden"
-                >
-                  <div className="aspect-square relative bg-muted">
-                    <div className="absolute top-2 right-2">
-                      <Badge
-                        variant={
-                          get(task, "status") === "approved"
-                            ? "default"
-                            : get(task, "status") === "rejected"
-                            ? "destructive"
-                            : "secondary"
-                        }
-                      >
-                        {get(task, "status").charAt(0).toUpperCase() +
-                          get(task, "status").slice(1)}
-                      </Badge>
+            {listImage.length > 0 ? (
+              listImage.map((i) => {
+                console.log("completedTasks :>> ", completedTasks);
+                const task = completedTasks.find(
+                  (t) => get(t, "orderId._id") === get(i, "taskId.orderId")
+                );
+                console.log("111111 :>> ", task);
+                return (
+                  <div
+                    key={get(i, "_id")}
+                    className="border rounded-lg overflow-hidden"
+                  >
+                    <div className="aspect-square relative bg-muted">
+                      {/* <div className="absolute top-2 right-2">
+                        <Badge
+                          variant={
+                            get(task, "status") === "approved"
+                              ? "default"
+                              : get(task, "status") === "rejected"
+                              ? "destructive"
+                              : "secondary"
+                          }
+                        >
+                          {get(task, "status").charAt(0).toUpperCase() +
+                            get(task, "status").slice(1)}
+                        </Badge>
+                      </div> */}
+                      {get(i, "imageData") ? (
+                        <img
+                          src={`${BASE_URL}${get(i, "imageData")}`}
+                          alt="Task completion"
+                          className="object-cover w-full h-full"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          <Camera className="h-12 w-12" />
+                        </div>
+                      )}
                     </div>
-                    {get(photo, "_id") ? (
-                      <img
-                        src={`${BASE_URL}${get(photo, "imageData")}`}
-                        alt="Task completion"
-                        className="object-cover w-full h-full"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        <Camera className="h-12 w-12" />
-                      </div>
-                    )}
+                    <div className="p-3">
+                      <p className="text-sm font-medium truncate">
+                        Task #{get(task, "orderId.ID")}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {dayjs(get(i, "createdAt")).format("YYYY/MM/DD HH:mm")}
+                      </p>
+                    </div>
                   </div>
-                  <div className="p-3">
-                    <p className="text-sm font-medium truncate">
-                      Task #{get(task, "_id")}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {dayjs(get(task, "createdAt")).format("YYYY/MM/DD HH:mm")}
-                    </p>
-                  </div>
+                );
+              })
+            ) : (
+              <div className="sm:col-span-2 md:col-span-3 lg:col-span-4">
+                <div className="text-center py-12 bg-muted/30 rounded-lg border border-dashed">
+                  <h3 className="text-lg font-medium mb-2">
+                    No Recent Task Photos
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    You have not uploaded any photos yet.
+                  </p>
                 </div>
-              );
-            })}
+              </div>
+            )}
           </div>
-          {completedTasks.length > 8 && (
+          {listImage.length > 0 && completedTasks.length > 8 && (
             <div className="text-center mt-4">
               <Button variant="outline" asChild>
                 <Link to="/worker/tasks">View All Task Photos</Link>
@@ -346,6 +421,14 @@ export default function WorkerDashboard() {
           )}
         </>
       )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={handleFileChange}
+      />
     </MainLayout>
   );
 }

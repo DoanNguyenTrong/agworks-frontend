@@ -1,3 +1,4 @@
+import { BASE_URL } from "@/api/config";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { MAP_ROLE } from "@/lib/utils/role";
+import { includes } from "lodash";
 import {
   Building,
   ClipboardList,
@@ -135,15 +137,21 @@ export default function MainLayout({
               <div className="px-4 py-2">
                 <div className="flex items-center gap-4 mb-6 mt-2">
                   <Avatar>
-                    <AvatarImage src={currentUser.logo} />
+                    <AvatarImage
+                      src={
+                        !includes(currentUser?.profileImage, "base64")
+                          ? `${BASE_URL}${currentUser?.profileImage}`
+                          : currentUser?.profileImage
+                      }
+                    />
                     <AvatarFallback className="bg-primary/10 text-primary">
-                      {currentUser.name.charAt(0)}
+                      {currentUser?.name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium">{currentUser.name}</p>
+                    <p className="font-medium">{currentUser?.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {currentUser.role.charAt(0).toUpperCase() +
+                      {currentUser?.role.charAt(0).toUpperCase() +
                         currentUser.role.slice(1)}
                     </p>
                   </div>
@@ -227,15 +235,15 @@ export default function MainLayout({
               <div className="p-4">
                 <div className="flex items-center gap-4 mb-6">
                   <Avatar>
-                    <AvatarImage src={currentUser.logo} />
+                    <AvatarImage src={currentUser?.logo} />
                     <AvatarFallback className="bg-primary/10 text-primary">
-                      {currentUser.name.charAt(0)}
+                      {currentUser?.name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium">{currentUser.name}</p>
+                    <p className="font-medium">{currentUser?.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {currentUser.role.charAt(0).toUpperCase() +
+                      {currentUser?.role.charAt(0).toUpperCase() +
                         currentUser.role.slice(1)}
                     </p>
                   </div>

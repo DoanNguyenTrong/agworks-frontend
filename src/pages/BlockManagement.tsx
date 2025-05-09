@@ -136,23 +136,20 @@ export default function BlockManagement() {
       setIsDialogOpen(false);
       form.reset();
     } catch (error) {
-      toast({
-        title: "Faild",
-        description: `Created faild`,
-      });
+      console.log("error :>> ", error);
     }
   }
 
   const fetchData = async () => {
     try {
       const { data } = await apiGetListBlock({});
-      console.log("data :>> ", data);
-      console.log(
-        "object :>> ",
-        get(data, "metaData", []).map((i: BlockProps) =>
-          get(i, "siteId._id", "")
-        )
-      );
+      // console.log("data :>> ", data);
+      // console.log(
+      //   "object :>> ",
+      //   get(data, "metaData", []).map((i: BlockProps) =>
+      //     get(i, "siteId._id", "")
+      //   )
+      // );
       setIdActiveSite(
         get(data, "metaData", []).map((i: BlockProps) =>
           get(i, "siteId._id", "")
@@ -214,9 +211,12 @@ export default function BlockManagement() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Block Name</FormLabel>
+                      <FormLabel>Block Name *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Block A - Cabernet" {...field} />
+                        <Input
+                          placeholder="eg: Block A - Cabernet"
+                          {...field}
+                        />
                       </FormControl>
                       <FormDescription>
                         A descriptive name for this growing area
@@ -231,7 +231,7 @@ export default function BlockManagement() {
                   name="siteId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Site</FormLabel>
+                      <FormLabel>Site *</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         defaultValue={field.value}
@@ -263,12 +263,12 @@ export default function BlockManagement() {
                     name="acres"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Acres</FormLabel>
+                        <FormLabel>Acres *</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             step="0.1"
-                            placeholder="5.2"
+                            placeholder="eg: 5.2"
                             {...field}
                             onChange={(e) =>
                               field.onChange(
@@ -290,11 +290,11 @@ export default function BlockManagement() {
                     name="rows"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Rows</FormLabel>
+                        <FormLabel>Rows *</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
-                            placeholder="52"
+                            placeholder="eg: 52"
                             {...field}
                             onChange={(e) =>
                               field.onChange(
@@ -316,11 +316,11 @@ export default function BlockManagement() {
                     name="vines"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Vines</FormLabel>
+                        <FormLabel>Vines *</FormLabel>
                         <FormControl>
                           <Input
                             type="number"
-                            placeholder="2080"
+                            placeholder="eg: 2080"
                             {...field}
                             onChange={(e) =>
                               field.onChange(

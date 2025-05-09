@@ -1,8 +1,9 @@
-import { apiLogin } from "@/api/account";
+import { apiGetAccDetail, apiLogin } from "@/api/account";
 import { useToast } from "@/hooks/use-toast";
 import { users } from "@/lib/data";
 import { User } from "@/lib/types";
 import { MAP_ROLE } from "@/lib/utils/role";
+import { get } from "lodash";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -16,6 +17,7 @@ interface AuthContextType {
     userData: Partial<User>
   ) => Promise<void>;
   logout: () => void;
+  updateInfoUser: (id: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -48,21 +50,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         break;
     }
   };
-
-  useEffect(() => {
-    // Check for saved user in localStorage
-    const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (savedUser) {
-      try {
-        const parsedUser = JSON.parse(savedUser);
-        setCurrentUser(parsedUser);
-      } catch (error) {
-        console.error("Error parsing saved user:", error);
-        localStorage.removeItem(AUTH_STORAGE_KEY);
-      }
-    }
-    setIsLoading(false);
-  }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -161,14 +148,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const updateInfoUser = async (id: string) => {
     try {
+      const { data } = await apiGetAccDetail({ id });
+      localStorage.setItem(
+        AUTH_STORAGE_KEY,
+        JSON.stringify(get(data, "metaData"))
+      );
+      setCurrentUser(get(data, "metaData"));
     } catch (error) {
       console.log("error :>> ", error);
     }
   };
 
+  useEffect(() => {
+    // Check for saved user in localStorage
+    const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setCurrentUser(parsedUser);
+        if (parsedUser?._id) {
+          updateInfoUser(parsedUser?._id);
+        }
+      } catch (error) {
+        console.error("Error parsing saved user:", error);
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+      }
+    }
+    setIsLoading(false);
+  }, []);
+
   return (
     <AuthContext.Provider
-      value={{ currentUser, isLoading, login, signup, logout }}
+      value={{ currentUser, isLoading, login, signup, logout, updateInfoUser }}
     >
       {children}
     </AuthContext.Provider>

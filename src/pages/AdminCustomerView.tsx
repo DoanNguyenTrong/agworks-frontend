@@ -25,7 +25,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
-import { sites } from "@/lib/data";
 import { Site, User } from "@/lib/types";
 import { get } from "lodash";
 import { ArrowLeft, Edit, Trash } from "lucide-react";
@@ -256,10 +255,12 @@ export default function AdminCustomerView() {
                 </TableHeader>
                 <TableBody>
                   {customerSites.map((site) => (
-                    <TableRow key={site._id} className="cursor-pointer">
-                      <TableCell>{site.name}</TableCell>
-                      <TableCell>{site.address}</TableCell>
-                      <TableCell>{site.managerId ? "Assigned" : "—"}</TableCell>
+                    <TableRow key={site?._id} className="cursor-pointer">
+                      <TableCell>{site?.name}</TableCell>
+                      <TableCell>{site?.address}</TableCell>
+                      <TableCell>
+                        {site?.userIds.length > 0 ? "Assigned" : "—"}
+                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           <Button
@@ -281,7 +282,7 @@ export default function AdminCustomerView() {
                   No sites found for this customer.
                 </p>
                 <Button className="mt-4" size="sm" asChild>
-                  <Link to={`/admin/sites/new?customerId=${customer._id}`}>
+                  <Link to={`/admin/sites/new?customerId=${customer?._id}`}>
                     Add Site
                   </Link>
                 </Button>

@@ -87,6 +87,7 @@ function App() {
             <Route path="workers/:id" element={<AdminWorkerView />} />
             <Route path="workers/edit/:id" element={<AdminWorkerEdit />} />
             <Route path="sites" element={<SiteManagement />} />
+            <Route path="orders" element={<WorkOrderManagement />} />
             <Route path="sites/:id" element={<SiteDetails />} />
             <Route path="sites/new" element={<SiteForm />} />
             <Route path="sites/edit/:id" element={<SiteEditPage />} />

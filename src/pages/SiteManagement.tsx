@@ -1,10 +1,5 @@
 import { apiGetAllAccOrganization } from "@/api/account";
-import {
-  apiCreateSite,
-  apiDeleteSite,
-  apiGetListSite,
-  apiGetSearchSiteByUser,
-} from "@/api/site";
+import { apiCreateSite, apiDeleteSite, apiGetListSite } from "@/api/site";
 import MainLayout from "@/components/MainLayout";
 import {
   AlertDialog,
@@ -61,7 +56,7 @@ import { get, join } from "lodash";
 import { ArrowLeft, MapPin, PlusCircle, Trash, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import * as z from "zod";
 
 const siteFormSchema = z.object({
@@ -102,9 +97,9 @@ export default function SiteManagement() {
         address: values.address,
         userId: values.managerId ? [values.managerId] : [],
       };
-      console.log("New site data :>> ", newSite);
+      // console.log("New site data :>> ", newSite);
 
-      const { data } = await apiCreateSite(newSite);
+      await apiCreateSite(newSite);
       // console.log("data :>> ", data);
       // Update local state
       await fetchData();
@@ -117,10 +112,7 @@ export default function SiteManagement() {
       setIsDialogOpen(false);
       form.reset();
     } catch (error) {
-      toast({
-        title: "Site created",
-        description: `Created failed`,
-      });
+      console.log("error :>> ", error);
     }
   }
 
@@ -170,27 +162,19 @@ export default function SiteManagement() {
   const fetchData = async () => {
     try {
       if (location.pathname.includes("admin")) {
-        const { data } = await apiGetListSite({ number_of_page: 1000 });
+        const { data } = await apiGetListSite({});
         setCustomerSites(get(data, "metaData", []));
       } else {
-        // const { data } = await apiGetListSite({
-        //   number_of_page: 1000,
-        //   filter: {
-        //     organizationId: managers[0].organizationId,
-        //   },
-        // });
-        // setCustomerSites(get(data, "metaData", []));
+        const { data } = await apiGetListSite({});
+        setCustomerSites(get(data, "metaData", []));
 
-        const { data } = await apiGetSearchSiteByUser();
-        setCustomerSites(data);
+        // const { data } = await apiGetSearchSiteByUser();
+        // setCustomerSites(data);
       }
     } catch (error) {
       console.log("error :>> ", error);
     }
   };
-
-  console.log("managers =>>>>", managers);
-  console.log("customerSites :>> ", customerSites);
 
   return (
     <MainLayout pageTitle="Site Management">

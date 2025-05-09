@@ -25,12 +25,16 @@ import { toast } from "@/hooks/use-toast";
 import { sites } from "@/lib/data";
 import { User } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import clsx from "clsx";
 import { get } from "lodash";
-import { ArrowLeft, CodeSquare } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { z } from "zod";
 
 const siteSchema = z.object({
@@ -42,6 +46,7 @@ const siteSchema = z.object({
 export default function SiteForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser } = useAuth();
   const isEditMode = !!id;
   const [siteManagers, setSiteManagers] = useState<Array<User>>([]);
@@ -100,21 +105,21 @@ export default function SiteForm() {
   useEffect(() => {
     const getDataManagerSite = async () => {
       try {
-        // const { data } = await apiGetAllAccOrganization();
-        // console.log("data list=> ", data);
-        // setSiteManagers(get(data, "metaData", []));
-
-        //get list with manager role in current organizationId
-        const { data } = await apiGetAccList({
-          filter: {
-            role: "SiteManager",
-            organizationId: customerId,
-          },
-        });
-
-        setSiteManagers(get(data, "metaData", []));
-
-        console.log("data manager: ", data);
+        if (location.pathname.includes("customer")) {
+          const { data } = await apiGetAllAccOrganization();
+          // console.log("data list=> ", data);
+          setSiteManagers(get(data, "metaData", []));
+        } else {
+          //get list with manager role in current organizationId
+          const { data } = await apiGetAccList({
+            filter: {
+              role: "SiteManager",
+              organizationId: customerId,
+            },
+          });
+          setSiteManagers(get(data, "metaData", []));
+          // console.log("data manager: ", data);
+        }
       } catch (error) {
         console.log("error :>> ", error);
       }

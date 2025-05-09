@@ -42,7 +42,6 @@ export default function BlockEditPage() {
   // const availableSites = sites;
 
   useEffect(() => {
-    console.log("id :>> ", id);
     const getDetail = async (id: string) => {
       try {
         setIsLoading(true);
@@ -176,7 +175,7 @@ export default function BlockEditPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="acres">Acres</Label>
+                  <Label htmlFor="acres">Acres*</Label>
                   <Input
                     id="acres"
                     type="number"
@@ -187,7 +186,7 @@ export default function BlockEditPage() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="rows">Rows</Label>
+                  <Label htmlFor="rows">Rows*</Label>
                   <Input
                     id="rows"
                     type="number"
@@ -197,7 +196,7 @@ export default function BlockEditPage() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="vines">Vines</Label>
+                  <Label htmlFor="vines">Vines*</Label>
                   <Input
                     id="vines"
                     type="number"
