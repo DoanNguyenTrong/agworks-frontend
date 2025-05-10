@@ -1,20 +1,17 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { apiGetDetailBlock } from "@/api/block";
+import { BASE_URL } from "@/api/config";
+import { apiGetAllImage } from "@/api/image";
+import { apiGetTaskDetails } from "@/api/workerTask";
 import MainLayout from "@/components/MainLayout";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, CheckCircle, Clock, MapPin } from "lucide-react";
-import { workerTasks, workOrders, blocks, sites } from "@/lib/data";
-import { WorkerTask, WorkOrder, Block, Site } from "@/lib/types";
-import { format } from "date-fns";
-import { apiGetTaskDetails } from "@/api/workerTask";
-import { apiGetDetailBlock } from "@/api/block";
-import { get } from "lodash";
 import dayjs from "dayjs";
-import { apiGetAllImage } from "@/api/image";
-import { BASE_URL } from "@/api/config";
+import { get } from "lodash";
+import { ArrowLeft, Calendar, CheckCircle, Clock, MapPin } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 export default function WorkerTaskDetails() {
   const { taskId } = useParams();
@@ -77,7 +74,7 @@ export default function WorkerTaskDetails() {
       case "pending":
         return <Badge variant="outline">Pending Review</Badge>;
       case "approved":
-        return <Badge className="bg-agworks-green">Approved</Badge>;
+        return <Badge className="bg-blue-500">Approved</Badge>;
       case "rejected":
         return <Badge variant="destructive">Rejected</Badge>;
       default:

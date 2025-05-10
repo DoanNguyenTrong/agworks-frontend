@@ -1,19 +1,36 @@
-
-import { useState } from "react";
+import { apiResetAcc, apiUpdateAcc } from "@/api/account";
+import { BASE_URL } from "@/api/config";
 import MainLayout from "@/components/MainLayout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { useAuth } from "@/contexts/AuthContext";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { toast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { get, includes } from "lodash";
+import { useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 // Form schemas
 const profileSchema = z.object({
@@ -22,17 +39,21 @@ const profileSchema = z.object({
   email: z.string().email("Invalid email address"),
   phone: z.string().optional(),
   address: z.string().optional(),
-  logoUrl: z.string().optional(),
+  logo: z.string().optional(),
 });
 
-const passwordSchema = z.object({
-  currentPassword: z.string().min(1, "Current password is required"),
-  newPassword: z.string().min(8, "Password must be at least 8 characters"),
-  confirmPassword: z.string().min(8, "Password must be at least 8 characters"),
-}).refine(data => data.newPassword === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+const passwordSchema = z
+  .object({
+    // currentPassword: z.string().min(1, "Current password is required"),
+    newPassword: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z
+      .string()
+      .min(8, "Password must be at least 8 characters"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 const notificationSchema = z.object({
   emailWorkOrders: z.boolean().default(true),
@@ -41,11 +62,14 @@ const notificationSchema = z.object({
 });
 
 export default function CustomerSettings() {
-  const { currentUser } = useAuth();
+  const { currentUser, updateInfoUser, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
-  
+
+  // Input
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
   // Profile form
-  const profileForm = useForm<z.infer<typeof profileSchema>>({
+  const profileForm: any = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: currentUser?.name || "",
@@ -53,7 +77,7 @@ export default function CustomerSettings() {
       email: currentUser?.email || "",
       phone: currentUser?.phone || "",
       address: currentUser?.address || "",
-      logoUrl: currentUser?.logo || "",
+      logo: currentUser?.logo || "",
     },
   });
 
@@ -61,12 +85,11 @@ export default function CustomerSettings() {
   const passwordForm = useForm<z.infer<typeof passwordSchema>>({
     resolver: zodResolver(passwordSchema),
     defaultValues: {
-      currentPassword: "",
       newPassword: "",
       confirmPassword: "",
     },
   });
-  
+
   // Notification form
   const notificationForm = useForm<z.infer<typeof notificationSchema>>({
     resolver: zodResolver(notificationSchema),
@@ -76,29 +99,63 @@ export default function CustomerSettings() {
       emailSummary: false,
     },
   });
-  
+
   // Submit handlers
-  const onProfileSubmit = (data: z.infer<typeof profileSchema>) => {
-    console.log("Profile data:", data);
-    toast({
-      title: "Profile updated",
-      description: "Your profile has been updated successfully.",
-    });
+  const onProfileSubmit = async (data: z.infer<typeof profileSchema>) => {
+    const body = {
+      ...data,
+      _id: get(currentUser, "_id"),
+    };
+    try {
+      // In a real app, this would make an API call
+      const { data } = await apiUpdateAcc(body);
+      if (data?.metaData?._id) {
+        updateInfoUser(data?.metaData?._id);
+      }
+
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully.",
+      });
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   };
-  
-  const onPasswordSubmit = (data: z.infer<typeof passwordSchema>) => {
-    console.log("Password data:", data);
-    passwordForm.reset({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
+
+  const onPasswordSubmit = async (data: z.infer<typeof passwordSchema>) => {
+    // passwordForm.reset({
+    //   currentPassword: "",
+    //   newPassword: "",
+    //   confirmPassword: "",
+    // });
     toast({
       title: "Password updated",
       description: "Your password has been changed successfully.",
     });
+    const body = {
+      id: currentUser._id,
+      password: data.newPassword,
+    };
+    try {
+      await apiResetAcc(body);
+      toast({
+        title: "Password updated",
+        description: "Your password has been changed successfully.",
+      });
+      passwordForm.reset({
+        newPassword: "",
+        confirmPassword: "",
+      });
+      toast({
+        title: "Password updated",
+        description: "Your password has been changed successfully.",
+      });
+      logout();
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   };
-  
+
   const onNotificationSubmit = (data: z.infer<typeof notificationSchema>) => {
     console.log("Notification settings:", data);
     toast({
@@ -107,15 +164,46 @@ export default function CustomerSettings() {
     });
   };
 
+  const changeProfileImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ["image/jpeg", "image/png", "image/gif"];
+    if (!validTypes.includes(file.type)) {
+      alert("Only JPG, PNG, or GIF images are allowed.");
+      return;
+    }
+
+    const maxSizeInBytes = 1 * 1024 * 1024;
+    if (file.size > maxSizeInBytes) {
+      alert("Image size must be less than 1MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      profileForm.setValue("logo", base64String);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const logoForm = profileForm.watch("logo");
+
   return (
     <MainLayout pageTitle="Settings">
-      <Tabs defaultValue="profile" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs
+        defaultValue="profile"
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6"
+      >
         <TabsList className="w-full md:w-auto justify-start border-b pb-0">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="password">Password</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
-        
+
         {/* Profile Settings */}
         <TabsContent value="profile">
           <Card>
@@ -127,10 +215,21 @@ export default function CustomerSettings() {
             </CardHeader>
             <CardContent>
               <Form {...profileForm}>
-                <form id="profile-form" onSubmit={profileForm.handleSubmit(onProfileSubmit)} className="space-y-6">
+                <form
+                  id="profile-form"
+                  onSubmit={profileForm.handleSubmit(onProfileSubmit)}
+                  className="space-y-6"
+                >
                   <div className="flex items-center gap-4 mb-4">
                     <Avatar className="h-20 w-20">
-                      <AvatarImage src={currentUser?.logo} />
+                      <AvatarImage
+                        src={
+                          !includes(logoForm, "base64")
+                            ? `${BASE_URL}${logoForm}`
+                            : logoForm
+                        }
+                        alt={currentUser?.name}
+                      />
                       <AvatarFallback className="text-xl">
                         {currentUser?.name?.charAt(0)}
                       </AvatarFallback>
@@ -141,16 +240,33 @@ export default function CustomerSettings() {
                         Your logo will be displayed throughout the app.
                       </p>
                       <div className="flex gap-2">
-                        <Button type="button" variant="outline" size="sm">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => fileInputRef.current?.click()}
+                        >
                           Change Logo
                         </Button>
-                        <Button type="button" variant="ghost" size="sm">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => profileForm.setValue("logo", "")}
+                        >
                           Remove
                         </Button>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={changeProfileImage}
+                        />
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={profileForm.control}
@@ -165,7 +281,7 @@ export default function CustomerSettings() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={profileForm.control}
                       name="companyName"
@@ -180,7 +296,7 @@ export default function CustomerSettings() {
                       )}
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={profileForm.control}
@@ -189,7 +305,7 @@ export default function CustomerSettings() {
                         <FormItem>
                           <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input {...field} type="email" />
+                            <Input disabled {...field} type="email" />
                           </FormControl>
                           <FormDescription>
                             This email will be used for system notifications.
@@ -198,7 +314,7 @@ export default function CustomerSettings() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={profileForm.control}
                       name="phone"
@@ -213,7 +329,7 @@ export default function CustomerSettings() {
                       )}
                     />
                   </div>
-                  
+
                   <FormField
                     control={profileForm.control}
                     name="address"
@@ -221,10 +337,7 @@ export default function CustomerSettings() {
                       <FormItem>
                         <FormLabel>Business Address</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            {...field} 
-                            rows={3}
-                          />
+                          <Textarea {...field} rows={3} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -234,24 +347,28 @@ export default function CustomerSettings() {
               </Form>
             </CardContent>
             <CardFooter className="flex justify-end">
-              <Button type="submit" form="profile-form">Save Changes</Button>
+              <Button type="submit" form="profile-form">
+                Save Changes
+              </Button>
             </CardFooter>
           </Card>
         </TabsContent>
-        
+
         {/* Password Settings */}
         <TabsContent value="password">
           <Card>
             <CardHeader>
               <CardTitle>Change Password</CardTitle>
-              <CardDescription>
-                Update your account password.
-              </CardDescription>
+              <CardDescription>Update your account password.</CardDescription>
             </CardHeader>
             <CardContent>
               <Form {...passwordForm}>
-                <form id="password-form" onSubmit={passwordForm.handleSubmit(onPasswordSubmit)} className="space-y-6">
-                  <FormField
+                <form
+                  id="password-form"
+                  onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
+                  className="space-y-6"
+                >
+                  {/* <FormField
                     control={passwordForm.control}
                     name="currentPassword"
                     render={({ field }) => (
@@ -263,8 +380,8 @@ export default function CustomerSettings() {
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
-                  
+                  /> */}
+
                   <FormField
                     control={passwordForm.control}
                     name="newPassword"
@@ -281,7 +398,7 @@ export default function CustomerSettings() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={passwordForm.control}
                     name="confirmPassword"
@@ -299,11 +416,13 @@ export default function CustomerSettings() {
               </Form>
             </CardContent>
             <CardFooter className="flex justify-end">
-              <Button type="submit" form="password-form">Change Password</Button>
+              <Button type="submit" form="password-form">
+                Change Password
+              </Button>
             </CardFooter>
           </Card>
         </TabsContent>
-        
+
         {/* Notification Settings */}
         <TabsContent value="notifications">
           <Card>
@@ -315,16 +434,26 @@ export default function CustomerSettings() {
             </CardHeader>
             <CardContent>
               <Form {...notificationForm}>
-                <form id="notification-form" onSubmit={notificationForm.handleSubmit(onNotificationSubmit)} className="space-y-6">
+                <form
+                  id="notification-form"
+                  onSubmit={notificationForm.handleSubmit(onNotificationSubmit)}
+                  className="space-y-6"
+                >
                   <div className="space-y-4">
                     <h3 className="text-sm font-medium">Email Notifications</h3>
-                    
+
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label htmlFor="email-work-orders" className="font-normal">Work Order Updates</Label>
+                          <Label
+                            htmlFor="email-work-orders"
+                            className="font-normal"
+                          >
+                            Work Order Updates
+                          </Label>
                           <p className="text-sm text-muted-foreground">
-                            Receive updates when work orders are created or completed.
+                            Receive updates when work orders are created or
+                            completed.
                           </p>
                         </div>
                         <FormField
@@ -346,10 +475,15 @@ export default function CustomerSettings() {
                           )}
                         />
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label htmlFor="email-payroll" className="font-normal">Payroll Reports</Label>
+                          <Label
+                            htmlFor="email-payroll"
+                            className="font-normal"
+                          >
+                            Payroll Reports
+                          </Label>
                           <p className="text-sm text-muted-foreground">
                             Receive weekly payroll reports for your sites.
                           </p>
@@ -373,10 +507,15 @@ export default function CustomerSettings() {
                           )}
                         />
                       </div>
-                      
+
                       <div className="flex items-center justify-between">
                         <div>
-                          <Label htmlFor="email-summary" className="font-normal">Monthly Summary</Label>
+                          <Label
+                            htmlFor="email-summary"
+                            className="font-normal"
+                          >
+                            Monthly Summary
+                          </Label>
                           <p className="text-sm text-muted-foreground">
                             Receive monthly summary of all vineyard activities.
                           </p>
@@ -406,7 +545,9 @@ export default function CustomerSettings() {
               </Form>
             </CardContent>
             <CardFooter className="flex justify-end">
-              <Button type="submit" form="notification-form">Save Preferences</Button>
+              <Button type="submit" form="notification-form">
+                Save Preferences
+              </Button>
             </CardFooter>
           </Card>
         </TabsContent>

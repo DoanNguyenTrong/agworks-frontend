@@ -71,7 +71,7 @@ export default function WorkerTasks() {
       case "pending":
         return <Badge variant="outline">Pending</Badge>;
       case "approved":
-        return <Badge className="bg-agworks-green">Approved</Badge>;
+        return <Badge className="bg-blue-500">Approved</Badge>;
       case "rejected":
         return <Badge variant="destructive">Rejected</Badge>;
       default:

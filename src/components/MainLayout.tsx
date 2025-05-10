@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { MAP_ROLE } from "@/lib/utils/role";
-import { includes } from "lodash";
+import { get } from "lodash";
 import {
   Building,
   ClipboardList,
@@ -123,6 +123,16 @@ export default function MainLayout({
     navigate("/login");
   };
 
+  const renderUrlLogoOrAvatar = () => {
+    let url = "";
+    if (get(currentUser, "role") === MAP_ROLE.CUSTOIMER) {
+      url = get(currentUser, "logo");
+    } else {
+      url = get(currentUser, "profileImage");
+    }
+    return `${BASE_URL}${url}`;
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -137,13 +147,7 @@ export default function MainLayout({
               <div className="px-4 py-2">
                 <div className="flex items-center gap-4 mb-6 mt-2">
                   <Avatar>
-                    <AvatarImage
-                      src={
-                        !includes(currentUser?.profileImage, "base64")
-                          ? `${BASE_URL}${currentUser?.profileImage}`
-                          : currentUser?.profileImage
-                      }
-                    />
+                    <AvatarImage src={renderUrlLogoOrAvatar()} />
                     <AvatarFallback className="bg-primary/10 text-primary">
                       {currentUser?.name.charAt(0)}
                     </AvatarFallback>

@@ -107,7 +107,7 @@ export default function WorkOrderDetails() {
       case "InProgress":
         return <Badge>In Progress</Badge>;
       case "Completed":
-        return <Badge className="bg-agworks-green">Completed</Badge>;
+        return <Badge className="bg-blue-500">Completed</Badge>;
       case "Cancelled":
         return <Badge variant="destructive">Cancelled</Badge>;
       default:

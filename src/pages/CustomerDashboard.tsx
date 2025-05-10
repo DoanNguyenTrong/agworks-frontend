@@ -39,7 +39,7 @@ export default function CustomerDashboard() {
     try {
       const { data } = await apiGetListBlock({ number_of_page: 1000 });
       setCustomerBlocks(get(data, "metaData", []));
-      console.log("Block :>> ", get(data, "metaData", []));
+      // console.log("Block :>> ", get(data, "metaData", []));
     } catch (error) {
       console.log("error :>> ", error);
     }
@@ -47,7 +47,7 @@ export default function CustomerDashboard() {
   const getDataSite = async () => {
     try {
       const { data } = await apiGetListSite({});
-      console.log("Site :>> ", get(data, "metaData", []));
+      // console.log("Site :>> ", get(data, "metaData", []));
       setCustomerSites(get(data, "metaData", []));
       // const { data } = await apiGetSearchSiteByUser();
       // setCustomerSites(data);
@@ -60,7 +60,7 @@ export default function CustomerDashboard() {
     try {
       const { data } = await apiGetAllAccOrganization();
       setManagers(get(data, "metaData"));
-      console.log("Acc :>> ", get(data, "metaData", []));
+      // console.log("Acc :>> ", get(data, "metaData", []));
     } catch (error) {
       console.log("error :>> ", error);
     }
