@@ -1,26 +1,46 @@
-
 import { useState, useEffect } from "react";
 import MainLayout from "@/components/MainLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { toast } from "@/hooks/use-toast";
 import { adminSettings } from "@/lib/data";
 import { updateAdminSettings } from "@/lib/utils/dataManagement";
+import {
+  apiGetConfigSystem,
+  apiUpdateConfigSystem,
+  apiCreateConfigSystem,
+} from "@/api/configSystem";
+import { get, set } from "lodash";
 
 // Form schemas
 const generalSettingsSchema = z.object({
   systemName: z.string().min(1, "System name is required"),
   supportEmail: z.string().email("Invalid email address"),
   logoUrl: z.string().optional(),
-  enablePublicRegistration: z.boolean().default(true),
-  enableWorkerSelfRegistration: z.boolean().default(true),
+  allowPublicRegistration: z.boolean().default(true),
+  allowWorkerSelfRegistration: z.boolean().default(true),
 });
 
 const emailSettingsSchema = z.object({
@@ -34,17 +54,30 @@ const emailSettingsSchema = z.object({
 
 export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState("general");
-  const [settings, setSettings] = useState(adminSettings);
-  
+  const [settings, setSettings] = useState<any>({});
+
+  const getAdminConfig = async () => {
+    const res = await apiGetConfigSystem();
+    // console.log("res :>> ", res);
+    setSettings(get(res, "data.metaData", {}));
+    generalForm.reset(settings.general);
+    emailForm.reset(settings.email);
+  };
+  console.log("settings :>> ", settings);
+
+  useEffect(() => {
+    getAdminConfig();
+  }, []);
+
   // General settings form
   const generalForm = useForm<z.infer<typeof generalSettingsSchema>>({
     resolver: zodResolver(generalSettingsSchema),
     defaultValues: {
-      systemName: settings.general.systemName,
-      supportEmail: settings.general.supportEmail,
-      logoUrl: settings.general.logoUrl,
-      enablePublicRegistration: settings.general.enablePublicRegistration,
-      enableWorkerSelfRegistration: settings.general.enableWorkerSelfRegistration,
+      systemName: "",
+      supportEmail: "",
+      logoUrl: "",
+      allowPublicRegistration: false,
+      allowWorkerSelfRegistration: false,
     },
   });
 
@@ -52,115 +85,57 @@ export default function AdminSettings() {
   const emailForm = useForm<z.infer<typeof emailSettingsSchema>>({
     resolver: zodResolver(emailSettingsSchema),
     defaultValues: {
-      smtpServer: settings.email.smtpServer,
-      smtpPort: settings.email.smtpPort,
-      smtpUsername: settings.email.smtpUsername,
-      smtpPassword: settings.email.smtpPassword,
-      senderEmail: settings.email.senderEmail,
-      senderName: settings.email.senderName,
+      smtpServer: "",
+      smtpPort: "",
+      smtpUsername: "",
+      smtpPassword: "",
+      senderEmail: "",
+      senderName: "",
     },
   });
 
   // Update forms when settings change
   useEffect(() => {
-    generalForm.reset({
-      systemName: settings.general.systemName,
-      supportEmail: settings.general.supportEmail,
-      logoUrl: settings.general.logoUrl,
-      enablePublicRegistration: settings.general.enablePublicRegistration,
-      enableWorkerSelfRegistration: settings.general.enableWorkerSelfRegistration,
-    });
-    
-    emailForm.reset({
-      smtpServer: settings.email.smtpServer,
-      smtpPort: settings.email.smtpPort,
-      smtpUsername: settings.email.smtpUsername,
-      smtpPassword: settings.email.smtpPassword,
-      senderEmail: settings.email.senderEmail,
-      senderName: settings.email.senderName,
-    });
+    generalForm.reset(settings.general);
+    emailForm.reset(settings.email);
   }, [settings]);
-  
+
+  console.log("reload");
+
   // Submit handlers
-  const onGeneralSubmit = (data: z.infer<typeof generalSettingsSchema>) => {
-    // Update the settings in our data management - ensure all properties are defined
-    const updatedSettings = updateAdminSettings({
-      general: {
-        systemName: data.systemName,
-        supportEmail: data.supportEmail,
-        logoUrl: data.logoUrl || "",
-        enablePublicRegistration: data.enablePublicRegistration,
-        enableWorkerSelfRegistration: data.enableWorkerSelfRegistration,
-      }
-    });
-    
+  const handleSubmit = async () => {
+    // console.log("setting::", settings);
+    const updatedSettings = {
+      ...settings,
+      general: generalForm.getValues(),
+      email: emailForm.getValues(),
+    };
+    console.log("submit settings :>> ", updatedSettings);
+    await apiUpdateConfigSystem(updatedSettings);
+
     setSettings(updatedSettings);
-    
+
     toast({
       title: "Settings saved",
       description: "Your general settings have been saved successfully.",
     });
   };
-  
-  const onEmailSubmit = (data: z.infer<typeof emailSettingsSchema>) => {
-    // Update the settings in our data management - ensure all properties are defined
-    const updatedSettings = updateAdminSettings({
-      email: {
-        smtpServer: data.smtpServer,
-        smtpPort: data.smtpPort,
-        smtpUsername: data.smtpUsername,
-        smtpPassword: data.smtpPassword,
-        senderEmail: data.senderEmail,
-        senderName: data.senderName,
-      }
-    });
-    
-    setSettings(updatedSettings);
-    
-    toast({
-      title: "Settings saved",
-      description: "Your email settings have been saved successfully.",
-    });
-  };
-  
-  const handleSecuritySave = () => {
-    // Update the settings in our data management
-    const updatedSettings = updateAdminSettings({
-      security: settings.security
-    });
-    
-    setSettings(updatedSettings);
-    
-    toast({
-      title: "Settings saved",
-      description: "Your security settings have been saved successfully.",
-    });
-  };
-  
-  const handleIntegrationsSave = () => {
-    // Update the settings in our data management  
-    const updatedSettings = updateAdminSettings({
-      integrations: settings.integrations
-    });
-    
-    setSettings(updatedSettings);
-    
-    toast({
-      title: "Settings saved",
-      description: "Your integration settings have been saved successfully.",
-    });
-  };
 
   return (
     <MainLayout pageTitle="Admin Settings">
-      <Tabs defaultValue="general" value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      <Tabs
+        defaultValue="general"
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6"
+      >
         <TabsList className="w-full md:w-auto justify-start border-b pb-0">
           <TabsTrigger value="general">General</TabsTrigger>
           <TabsTrigger value="email">Email</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
         </TabsList>
-        
+
         {/* General Settings */}
         <TabsContent value="general">
           <Card>
@@ -172,7 +147,11 @@ export default function AdminSettings() {
             </CardHeader>
             <CardContent>
               <Form {...generalForm}>
-                <form id="general-settings-form" onSubmit={generalForm.handleSubmit(onGeneralSubmit)} className="space-y-6">
+                <form
+                  id="general-settings-form"
+                  onSubmit={generalForm.handleSubmit(handleSubmit)}
+                  className="space-y-6"
+                >
                   <FormField
                     control={generalForm.control}
                     name="systemName"
@@ -183,13 +162,14 @@ export default function AdminSettings() {
                           <Input {...field} />
                         </FormControl>
                         <FormDescription>
-                          This name will appear in the application header and emails.
+                          This name will appear in the application header and
+                          emails.
                         </FormDescription>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={generalForm.control}
                     name="supportEmail"
@@ -206,7 +186,7 @@ export default function AdminSettings() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={generalForm.control}
                     name="logoUrl"
@@ -223,14 +203,16 @@ export default function AdminSettings() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={generalForm.control}
-                    name="enablePublicRegistration"
+                    name="allowPublicRegistration"
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                         <div className="space-y-0.5">
-                          <FormLabel className="text-base">Public Registration</FormLabel>
+                          <FormLabel className="text-base">
+                            Public Registration
+                          </FormLabel>
                           <FormDescription>
                             Allow users to register accounts publicly.
                           </FormDescription>
@@ -244,14 +226,16 @@ export default function AdminSettings() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={generalForm.control}
-                    name="enableWorkerSelfRegistration"
+                    name="allowWorkerSelfRegistration"
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                         <div className="space-y-0.5">
-                          <FormLabel className="text-base">Worker Self-Registration</FormLabel>
+                          <FormLabel className="text-base">
+                            Worker Self-Registration
+                          </FormLabel>
                           <FormDescription>
                             Allow workers to register for available jobs.
                           </FormDescription>
@@ -269,11 +253,13 @@ export default function AdminSettings() {
               </Form>
             </CardContent>
             <CardFooter className="flex justify-end">
-              <Button type="submit" form="general-settings-form">Save Changes</Button>
+              <Button type="submit" form="general-settings-form">
+                Save Changes
+              </Button>
             </CardFooter>
           </Card>
         </TabsContent>
-        
+
         {/* Email Settings */}
         <TabsContent value="email">
           <Card>
@@ -285,7 +271,11 @@ export default function AdminSettings() {
             </CardHeader>
             <CardContent>
               <Form {...emailForm}>
-                <form id="email-settings-form" onSubmit={emailForm.handleSubmit(onEmailSubmit)} className="space-y-6">
+                <form
+                  id="email-settings-form"
+                  onSubmit={emailForm.handleSubmit(handleSubmit)}
+                  className="space-y-6"
+                >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={emailForm.control}
@@ -300,7 +290,7 @@ export default function AdminSettings() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={emailForm.control}
                       name="smtpPort"
@@ -315,7 +305,7 @@ export default function AdminSettings() {
                       )}
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={emailForm.control}
@@ -330,7 +320,7 @@ export default function AdminSettings() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={emailForm.control}
                       name="smtpPassword"
@@ -345,7 +335,7 @@ export default function AdminSettings() {
                       )}
                     />
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                       control={emailForm.control}
@@ -360,7 +350,7 @@ export default function AdminSettings() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={emailForm.control}
                       name="senderName"
@@ -379,11 +369,13 @@ export default function AdminSettings() {
               </Form>
             </CardContent>
             <CardFooter className="flex justify-end">
-              <Button type="submit" form="email-settings-form">Save Changes</Button>
+              <Button type="submit" form="email-settings-form">
+                Save Changes
+              </Button>
             </CardFooter>
           </Card>
         </TabsContent>
-        
+
         {/* Security Settings */}
         <TabsContent value="security">
           <Card>
@@ -397,25 +389,27 @@ export default function AdminSettings() {
               <div className="space-y-6">
                 <div className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
-                    <p className="text-base font-medium">Two-Factor Authentication</p>
+                    <p className="text-base font-medium">
+                      Two-Factor Authentication
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       Require users to use two-factor authentication.
                     </p>
                   </div>
-                  <Switch 
-                    checked={settings.security.twoFactorAuth}
+                  <Switch
+                    checked={settings?.security?.requireTwoFactorAuthentication}
                     onCheckedChange={(checked) => {
-                      setSettings(prev => ({
+                      setSettings((prev: Record<string, any>) => ({
                         ...prev,
                         security: {
-                          ...prev.security,
-                          twoFactorAuth: checked
-                        }
+                          ...(prev?.security || {}),
+                          requireTwoFactorAuthentication: checked,
+                        },
                       }));
                     }}
                   />
                 </div>
-                
+
                 <div className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
                     <p className="text-base font-medium">Password Expiration</p>
@@ -423,20 +417,20 @@ export default function AdminSettings() {
                       Force users to change their password periodically.
                     </p>
                   </div>
-                  <Switch 
-                    checked={settings.security.passwordExpiration}
+                  <Switch
+                    checked={settings?.security?.allowPasswordExpiration}
                     onCheckedChange={(checked) => {
-                      setSettings(prev => ({
+                      setSettings((prev: Record<string, any>) => ({
                         ...prev,
                         security: {
-                          ...prev.security,
-                          passwordExpiration: checked
-                        }
+                          ...(prev?.security || {}),
+                          allowPasswordExpiration: checked,
+                        },
                       }));
                     }}
                   />
                 </div>
-                
+
                 <div className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
                     <p className="text-base font-medium">Account Lockout</p>
@@ -444,15 +438,15 @@ export default function AdminSettings() {
                       Lock accounts after multiple failed login attempts.
                     </p>
                   </div>
-                  <Switch 
-                    checked={settings.security.accountLockout}
+                  <Switch
+                    checked={settings?.security?.allowAccountLockout}
                     onCheckedChange={(checked) => {
-                      setSettings(prev => ({
+                      setSettings((prev: Record<string, any>) => ({
                         ...prev,
                         security: {
-                          ...prev.security,
-                          accountLockout: checked
-                        }
+                          ...(prev?.security || {}),
+                          allowAccountLockout: checked,
+                        },
                       }));
                     }}
                   />
@@ -460,11 +454,11 @@ export default function AdminSettings() {
               </div>
             </CardContent>
             <CardFooter className="flex justify-end">
-              <Button onClick={handleSecuritySave}>Save Changes</Button>
+              <Button onClick={handleSubmit}>Save Changes</Button>
             </CardFooter>
           </Card>
         </TabsContent>
-        
+
         {/* Integrations Settings */}
         <TabsContent value="integrations">
           <Card>
@@ -483,20 +477,20 @@ export default function AdminSettings() {
                       Enable Google Maps integration for location services.
                     </p>
                   </div>
-                  <Switch 
-                    checked={settings.integrations.googleMaps}
+                  <Switch
+                    checked={settings?.integrations?.enableGoogleMaps}
                     onCheckedChange={(checked) => {
-                      setSettings(prev => ({
+                      setSettings((prev: Record<string, any>) => ({
                         ...prev,
                         integrations: {
-                          ...prev.integrations,
-                          googleMaps: checked
-                        }
+                          ...(prev?.integrations || {}),
+                          enableGoogleMaps: checked,
+                        },
                       }));
                     }}
                   />
                 </div>
-                
+
                 <div className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
                     <p className="text-base font-medium">Twilio SMS</p>
@@ -504,20 +498,20 @@ export default function AdminSettings() {
                       Enable Twilio SMS for mobile notifications.
                     </p>
                   </div>
-                  <Switch 
-                    checked={settings.integrations.twilioSMS}
+                  <Switch
+                    checked={settings?.integrations?.enableTwilioSMS}
                     onCheckedChange={(checked) => {
-                      setSettings(prev => ({
+                      setSettings((prev: Record<string, any>) => ({
                         ...prev,
                         integrations: {
-                          ...prev.integrations,
-                          twilioSMS: checked
-                        }
+                          ...(prev?.integrations || {}),
+                          enableTwilioSMS: checked,
+                        },
                       }));
                     }}
                   />
                 </div>
-                
+
                 <div className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
                     <p className="text-base font-medium">Stripe Payments</p>
@@ -525,15 +519,15 @@ export default function AdminSettings() {
                       Enable Stripe for payment processing.
                     </p>
                   </div>
-                  <Switch 
-                    checked={settings.integrations.stripePayments}
+                  <Switch
+                    checked={settings?.integrations?.enableStripe}
                     onCheckedChange={(checked) => {
-                      setSettings(prev => ({
+                      setSettings((prev: Record<string, any>) => ({
                         ...prev,
                         integrations: {
-                          ...prev.integrations,
-                          stripePayments: checked
-                        }
+                          ...(prev?.integrations || {}),
+                          enableStripe: checked,
+                        },
                       }));
                     }}
                   />
@@ -541,7 +535,7 @@ export default function AdminSettings() {
               </div>
             </CardContent>
             <CardFooter className="flex justify-end">
-              <Button onClick={handleIntegrationsSave}>Save Changes</Button>
+              <Button onClick={handleSubmit}>Save Changes</Button>
             </CardFooter>
           </Card>
         </TabsContent>
