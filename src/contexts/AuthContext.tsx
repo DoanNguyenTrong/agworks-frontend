@@ -1,4 +1,5 @@
 import { apiGetAccDetail, apiLogin } from "@/api/account";
+import { apiGetConfigSystem } from "@/api/configSystem";
 import { useToast } from "@/hooks/use-toast";
 import { users } from "@/lib/data";
 import { User } from "@/lib/types";
@@ -7,7 +8,15 @@ import { get } from "lodash";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+interface General {
+  systemName: string;
+  supportEmail: string;
+  logoUrl: string;
+  allowPublicRegistration: boolean;
+  allowWorkerSelfRegistration: boolean;
+}
 interface AuthContextType {
+  general: General;
   currentUser: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -30,6 +39,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [general, setGeneral] = useState<any>({});
+
+  useEffect(() => {
+    const getGeneral = async () => {
+      try {
+        const res = await apiGetConfigSystem();
+        setGeneral(get(res, "data.metaData.general", {}));
+      } catch (error) {
+        console.log("error :>> ", error);
+      }
+    };
+    getGeneral();
+  }, []);
 
   const redirectBasedOnRole = (role: string) => {
     switch (role) {
@@ -179,7 +201,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ currentUser, isLoading, login, signup, logout, updateInfoUser }}
+      value={{
+        currentUser,
+        isLoading,
+        login,
+        signup,
+        logout,
+        updateInfoUser,
+        general,
+      }}
     >
       {children}
     </AuthContext.Provider>

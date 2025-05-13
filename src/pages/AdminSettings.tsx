@@ -57,22 +57,27 @@ export default function AdminSettings() {
   const [settings, setSettings] = useState<any>({});
 
   const getAdminConfig = async () => {
-    const res = await apiGetConfigSystem();
-    // console.log("res :>> ", res);
-    setSettings(get(res, "data.metaData", {}));
-    generalForm.reset(settings.general);
-    emailForm.reset(settings.email);
+    try {
+      const res = await apiGetConfigSystem();
+      // console.log("res :>> ", res);
+      setSettings(get(res, "data.metaData", {}));
+    } catch (error) {
+      console.log("error :>> ", error);
+    }
   };
-  console.log("settings :>> ", settings);
+  // console.log("settings :>> ", settings);
 
   useEffect(() => {
     getAdminConfig();
   }, []);
+  // useEffect(() => {
+  //   getAdminConfig();
+  // }, []);
 
   // General settings form
   const generalForm = useForm<z.infer<typeof generalSettingsSchema>>({
     resolver: zodResolver(generalSettingsSchema),
-    defaultValues: {
+    defaultValues: settings.general || {
       systemName: "",
       supportEmail: "",
       logoUrl: "",
@@ -84,7 +89,7 @@ export default function AdminSettings() {
   // Email settings form
   const emailForm = useForm<z.infer<typeof emailSettingsSchema>>({
     resolver: zodResolver(emailSettingsSchema),
-    defaultValues: {
+    defaultValues: settings.email || {
       smtpServer: "",
       smtpPort: "",
       smtpUsername: "",
@@ -93,14 +98,11 @@ export default function AdminSettings() {
       senderName: "",
     },
   });
-
   // Update forms when settings change
   useEffect(() => {
     generalForm.reset(settings.general);
     emailForm.reset(settings.email);
   }, [settings]);
-
-  console.log("reload");
 
   // Submit handlers
   const handleSubmit = async () => {
@@ -110,7 +112,7 @@ export default function AdminSettings() {
       general: generalForm.getValues(),
       email: emailForm.getValues(),
     };
-    console.log("submit settings :>> ", updatedSettings);
+    // console.log("submit settings :>> ", updatedSettings);
     await apiUpdateConfigSystem(updatedSettings);
 
     setSettings(updatedSettings);

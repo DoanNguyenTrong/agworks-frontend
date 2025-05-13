@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import MainLayout from "@/components/MainLayout";
 import {
   Card,
@@ -29,24 +29,14 @@ import {
   FileText,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { apiGetConfigSystem } from "@/api/configSystem";
-import { get } from "lodash";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function CustomerHelp() {
   const [message, setMessage] = useState("");
   const [subject, setSubject] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [general, setGeneral] = useState<any>({});
-
-  const getgeneral = async () => {
-    const res = await apiGetConfigSystem();
-    setGeneral(get(res, "data.metaData.general", {}));
-  };
-
-  useEffect(() => {
-    getgeneral();
-  }, []);
+  const { general } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -248,7 +238,7 @@ export default function CustomerHelp() {
                         <div>
                           <p className="font-medium">Email Support</p>
                           <p className="text-sm text-muted-foreground">
-                            {general.supportEmail}
+                            {general?.supportEmail || ""}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             Response within 24 hours

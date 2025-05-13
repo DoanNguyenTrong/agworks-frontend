@@ -1,5 +1,4 @@
 import { BASE_URL } from "@/api/config";
-import { apiGetConfigSystem } from "@/api/configSystem";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -44,23 +43,15 @@ export default function MainLayout({
   children,
   pageTitle = "AgWorks",
 }: MainLayoutProps) {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, general } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const [general, setGeneral] = useState<any>({});
-
-  const getgeneral = async () => {
-    const res = await apiGetConfigSystem();
-    setGeneral(get(res, "data.metaData.general", {}));
-  };
 
   useEffect(() => {
     if (!currentUser) {
       navigate("/login");
     }
-    getgeneral();
-    console.log("layout reload");
   }, [currentUser, navigate]);
 
   if (!currentUser) return null;
@@ -149,7 +140,7 @@ export default function MainLayout({
           <SidebarHeader className="flex h-16 items-center px-4 border-b">
             <div className="flex items-center">
               <span className="text-xl font-bold text-primary">
-                {general.systemName}
+                {general?.systemName || "AgWorks"}
               </span>
             </div>
           </SidebarHeader>

@@ -23,22 +23,14 @@ import { ArrowRight, Mail, MessageCircle, Phone, Search } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { apiGetConfigSystem } from "@/api/configSystem";
 import { get } from "lodash";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function SiteManagerHelp() {
   const [message, setMessage] = useState("");
   const [subject, setSubject] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [general, setGeneral] = useState<any>({});
-
-  const getgeneral = async () => {
-    const res = await apiGetConfigSystem();
-    setGeneral(get(res, "data.metaData.general", {}));
-  };
-
-  useEffect(() => {
-    getgeneral();
-  }, []);
+  const { general } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -212,7 +204,7 @@ export default function SiteManagerHelp() {
                       <div>
                         <p className="font-medium">Email Support</p>
                         <p className="text-sm text-muted-foreground">
-                          {general.supportEmail}
+                          {general?.supportEmail || ""}
                         </p>
                         <p className="text-sm text-muted-foreground">
                           Response within 24 hours
