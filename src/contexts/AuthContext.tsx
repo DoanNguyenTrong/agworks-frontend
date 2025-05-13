@@ -159,7 +159,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { data } = await apiGetAccDetail({ id });
       const { data: _data } = await apiGetConfigSystem();
-      console.log("_data", _data);
       localStorage.setItem(
         AUTH_STORAGE_KEY,
         JSON.stringify(get(data, "metaData"))
