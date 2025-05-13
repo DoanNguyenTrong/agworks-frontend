@@ -43,7 +43,7 @@ export default function MainLayout({
   children,
   pageTitle = "AgWorks",
 }: MainLayoutProps) {
-  const { currentUser, logout, general } = useAuth();
+  const { currentUser, logout, configSystem } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -122,16 +122,17 @@ export default function MainLayout({
     logout();
     navigate("/login");
   };
+  console.log("currentUser :>> ", currentUser);
 
-  const renderUrlLogoOrAvatar = () => {
-    let url = "";
-    if (get(currentUser, "role") === MAP_ROLE.CUSTOIMER) {
-      url = get(currentUser, "logo");
-    } else {
-      url = get(currentUser, "profileImage");
-    }
-    return `${BASE_URL}${url}`;
-  };
+  // const renderUrlLogoOrAvatar = () => {
+  //   let url = "";
+  //   if (get(currentUser, "role") === MAP_ROLE.CUSTOIMER) {
+  //     url = get(currentUser, "logo");
+  //   } else {
+  //     url = get(currentUser, "profileImage");
+  //   }
+  //   return `${BASE_URL}${url}`;
+  // };
 
   return (
     <SidebarProvider>
@@ -140,7 +141,7 @@ export default function MainLayout({
           <SidebarHeader className="flex h-16 items-center px-4 border-b">
             <div className="flex items-center">
               <span className="text-xl font-bold text-primary">
-                {general?.systemName || "AgWorks"}
+                {configSystem?.general?.systemName || "AgWorks"}
               </span>
             </div>
           </SidebarHeader>
@@ -149,7 +150,13 @@ export default function MainLayout({
               <div className="px-4 py-2">
                 <div className="flex items-center gap-4 mb-6 mt-2">
                   <Avatar>
-                    <AvatarImage src={renderUrlLogoOrAvatar()} />
+                    <AvatarImage
+                      src={
+                        currentUser?.role === MAP_ROLE.ADMIN
+                          ? `${BASE_URL}${configSystem?.general?.logoUrl}`
+                          : `${BASE_URL}${currentUser?.logo}`
+                      }
+                    />
                     <AvatarFallback className="bg-primary/10 text-primary">
                       {currentUser?.name.charAt(0)}
                     </AvatarFallback>

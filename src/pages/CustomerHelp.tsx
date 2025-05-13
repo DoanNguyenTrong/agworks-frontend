@@ -36,7 +36,7 @@ export default function CustomerHelp() {
   const [subject, setSubject] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const { general } = useAuth();
+  const { configSystem } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -238,7 +238,7 @@ export default function CustomerHelp() {
                         <div>
                           <p className="font-medium">Email Support</p>
                           <p className="text-sm text-muted-foreground">
-                            {general?.supportEmail || ""}
+                            {configSystem?.email?.supportEmail || ""}
                           </p>
                           <p className="text-sm text-muted-foreground">
                             Response within 24 hours

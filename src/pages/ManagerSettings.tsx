@@ -27,9 +27,7 @@ export default function ManagerSettings() {
   const [name, setName] = useState(currentUser?.name || "");
   const [email, setEmail] = useState(currentUser?.email || "");
   const [phone, setPhone] = useState(currentUser?.phone || "");
-  const [profileImage, setProfileImage] = useState(
-    currentUser?.profileImage || ""
-  );
+  const [profileImage, setProfileImage] = useState(currentUser?.logo || "");
 
   // Notification settings
   const [newWorkOrderNotif, setNewWorkOrderNotif] = useState(true);
@@ -52,9 +50,9 @@ export default function ManagerSettings() {
         name: name,
         email: email,
         phone: phone,
-        profileImage: profileImage,
+        logo: profileImage,
       };
-      console.log("body :>> ", body);
+      // console.log("body :>> ", body);
       // In a real app, this would make an API call
       const { data } = await apiUpdateAcc(body);
       if (data?.metaData?._id) {

@@ -33,6 +33,7 @@ import {
   apiCreateConfigSystem,
 } from "@/api/configSystem";
 import { get, set } from "lodash";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Form schemas
 const generalSettingsSchema = z.object({
@@ -55,6 +56,7 @@ const emailSettingsSchema = z.object({
 export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState("general");
   const [settings, setSettings] = useState<any>({});
+  const { updateInfoUser, currentUser } = useAuth();
 
   const getAdminConfig = async () => {
     try {
@@ -75,6 +77,37 @@ export default function AdminSettings() {
   // }, []);
 
   // General settings form
+
+  const changeProfileImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ["image/jpeg", "image/png", "image/gif"];
+    if (!validTypes.includes(file.type)) {
+      alert("Only JPG, PNG, or GIF images are allowed.");
+      return;
+    }
+
+    const maxSizeInBytes = 1 * 1024 * 1024;
+    if (file.size > maxSizeInBytes) {
+      alert("Image size must be less than 1MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      setSettings((prev: any) => ({
+        ...prev,
+        general: {
+          ...prev.general,
+          logoUrl: base64String,
+        },
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const generalForm = useForm<z.infer<typeof generalSettingsSchema>>({
     resolver: zodResolver(generalSettingsSchema),
     defaultValues: settings.general || {
@@ -105,8 +138,8 @@ export default function AdminSettings() {
   }, [settings]);
 
   // Submit handlers
+  console.log("setting::", settings);
   const handleSubmit = async () => {
-    // console.log("setting::", settings);
     const updatedSettings = {
       ...settings,
       general: generalForm.getValues(),
@@ -114,8 +147,8 @@ export default function AdminSettings() {
     };
     // console.log("submit settings :>> ", updatedSettings);
     await apiUpdateConfigSystem(updatedSettings);
-
     setSettings(updatedSettings);
+    updateInfoUser(currentUser?._id);
 
     toast({
       title: "Settings saved",
@@ -196,7 +229,13 @@ export default function AdminSettings() {
                       <FormItem>
                         <FormLabel>Logo URL</FormLabel>
                         <FormControl>
-                          <Input {...field} />
+                          <Input
+                            id="profile-image"
+                            type="file"
+                            className="mt-1"
+                            accept="image/*"
+                            onChange={(e) => changeProfileImage(e)}
+                          />
                         </FormControl>
                         <FormDescription>
                           URL to your system logo image.

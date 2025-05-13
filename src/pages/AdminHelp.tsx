@@ -17,20 +17,12 @@ import { toast } from "@/hooks/use-toast";
 import { adminSettings } from "@/lib/data";
 import { apiGetConfigSystem } from "@/api/configSystem";
 import { get } from "lodash";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function AdminHelp() {
   const [activeTab, setActiveTab] = React.useState("faq");
   const [searchTerm, setSearchTerm] = React.useState("");
-  const [general, setGeneral] = useState<any>({});
-
-  const getgeneral = async () => {
-    const res = await apiGetConfigSystem();
-    setGeneral(get(res, "data.metaData.general", {}));
-  };
-
-  useEffect(() => {
-    getgeneral();
-  }, []);
+  const { configSystem } = useAuth();
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -300,7 +292,7 @@ export default function AdminHelp() {
                       </h3>
                       <p className="text-sm flex items-center text-muted-foreground">
                         <Mail className="h-4 w-4 mr-2" />
-                        {general.supportEmail}
+                        {configSystem?.general?.supportEmail}
                       </p>
                     </div>
 

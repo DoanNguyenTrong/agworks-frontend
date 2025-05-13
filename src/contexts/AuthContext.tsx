@@ -8,15 +8,14 @@ import { get } from "lodash";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-interface General {
-  systemName: string;
-  supportEmail: string;
-  logoUrl: string;
-  allowPublicRegistration: boolean;
-  allowWorkerSelfRegistration: boolean;
+interface ConfigSystem {
+  general: any;
+  email?: any;
+  sms?: any;
+  payment?: any;
 }
 interface AuthContextType {
-  general: General;
+  configSystem: ConfigSystem;
   currentUser: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -39,19 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [general, setGeneral] = useState<any>({});
-
-  useEffect(() => {
-    const getGeneral = async () => {
-      try {
-        const res = await apiGetConfigSystem();
-        setGeneral(get(res, "data.metaData.general", {}));
-      } catch (error) {
-        console.log("error :>> ", error);
-      }
-    };
-    getGeneral();
-  }, []);
+  const [configSystem, setConfigSystem] = useState<any>({});
 
   const redirectBasedOnRole = (role: string) => {
     switch (role) {
@@ -171,10 +158,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateInfoUser = async (id: string) => {
     try {
       const { data } = await apiGetAccDetail({ id });
+      const { data: _data } = await apiGetConfigSystem();
+      console.log("_data", _data);
       localStorage.setItem(
         AUTH_STORAGE_KEY,
         JSON.stringify(get(data, "metaData"))
       );
+      setConfigSystem(get(_data, "metaData"));
       setCurrentUser(get(data, "metaData"));
     } catch (error) {
       console.log("error :>> ", error);
@@ -208,7 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signup,
         logout,
         updateInfoUser,
-        general,
+        configSystem,
       }}
     >
       {children}
