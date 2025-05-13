@@ -263,13 +263,13 @@ export default function CustomerDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
         {customerBlocks.length > 0 ? (
           customerBlocks.slice(0, 3).map((block) => {
-            const blockSite = get(block, "siteId", null);
+            const siteManager = get(block, "siteId", null);
             return (
               <Card key={block._id}>
                 <CardHeader>
                   <CardTitle>{block.name}</CardTitle>
                   <CardDescription>
-                    {blockSite ? blockSite?.name : "Unknown Site"}
+                    {siteManager ? siteManager?.name : "Unknown Site"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -346,8 +346,85 @@ export default function CustomerDashboard() {
           Add Site Manager
         </Button>
       </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        {managers.length > 0 ? (
+          managers.slice(0, 3).map((manager) => {
+            const siteManager = get(manager, "siteId", null);
+            return (
+              <Card key={manager._id}>
+                <CardHeader>
+                  <CardTitle>{manager.name}</CardTitle>
+                  <CardDescription>
+                    {siteManager ? siteManager?.name : "Unknown Site"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 mb-4">
+                    {manager.acres && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          Acres:
+                        </span>
+                        <span className="text-sm font-medium">
+                          {manager.acres}
+                        </span>
+                      </div>
+                    )}
+                    {manager.rows && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          Rows:
+                        </span>
+                        <span className="text-sm font-medium">
+                          {manager.rows}
+                        </span>
+                      </div>
+                    )}
+                    {manager.vines && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          Vines:
+                        </span>
+                        <span className="text-sm font-medium">
+                          {manager.vines}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <Button variant="outline" className="w-full" asChild>
+                    <Link to={`/customer/account/${manager._id}`}>
+                      View Details
+                    </Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })
+        ) : (
+          <div className="col-span-full text-center py-12 bg-muted/30 rounded-lg border border-dashed">
+            <Grape className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium mb-2">No Blocks Added Yet</h3>
+            <p className="text-muted-foreground mb-4">
+              Define growing blocks within your vineyard sites
+            </p>
+            <Button asChild>
+              <Link to="/customer/blocks/new">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add New Block
+              </Link>
+            </Button>
+          </div>
+        )}
+        {managers.length > 3 && (
+          <div className="flex justify-center col-span-full mt-2">
+            <Button variant="outline" asChild>
+              <Link to="/customer/blocks">View All Managers</Link>
+            </Button>
+          </div>
+        )}
+      </div>
 
-      <div className="mb-12">
+      {/* <div className="mb-12">
         <Card>
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between">
@@ -369,7 +446,7 @@ export default function CustomerDashboard() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
 
       {/* Recent Activity */}
       <h2 className="text-xl font-semibold mb-6">Recent Work Orders</h2>
