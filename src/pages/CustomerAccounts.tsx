@@ -41,6 +41,7 @@ import { MAP_ROLE } from "@/lib/utils/role";
 import { filter, get } from "lodash";
 import {
   Edit,
+  Eye,
   KeyRound,
   Mail,
   Phone,
@@ -197,6 +198,16 @@ export default function CustomerAccounts() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/customer/managers/${manager._id}`);
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"

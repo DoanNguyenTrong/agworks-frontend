@@ -1,5 +1,7 @@
 import { apiGetAccDetail } from "@/api/account";
+import { apiGetAllWorkerTask } from "@/api/workerTask";
 import MainLayout from "@/components/MainLayout";
+import PreviewImageDialog from "@/components/PreviewImageDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,8 +23,8 @@ import {
 } from "@/components/ui/table";
 import WorkerPerformance from "@/components/WorkerPerformance";
 import { useToast } from "@/hooks/use-toast";
-import { workerTasks } from "@/lib/data";
-import { User } from "@/lib/types";
+import { StatusType } from "@/lib/utils/constant";
+import dayjs from "dayjs";
 import { get } from "lodash";
 import { Calendar, ChevronLeft, Edit, Mail, Phone } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -30,12 +32,13 @@ import { Link, useParams } from "react-router-dom";
 
 export default function AdminWorkerView() {
   const { id } = useParams<{ id: string }>();
-  const [worker, setWorker] = useState<User | null>(null);
+  const [worker, setWorker] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [completedTasks, setCompletedTasks] = useState<any[]>([]);
   const { toast } = useToast();
 
-  const loadWorker = async () => {
+  const loadWorker = async (id: string) => {
     try {
       setIsLoading(true);
       // Find worker by ID from the local data
@@ -43,8 +46,10 @@ export default function AdminWorkerView() {
       setWorker(get(data, "metaData", {}));
 
       // Get completed tasks for this worker
-      const tasks = workerTasks.filter((task) => task.workerId === id) || [];
-      setCompletedTasks(tasks);
+      const { data: _data } = await apiGetAllWorkerTask({
+        filter: { status: StatusType.APPROVED, workerId: id },
+      });
+      setCompletedTasks(get(_data, "metaData", []));
     } catch (error: any) {
       console.error("Error loading worker:", error);
       toast({
@@ -57,8 +62,13 @@ export default function AdminWorkerView() {
     }
   };
 
+  console.log("id", id);
+  console.log("completedTasks", completedTasks);
+
   useEffect(() => {
-    loadWorker();
+    if (id) {
+      loadWorker(id);
+    }
   }, [id]);
 
   if (isLoading) {
@@ -156,21 +166,21 @@ export default function AdminWorkerView() {
         </Card>
 
         {/* Performance Card */}
-        <Card className="lg:col-span-2">
+        {/* <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Performance Overview</CardTitle>
             <CardDescription>
               Task completion metrics and efficiency data
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-6">
-            {/* Pass id to WorkerPerformance */}
-            <WorkerPerformance image={[]} tasks={[]} worker={[]} />
+          <CardContent className="p-6"> */}
+        {/* Pass id to WorkerPerformance */}
+        {/* <WorkerPerformance image={[]} tasks={[]} worker={[]} />
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Recent Tasks Card */}
-        <Card className="lg:col-span-3">
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Recent Tasks</CardTitle>
             <CardDescription>
@@ -183,7 +193,7 @@ export default function AdminWorkerView() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Task ID</TableHead>
-                    <TableHead>Order ID</TableHead>
+                    {/* <TableHead>Order ID</TableHead> */}
                     <TableHead>Completed</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Verification</TableHead>
@@ -191,28 +201,32 @@ export default function AdminWorkerView() {
                 </TableHeader>
                 <TableBody>
                   {completedTasks.map((task) => (
-                    <TableRow key={task.id}>
-                      <TableCell className="font-medium">{task.id}</TableCell>
-                      <TableCell>{task.orderId}</TableCell>
+                    <TableRow key={task?._id}>
+                      <TableCell className="font-medium">{task?._id}</TableCell>
+                      {/* <TableCell>{task?.orderId?._id}</TableCell> */}
                       <TableCell>
-                        {new Date(task.completedAt).toLocaleDateString()}
+                        {dayjs(task?.updatedAt).format("YYYY-MM-DD HH:mm")}
                       </TableCell>
                       <TableCell>
                         <Badge
                           variant={
-                            task.status === "approved"
+                            task?.status === "approved"
                               ? "default"
-                              : task.status === "rejected"
+                              : task?.status === "rejected"
                               ? "destructive"
                               : "outline"
                           }
                         >
-                          {task.status.charAt(0).toUpperCase() +
-                            task.status.slice(1)}
+                          {task?.status?.charAt(0).toUpperCase() +
+                            task?.status?.slice(1)}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button variant="outline" size="sm">
+                        <Button
+                          onClick={() => setPreviewImage(task?._id)}
+                          variant="outline"
+                          size="sm"
+                        >
                           View Photos
                         </Button>
                       </TableCell>
@@ -228,6 +242,10 @@ export default function AdminWorkerView() {
           </CardContent>
         </Card>
       </div>
+      <PreviewImageDialog
+        id={previewImage}
+        _onclose={() => setPreviewImage(null)}
+      />
     </MainLayout>
   );
 }

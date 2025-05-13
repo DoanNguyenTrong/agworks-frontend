@@ -122,7 +122,6 @@ export default function MainLayout({
     logout();
     navigate("/login");
   };
-  console.log("currentUser :>> ", currentUser);
 
   // const renderUrlLogoOrAvatar = () => {
   //   let url = "";

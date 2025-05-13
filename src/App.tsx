@@ -62,6 +62,7 @@ import SiteManagerHelp from "@/pages/SiteManagerHelp";
 import { MAP_ROLE } from "./lib/utils/role";
 import EditWorkOrder from "./pages/EidtWorkOrder";
 import HelpPage from "./pages/HelpPage";
+import CustomerManagerView from "./pages/CustomerManagerView";
 
 function App() {
   return (
@@ -108,6 +109,7 @@ function App() {
             />
             <Route path="dashboard" element={<CustomerDashboard />} />
             <Route path="accounts" element={<CustomerAccounts />} />
+            <Route path="managers/:id" element={<CustomerManagerView />} />
             <Route path="managers/edit/:id" element={<CustomerManagerEdit />} />
             <Route path="settings" element={<CustomerSettings />} />
             <Route path="help" element={<CustomerHelp />} />

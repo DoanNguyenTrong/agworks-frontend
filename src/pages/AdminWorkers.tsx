@@ -1,4 +1,5 @@
 import { apiCreateAcc, apiDeleteAcc, apiGetAccList } from "@/api/account";
+import { apiGetAllWorkerTask } from "@/api/workerTask";
 import AccountResetDialog from "@/components/AccountResetDialog";
 import MainLayout from "@/components/MainLayout";
 import {
@@ -44,6 +45,7 @@ import WorkerForm, { WorkerFormData } from "@/components/WorkerForm";
 import { toast } from "@/hooks/use-toast";
 import { users, workerTasks } from "@/lib/data";
 import { User } from "@/lib/types";
+import { StatusType } from "@/lib/utils/constant";
 import { get } from "lodash";
 import { Edit, Eye, KeyRound, PlusCircle, Search, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -61,6 +63,7 @@ export default function AdminWorkers() {
   );
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [completedTasks, setCompletedTasks] = useState<any[]>([]);
 
   // Filter workers based on search term and status
   const filteredWorkers = workersList.filter((worker) => {
@@ -86,15 +89,28 @@ export default function AdminWorkers() {
     }
   };
 
+  const getCompletedTask = async () => {
+    try {
+      const { data } = await apiGetAllWorkerTask({
+        filter: { status: StatusType.APPROVED },
+      });
+      setCompletedTasks(get(data, "metaData", []));
+    } catch (error) {
+      console.error("Error fetching worker tasks:", error);
+    }
+  };
+
   useEffect(() => {
     getList();
+    getCompletedTask();
   }, []);
 
+  console.log("completedTasks", completedTasks);
+
   // Calculate completed tasks for each worker
-  const calculateCompletedTasks = (workerId: string) => {
-    return workerTasks.filter(
-      (task) => task.workerId === workerId && task.status === "approved"
-    ).length;
+  const calculateCompletedTasks = (workerId: string = "") => {
+    return completedTasks.filter((task) => task?.workerId?._id === workerId)
+      .length;
   };
 
   // Handle adding a new worker
@@ -246,7 +262,7 @@ export default function AdminWorkers() {
                     </TableCell>
                     <TableCell>{worker.phone || "—"}</TableCell>
                     <TableCell>
-                      {calculateCompletedTasks(worker["_id"])} tasks
+                      {calculateCompletedTasks(worker?._id)} tasks
                     </TableCell>
                     <TableCell>
                       <Badge
