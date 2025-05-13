@@ -27,11 +27,6 @@ export default function CreateWorkOrder() {
       navigate("/manager/orders");
     } catch (error) {
       console.error("Error creating work order:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create work order. Please try again.",
-        variant: "destructive",
-      });
     } finally {
       setIsSubmitting(false);
     }

@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { apiGetAccDetail } from "@/api/account";
 import MainLayout from "@/components/MainLayout";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,9 +11,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ChevronLeft, Mail, Phone, Calendar, Edit } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -25,9 +23,10 @@ import WorkerPerformance from "@/components/WorkerPerformance";
 import { useToast } from "@/hooks/use-toast";
 import { workerTasks } from "@/lib/data";
 import { User } from "@/lib/types";
-import { findUserById } from "@/lib/utils/dataManagement";
-import { apiGetAccDetail } from "@/api/account";
 import { get } from "lodash";
+import { Calendar, ChevronLeft, Edit, Mail, Phone } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 
 export default function AdminWorkerView() {
   const { id } = useParams<{ id: string }>();
@@ -36,40 +35,31 @@ export default function AdminWorkerView() {
   const [completedTasks, setCompletedTasks] = useState<any[]>([]);
   const { toast } = useToast();
 
+  const loadWorker = async () => {
+    try {
+      setIsLoading(true);
+      // Find worker by ID from the local data
+      const { data } = await apiGetAccDetail({ id: id });
+      setWorker(get(data, "metaData", {}));
+
+      // Get completed tasks for this worker
+      const tasks = workerTasks.filter((task) => task.workerId === id) || [];
+      setCompletedTasks(tasks);
+    } catch (error: any) {
+      console.error("Error loading worker:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load worker details",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadWorker = async () => {
-      try {
-        setIsLoading(true);
-
-        if (!id) {
-          throw new Error("Worker ID is required");
-        }
-
-        // Find worker by ID from the local data
-        const { data } = await apiGetAccDetail({ id: id });
-        setWorker(get(data, "metaData", {}));
-
-        // if (!workerData || workerData.role !== 'worker') {
-        //   throw new Error("Worker not found");
-        // }
-
-        // Get completed tasks for this worker
-        const tasks = workerTasks.filter((task) => task.workerId === id) || [];
-        setCompletedTasks(tasks);
-      } catch (error: any) {
-        console.error("Error loading worker:", error);
-        toast({
-          title: "Error",
-          description: error.message || "Failed to load worker details",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadWorker();
-  }, [id, toast]);
+  }, [id]);
 
   if (isLoading) {
     return (
@@ -175,7 +165,7 @@ export default function AdminWorkerView() {
           </CardHeader>
           <CardContent className="p-6">
             {/* Pass id to WorkerPerformance */}
-            <WorkerPerformance id={worker["_id"]} />
+            <WorkerPerformance image={[]} tasks={[]} worker={[]} />
           </CardContent>
         </Card>
 
@@ -188,7 +178,7 @@ export default function AdminWorkerView() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {Array.isArray(completedTasks) && completedTasks.length > 0 ? (
+            {Array.isArray(completedTasks) && completedTasks?.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow>

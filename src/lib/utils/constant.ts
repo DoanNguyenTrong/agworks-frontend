@@ -42,6 +42,10 @@ export enum StatusType {
   APPROVED = 'approved',
   PENDING = 'pending',
   REJECTED = 'rejected',
+  // =============================
+  PRUNING = "pruning",
+  SHOOT_THINNING = "shoot_thinning",
+  OTHER = "other",
 }
 
 const URL_DONT_SHOW_MENU = ['login', "404"]

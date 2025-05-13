@@ -19,6 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
+import { RenderStatusWO } from "@/lib/helper";
 import { WorkOrder } from "@/lib/types";
 import { MAP_ROLE } from "@/lib/utils/role";
 import dayjs from "dayjs";
@@ -160,13 +161,14 @@ export default function WorkOrderManagement() {
                         handleOrderClick(order._id)
                       }
                     >
-                      <TableCell className="font-medium">{order.ID}</TableCell>
+                      <TableCell className="font-medium">
+                        {get(order, "_id")}
+                      </TableCell>
                       <TableCell>
                         {get(order, "blockId.name", "Unknown Block")}
                       </TableCell>
                       <TableCell>
-                        {order.workType.charAt(0).toUpperCase() +
-                          order.workType.slice(1)}
+                        {RenderStatusWO(get(order, "workType"))}
                       </TableCell>
                       <TableCell>
                         {dayjs(order.startDate).format("YYYY/MM/DD HH:mm")} -{" "}

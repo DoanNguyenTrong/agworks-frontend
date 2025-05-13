@@ -5,6 +5,7 @@ import MainLayout from "@/components/MainLayout";
 import WorkOrderTabs from "@/components/WorkOrderTabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { RenderStatusWO } from "@/lib/helper";
 import { WorkOrder, WorkerTask } from "@/lib/types";
 import { StatusType } from "@/lib/utils/constant";
 import { get, groupBy, map, merge } from "lodash";
@@ -17,7 +18,6 @@ export default function WorkOrderDetails() {
   const navigate = useNavigate();
   const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
   const [tasks, setTasks] = useState<WorkerTask[]>([]);
-  const [payments, setPayments] = useState<any[]>([]);
   const [worker, setWorker] = useState<any[]>([]);
   const [image, setImage] = useState<any[]>([]);
 
@@ -133,9 +133,8 @@ export default function WorkOrderDetails() {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-semibold">
-                {workOrder.workType.charAt(0).toUpperCase() +
-                  workOrder.workType.slice(1)}{" "}
-                - {workOrder.blockId["ID"]}
+                {RenderStatusWO(get(workOrder, "workType"))} -{" "}
+                {workOrder.blockId["ID"]}
               </h2>
               {getStatusBadge(workOrder.status)}
             </div>

@@ -153,7 +153,7 @@ export default function Login() {
           </div>
         </div>
 
-        <div className="bg-card border rounded-lg shadow-sm p-6 mt-6">
+        {/* <div className="bg-card border rounded-lg shadow-sm p-6 mt-6">
           <h3 className="font-medium mb-3">Demo Accounts</h3>
           <div className="space-y-3">
             {demoAccounts.map((account, index) => (
@@ -172,7 +172,7 @@ export default function Login() {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );

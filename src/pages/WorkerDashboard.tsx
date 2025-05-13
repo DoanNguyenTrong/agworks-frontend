@@ -19,7 +19,6 @@ import {
   Clock,
   DollarSign,
   MapPin,
-  UserCircle,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -142,7 +141,7 @@ export default function WorkerDashboard() {
 
   return (
     <MainLayout pageTitle="Worker Dashboard">
-      <div className="flex items-center mb-8">
+      {/* <div className="flex items-center mb-8">
         <div className="mr-4">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
             {currentUser?.profileImage ? (
@@ -160,7 +159,7 @@ export default function WorkerDashboard() {
           <h2 className="text-2xl font-bold">{currentUser?.name}</h2>
           <p className="text-muted-foreground">{currentUser?.email}</p>
         </div>
-      </div>
+      </div> */}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>

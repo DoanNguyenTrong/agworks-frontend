@@ -32,14 +32,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import dayjs from "dayjs";
 import { get, isEmpty } from "lodash";
-import { CalendarIcon, Clock } from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 // Work order schema
 const workOrderSchema = z.object({
-  ID: z.string().min(1, "Name is required"),
   siteId: z.string().min(1, "Site is required"),
   blockId: z.string().min(1, "Block is required"),
   workDate: z.date({
@@ -99,7 +98,7 @@ export default function WorkOrderForm({
       workDate: new Date(),
       startTime: "08:00",
       endTime: "17:00",
-      workType: "pruning",
+      workType: undefined,
       neededWorkers: 1,
       payRate: 0.5,
       acres: undefined,
@@ -255,9 +254,9 @@ export default function WorkOrderForm({
         onSubmit={form.handleSubmit(handleFormSubmit)}
         className="space-y-8"
       >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Site Selection */}
-          <FormField
+          {/* <FormField
             control={form.control}
             name="ID"
             render={({ field }) => (
@@ -269,7 +268,7 @@ export default function WorkOrderForm({
                 <FormMessage />
               </FormItem>
             )}
-          />
+          /> */}
 
           {/* Site Selection */}
           <FormField
@@ -393,9 +392,9 @@ export default function WorkOrderForm({
               <FormItem>
                 <FormLabel>Start Time*</FormLabel>
                 <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  {/* <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /> */}
                   <FormControl>
-                    <Input {...field} type="time" className="pl-10" />
+                    <Input {...field} type="time" />
                   </FormControl>
                 </div>
                 <FormDescription>
@@ -414,9 +413,9 @@ export default function WorkOrderForm({
               <FormItem>
                 <FormLabel>End Time*</FormLabel>
                 <div className="relative">
-                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  {/* <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /> */}
                   <FormControl>
-                    <Input {...field} type="time" className="pl-10" />
+                    <Input {...field} type="time" />
                   </FormControl>
                 </div>
                 <FormDescription>
