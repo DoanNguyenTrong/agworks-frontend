@@ -105,8 +105,6 @@ export default function AdminWorkers() {
     getCompletedTask();
   }, []);
 
-  console.log("completedTasks", completedTasks);
-
   // Calculate completed tasks for each worker
   const calculateCompletedTasks = (workerId: string = "") => {
     return completedTasks.filter((task) => task?.workerId?._id === workerId)

@@ -153,7 +153,7 @@ export default function CustomerManagerView() {
               <Avatar className="h-24 w-24 mb-4">
                 <AvatarImage src={`${BASE_URL}${manager?.logo}`} />
                 <AvatarFallback className="text-2xl">
-                  {manager.name?.charAt(0) || "M"}
+                  {manager?.name?.charAt(0) || "M"}
                 </AvatarFallback>
               </Avatar>
               <h2 className="text-xl font-bold">{manager?.name || "—"}</h2>
@@ -168,28 +168,28 @@ export default function CustomerManagerView() {
                   <p className="text-sm font-medium text-muted-foreground">
                     Company Name
                   </p>
-                  <p>{manager.companyName || "—"}</p>
+                  <p>{manager?.companyName || "—"}</p>
                 </div>
               )}
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
                   Phone
                 </p>
-                <p>{manager.phone || "—"}</p>
+                <p>{manager?.phone || "—"}</p>
               </div>
               {manager?.address && (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">
                     Address
                   </p>
-                  <p>{manager.address || "—"}</p>
+                  <p>{manager?.address || "—"}</p>
                 </div>
               )}
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
                   Created
                 </p>
-                <p>{new Date(manager.createdAt).toLocaleDateString()}</p>
+                <p>{new Date(manager?.createdAt).toLocaleDateString()}</p>
               </div>
             </div>
 
@@ -218,8 +218,8 @@ export default function CustomerManagerView() {
                     <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
                     <AlertDialogDescription>
                       Are you sure you want to delete{" "}
-                      {manager.companyName || manager.name}? This action cannot
-                      be undone.
+                      {manager?.companyName || manager?.name}? This action
+                      cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -250,7 +250,7 @@ export default function CustomerManagerView() {
             </div>
           </CardHeader>
           <CardContent className="max-h-[460px] overflow-auto">
-            {managerSites.length > 0 ? (
+            {managerSites?.length > 0 ? (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -261,7 +261,7 @@ export default function CustomerManagerView() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {managerSites.map((site) => (
+                  {managerSites?.map((site) => (
                     <TableRow key={site?._id} className="cursor-pointer">
                       <TableCell>{site?.name}</TableCell>
                       <TableCell>{site?.address}</TableCell>
@@ -274,7 +274,7 @@ export default function CustomerManagerView() {
                             variant="outline"
                             size="icon"
                             onClick={() =>
-                              navigate(`/customer/sites/${site._id}`)
+                              navigate(`/customer/sites/${site?._id}`)
                             }
                           >
                             <Edit className="h-4 w-4" />
