@@ -70,25 +70,6 @@ export default function CustomerDashboard() {
     getDataBlocks();
     getAllManagers();
     getDataSite();
-    // const getDataManagerSite = async () => {
-    //   try {
-    //     const { data } = await apiGetAllAccOrganization();
-    //     // console.log("data :>> ", data);
-    //     setManagers(get(data, "metaData"));
-    //   } catch (error) {
-    //     console.log("error :>> ", error);
-    //   }
-    // };
-
-    // getDataManagerSite();
-
-    // Get active work orders for these sites
-    // const userOrders = workOrders.filter(
-    //   (order) =>
-    //     siteIds.includes(order.siteId) &&
-    //     ["published", "inProgress"].includes(order.status)
-    // );
-    // setworkOrders(userOrders);
   }, []);
 
   useEffect(() => {
@@ -134,7 +115,7 @@ export default function CustomerDashboard() {
             <CardTitle className="text-sm font-medium">Total Sites</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{customerSites.length}</div>
+            <div className="text-2xl font-bold">{customerSites?.length}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Across your vineyard operations
             </p>
@@ -145,7 +126,7 @@ export default function CustomerDashboard() {
             <CardTitle className="text-sm font-medium">Total Blocks</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{customerBlocks.length}</div>
+            <div className="text-2xl font-bold">{customerBlocks?.length}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Managed growing areas
             </p>
@@ -158,7 +139,7 @@ export default function CustomerDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{workOrders.length}</div>
+            <div className="text-2xl font-bold">{workOrders?.length}</div>
             <p className="text-xs text-muted-foreground mt-1">
               Currently in progress
             </p>
@@ -178,13 +159,13 @@ export default function CustomerDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-4">
-        {customerSites.length > 0 ? (
-          customerSites.slice(0, 3).map((site) => (
-            <Card key={site._id} className="overflow-hidden">
+        {customerSites?.length > 0 ? (
+          customerSites?.slice(0, 3).map((site) => (
+            <Card key={site?._id} className="overflow-hidden">
               <div className="h-1 bg-primary"></div>
               <CardHeader>
-                <CardTitle>{site.name}</CardTitle>
-                <CardDescription>{site.address}</CardDescription>
+                <CardTitle>{site?.name}</CardTitle>
+                <CardDescription>{site?.address}</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 mb-4">
@@ -194,8 +175,8 @@ export default function CustomerDashboard() {
                     </span>
                     <span className="text-sm font-medium">
                       {
-                        customerBlocks.filter(
-                          (block) => get(block, "siteId._id") === site._id
+                        customerBlocks?.filter(
+                          (block) => get(block, "siteId._id") === site?._id
                         ).length
                       }
                     </span>
@@ -206,17 +187,17 @@ export default function CustomerDashboard() {
                     </span>
                     <span className="text-sm font-medium">
                       {
-                        workOrders.filter(
+                        workOrders?.filter(
                           (order) =>
-                            order.siteId === site.id &&
-                            ["New", "InProgress"].includes(order.status)
+                            order?.siteId === site?.id &&
+                            ["New", "InProgress"].includes(order?.status)
                         ).length
                       }
                     </span>
                   </div>
                 </div>
                 <Button variant="outline" className="w-full" asChild>
-                  <Link to={`/customer/sites/${site._id}`}>View Details</Link>
+                  <Link to={`/customer/sites/${site?._id}`}>View Details</Link>
                 </Button>
               </CardContent>
             </Card>
@@ -238,14 +219,14 @@ export default function CustomerDashboard() {
         )}
       </div>
 
-      {customerSites.length > 3 && (
+      {customerSites?.length > 3 && (
         <div className="flex justify-center mb-12">
           <Button variant="outline" asChild>
             <Link to="/customer/sites">View All Sites</Link>
           </Button>
         </div>
       )}
-      {customerSites.length > 0 && customerSites.length <= 3 && (
+      {customerSites?.length > 0 && customerSites?.length <= 3 && (
         <div className="mb-12"></div>
       )}
 
@@ -261,52 +242,52 @@ export default function CustomerDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-        {customerBlocks.length > 0 ? (
-          customerBlocks.slice(0, 3).map((block) => {
+        {customerBlocks?.length > 0 ? (
+          customerBlocks?.slice(0, 3).map((block) => {
             const siteManager = get(block, "siteId", null);
             return (
-              <Card key={block._id}>
+              <Card key={block?._id}>
                 <CardHeader>
-                  <CardTitle>{block.name}</CardTitle>
+                  <CardTitle>{block?.name}</CardTitle>
                   <CardDescription>
                     {siteManager ? siteManager?.name : "Unknown Site"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 mb-4">
-                    {block.acres && (
+                    {block?.acres && (
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">
                           Acres:
                         </span>
                         <span className="text-sm font-medium">
-                          {block.acres}
+                          {block?.acres}
                         </span>
                       </div>
                     )}
-                    {block.rows && (
+                    {block?.rows && (
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">
                           Rows:
                         </span>
                         <span className="text-sm font-medium">
-                          {block.rows}
+                          {block?.rows}
                         </span>
                       </div>
                     )}
-                    {block.vines && (
+                    {block?.vines && (
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">
                           Vines:
                         </span>
                         <span className="text-sm font-medium">
-                          {block.vines}
+                          {block?.vines}
                         </span>
                       </div>
                     )}
                   </div>
                   <Button variant="outline" className="w-full" asChild>
-                    <Link to={`/customer/blocks/${block._id}`}>
+                    <Link to={`/customer/blocks/${block?._id}`}>
                       View Details
                     </Link>
                   </Button>
@@ -329,7 +310,7 @@ export default function CustomerDashboard() {
             </Button>
           </div>
         )}
-        {customerBlocks.length > 3 && (
+        {customerBlocks?.length > 3 && (
           <div className="flex justify-center col-span-full mt-2">
             <Button variant="outline" asChild>
               <Link to="/customer/blocks">View All Blocks</Link>
@@ -351,35 +332,35 @@ export default function CustomerDashboard() {
           managers.slice(0, 3).map((manager) => {
             const siteManager = get(manager, "siteId", null);
             return (
-              <Card key={manager._id}>
+              <Card key={manager?._id}>
                 <CardHeader>
-                  <CardTitle>{manager.name}</CardTitle>
+                  <CardTitle>{manager?.name}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 mb-4">
-                    {manager.email && (
+                    {manager?.email && (
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">
                           Email:
                         </span>
                         <span className="text-sm font-medium">
-                          {manager.email}
+                          {manager?.email}
                         </span>
                       </div>
                     )}
-                    {manager.phone && (
+                    {manager?.phone && (
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">
                           Phone:
                         </span>
                         <span className="text-sm font-medium">
-                          {manager.phone}
+                          {manager?.phone}
                         </span>
                       </div>
                     )}
                   </div>
                   <Button variant="outline" className="w-full" asChild>
-                    <Link to={`/customer/managers/${manager._id}`}>
+                    <Link to={`/customer/managers/${manager?._id}`}>
                       View Details
                     </Link>
                   </Button>
@@ -403,7 +384,7 @@ export default function CustomerDashboard() {
             </Button>
           </div>
         )}
-        {managers.length > 3 && (
+        {managers?.length > 3 && (
           <div className="flex justify-center col-span-full mt-2">
             <Button variant="outline" asChild>
               <Link to="/customer/accounts">View All Managers</Link>
@@ -415,34 +396,34 @@ export default function CustomerDashboard() {
       {/* Recent Activity */}
       <h2 className="text-xl font-semibold mb-6">Recent Work Orders</h2>
       <div className="space-y-4 max-h-[560px] overflow-y-auto">
-        {workOrders.length > 0 ? (
-          workOrders.map((order) => {
-            const orderBlock = customerBlocks.find(
-              (block) => block._id === order.blockId
+        {workOrders?.length > 0 ? (
+          workOrders?.map((order) => {
+            const orderBlock = customerBlocks?.find(
+              (block) => block?._id === order?.blockId
             );
-            const orderSite = customerSites.find(
-              (site) => site._id === order.siteId
+            const orderSite = customerSites?.find(
+              (site) => site?._id === order?.siteId
             );
             return (
-              <Card key={order._id} className="max-h-[120px] overflow-y-auto">
+              <Card key={order?._id} className="max-h-[120px] overflow-y-auto">
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row md:items-center justify-between mb-4">
                     <div>
                       <h3 className="text-lg font-semibold">
-                        {order.workType.charAt(0).toUpperCase() +
-                          order.workType.slice(1)}{" "}
+                        {order?.workType.charAt(0).toUpperCase() +
+                          order?.workType.slice(1)}{" "}
                         - {orderBlock?.name || "Unknown Block"}
                       </h3>
                       <p className="text-sm text-muted-foreground">
                         {orderSite?.name || "Unknown Site"}
                         <span> • </span>
-                        {format(new Date(order.startDate), "MMM d")} -{" "}
-                        {format(new Date(order.endDate), "MMM d")}
+                        {format(new Date(order?.startDate), "MMM d")} -{" "}
+                        {format(new Date(order?.endDate), "MMM d")}
                       </p>
                     </div>
 
                     <Button variant="outline" className="mt-2 md:mt-0">
-                      <Link to={`/customer/work-order/detail/${order._id}`}>
+                      <Link to={`/customer/work-order/detail/${order?._id}`}>
                         View Details
                       </Link>
                     </Button>
