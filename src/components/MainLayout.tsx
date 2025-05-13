@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { MAP_ROLE } from "@/lib/utils/role";
-import { get } from "lodash";
 import {
   Building,
   ClipboardList,
@@ -122,16 +121,6 @@ export default function MainLayout({
     logout();
     navigate("/login");
   };
-
-  // const renderUrlLogoOrAvatar = () => {
-  //   let url = "";
-  //   if (get(currentUser, "role") === MAP_ROLE.CUSTOIMER) {
-  //     url = get(currentUser, "logo");
-  //   } else {
-  //     url = get(currentUser, "profileImage");
-  //   }
-  //   return `${BASE_URL}${url}`;
-  // };
 
   return (
     <SidebarProvider>

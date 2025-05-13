@@ -1,4 +1,5 @@
 import { apiCreateAcc, apiDeleteAcc, apiGetAccList } from "@/api/account";
+import { apiGetListSite } from "@/api/site";
 import AccountResetDialog from "@/components/AccountResetDialog";
 import CustomerForm, { CustomerFormData } from "@/components/CustomerForm";
 import MainLayout from "@/components/MainLayout";
@@ -36,8 +37,8 @@ import {
 } from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { sites, users } from "@/lib/data";
 import { User } from "@/lib/types";
+import { MAP_ROLE } from "@/lib/utils/role";
 import { get } from "lodash";
 import { Edit, Eye, KeyRound, PlusCircle, Search, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -49,9 +50,8 @@ export default function AdminCustomers() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [customersList, setCustomersList] = useState<User[]>(
-    users.filter((user) => user.role === "Customer" || [])
-  );
+  const [customersList, setCustomersList] = useState<User[]>([]);
+  const [sites, setSites] = useState<any[]>([]);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
@@ -66,7 +66,9 @@ export default function AdminCustomers() {
 
   const getList = async () => {
     try {
-      const { data } = await apiGetAccList({ filter: { role: "Customer" } });
+      const { data } = await apiGetAccList({
+        filter: { role: MAP_ROLE.CUSTOIMER },
+      });
       // const data = response.metaData;
       setCustomersList(get(data, "metaData", []));
     } catch (error) {
@@ -74,20 +76,19 @@ export default function AdminCustomers() {
     }
   };
 
+  const getListSite = async () => {
+    try {
+      const { data } = await apiGetListSite({});
+      setSites(get(data, "metaData", []));
+    } catch (error) {
+      console.error("Error fetching customer list:", error);
+    }
+  };
+
   useEffect(() => {
+    getListSite();
     getList();
   }, []);
-
-  // Calculate site count for each customer
-  const customerSiteCounts = customersList.map((customer) => {
-    const siteCount = sites.filter(
-      (site) => site.customerId === customer["_id"]
-    ).length;
-    return {
-      customerId: customer["_id"],
-      siteCount,
-    };
-  });
 
   // Handle adding a new customer
   const handleAddCustomer = async (data: CustomerFormData) => {
@@ -131,7 +132,20 @@ export default function AdminCustomers() {
     try {
       setIsDeleting(true);
       await apiDeleteAcc({ _id: customerToDelete });
-      getList();
+      const { data } = await apiGetAccList({
+        filter: { organizationId: customerToDelete },
+      });
+
+      // remove site manager when customer created acc
+      const accManagerSite = get(data, "metaData", []).map((i) => i._id);
+      if (accManagerSite.length > 0) {
+        await Promise.all(
+          accManagerSite.map((idAcc: string) => apiDeleteAcc({ _id: idAcc }))
+        );
+      }
+
+      // get list acc cus
+      await getList();
 
       toast({
         title: "Customer deleted",
@@ -139,11 +153,6 @@ export default function AdminCustomers() {
       });
     } catch (error: any) {
       console.error("Error deleting customer:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete customer",
-        variant: "destructive",
-      });
     } finally {
       setIsDeleting(false);
       setCustomerToDelete(null);
@@ -227,9 +236,10 @@ export default function AdminCustomers() {
                     <TableCell>{customer.companyName || "—"}</TableCell>
                     <TableCell>{customer.phone || "—"}</TableCell>
                     <TableCell>
-                      {customerSiteCounts.find(
-                        (c) => c.customerId === customer["_id"]
-                      )?.siteCount || 0}{" "}
+                      {
+                        sites.filter((i) => i?.organizationId === customer._id)
+                          .length
+                      }{" "}
                       Sites
                     </TableCell>
                     <TableCell>

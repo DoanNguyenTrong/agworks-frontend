@@ -23,6 +23,7 @@ export interface User {
   profileImage?: string;
   customerId?: string;
   siteId?: string;
+  organizationId?: string;
 }
 
 // Site type
@@ -34,6 +35,7 @@ export interface Site {
   managerId?: string;
   userIds?: Array<User>;
   createdAt: string;
+  organizationId?: string;
 }
 
 // Block type
