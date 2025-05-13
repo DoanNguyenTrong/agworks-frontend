@@ -1,4 +1,5 @@
 import { apiGetAccDetail, apiLogin } from "@/api/account";
+import { apiGetConfigSystem } from "@/api/configSystem";
 import { useToast } from "@/hooks/use-toast";
 import { users } from "@/lib/data";
 import { User } from "@/lib/types";
@@ -7,7 +8,14 @@ import { get } from "lodash";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+interface ConfigSystem {
+  general: any;
+  email?: any;
+  sms?: any;
+  payment?: any;
+}
 interface AuthContextType {
+  configSystem: ConfigSystem;
   currentUser: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -30,6 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [configSystem, setConfigSystem] = useState<any>({});
 
   const redirectBasedOnRole = (role: string) => {
     switch (role) {
@@ -149,10 +158,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateInfoUser = async (id: string) => {
     try {
       const { data } = await apiGetAccDetail({ id });
+      const { data: _data } = await apiGetConfigSystem();
+      console.log("_data", _data);
       localStorage.setItem(
         AUTH_STORAGE_KEY,
         JSON.stringify(get(data, "metaData"))
       );
+      setConfigSystem(get(_data, "metaData"));
       setCurrentUser(get(data, "metaData"));
     } catch (error) {
       console.log("error :>> ", error);
@@ -179,7 +191,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ currentUser, isLoading, login, signup, logout, updateInfoUser }}
+      value={{
+        currentUser,
+        isLoading,
+        login,
+        signup,
+        logout,
+        updateInfoUser,
+        configSystem,
+      }}
     >
       {children}
     </AuthContext.Provider>

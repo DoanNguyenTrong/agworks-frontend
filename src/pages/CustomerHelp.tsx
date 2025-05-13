@@ -1,36 +1,57 @@
-
 import { useState } from "react";
 import MainLayout from "@/components/MainLayout";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { ArrowRight, Mail, MessageCircle, Phone, Search, HelpCircle, FileText } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  ArrowRight,
+  Mail,
+  MessageCircle,
+  Phone,
+  Search,
+  HelpCircle,
+  FileText,
+} from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function CustomerHelp() {
   const [message, setMessage] = useState("");
   const [subject, setSubject] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  
+  const { configSystem } = useAuth();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
       // In a production app, you would send the message to your support system
       // For now, just simulate a success
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       toast({
         title: "Message sent",
         description: "We'll get back to you as soon as possible.",
       });
-      
+
       setMessage("");
       setSubject("");
     } catch (error) {
@@ -56,12 +77,14 @@ export default function CustomerHelp() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        
+
         <Card className="mb-8">
           <CardContent className="p-6">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div>
-                <h3 className="text-lg font-semibold mb-1">Need immediate help?</h3>
+                <h3 className="text-lg font-semibold mb-1">
+                  Need immediate help?
+                </h3>
                 <p className="text-muted-foreground mb-4 md:mb-0">
                   Our support team is available Monday-Friday, 8am-5pm PT
                 </p>
@@ -74,7 +97,7 @@ export default function CustomerHelp() {
           </CardContent>
         </Card>
       </div>
-      
+
       <Tabs defaultValue="faq" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4 md:w-[600px] mx-auto">
           <TabsTrigger value="faq">FAQs</TabsTrigger>
@@ -82,72 +105,89 @@ export default function CustomerHelp() {
           <TabsTrigger value="resources">Resources</TabsTrigger>
           <TabsTrigger value="account">Account</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="faq">
           <Card>
             <CardHeader>
               <CardTitle>Frequently Asked Questions</CardTitle>
               <CardDescription>
-                Find answers to common questions about managing your vineyard operations.
+                Find answers to common questions about managing your vineyard
+                operations.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="item-1">
-                  <AccordionTrigger>How do I add a new site manager?</AccordionTrigger>
+                  <AccordionTrigger>
+                    How do I add a new site manager?
+                  </AccordionTrigger>
                   <AccordionContent>
-                    To add a new site manager, navigate to the "Accounts" page from the main menu,
-                    then click on "Add Manager" and fill in the required information. The new manager 
-                    will receive an email invitation to join your account.
+                    To add a new site manager, navigate to the "Accounts" page
+                    from the main menu, then click on "Add Manager" and fill in
+                    the required information. The new manager will receive an
+                    email invitation to join your account.
                   </AccordionContent>
                 </AccordionItem>
-                
+
                 <AccordionItem value="item-2">
-                  <AccordionTrigger>How can I view work order progress?</AccordionTrigger>
+                  <AccordionTrigger>
+                    How can I view work order progress?
+                  </AccordionTrigger>
                   <AccordionContent>
-                    You can view the progress of all work orders from your dashboard or by going to the 
-                    "Sites" section and selecting a specific site. Each work order will display its 
-                    current status, assigned workers, and completion percentage.
+                    You can view the progress of all work orders from your
+                    dashboard or by going to the "Sites" section and selecting a
+                    specific site. Each work order will display its current
+                    status, assigned workers, and completion percentage.
                   </AccordionContent>
                 </AccordionItem>
-                
+
                 <AccordionItem value="item-3">
-                  <AccordionTrigger>How do I approve worker payments?</AccordionTrigger>
+                  <AccordionTrigger>
+                    How do I approve worker payments?
+                  </AccordionTrigger>
                   <AccordionContent>
-                    Worker payments can be approved from the "Payments" section. Select the relevant
-                    work order, review the completed tasks and hours, then click "Approve Payments"
-                    to authorize the transaction.
+                    Worker payments can be approved from the "Payments" section.
+                    Select the relevant work order, review the completed tasks
+                    and hours, then click "Approve Payments" to authorize the
+                    transaction.
                   </AccordionContent>
                 </AccordionItem>
-                
+
                 <AccordionItem value="item-4">
-                  <AccordionTrigger>Can I edit a site after it's been created?</AccordionTrigger>
+                  <AccordionTrigger>
+                    Can I edit a site after it's been created?
+                  </AccordionTrigger>
                   <AccordionContent>
-                    Yes, you can edit any site details by going to the "Sites" section, selecting the
-                    site you want to modify, and clicking on the "Edit" button. You can update the site name,
-                    address, size, and other details.
+                    Yes, you can edit any site details by going to the "Sites"
+                    section, selecting the site you want to modify, and clicking
+                    on the "Edit" button. You can update the site name, address,
+                    size, and other details.
                   </AccordionContent>
                 </AccordionItem>
-                
+
                 <AccordionItem value="item-5">
-                  <AccordionTrigger>How do I reset a site manager's password?</AccordionTrigger>
+                  <AccordionTrigger>
+                    How do I reset a site manager's password?
+                  </AccordionTrigger>
                   <AccordionContent>
-                    To reset a site manager's password, go to the "Accounts" page, find the manager
-                    in the list, click "Edit," and use the "Reset Password" option. The manager will 
-                    receive an email with instructions to set a new password.
+                    To reset a site manager's password, go to the "Accounts"
+                    page, find the manager in the list, click "Edit," and use
+                    the "Reset Password" option. The manager will receive an
+                    email with instructions to set a new password.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="contact">
           <Card>
             <CardHeader>
               <CardTitle>Contact Us</CardTitle>
               <CardDescription>
-                Fill out the form below and our support team will get back to you as soon as possible.
+                Fill out the form below and our support team will get back to
+                you as soon as possible.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -156,7 +196,7 @@ export default function CustomerHelp() {
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="subject">Subject</Label>
-                      <Input 
+                      <Input
                         id="subject"
                         value={subject}
                         onChange={(e) => setSubject(e.target.value)}
@@ -164,10 +204,10 @@ export default function CustomerHelp() {
                         required
                       />
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label htmlFor="message">Message</Label>
-                      <Textarea 
+                      <Textarea
                         id="message"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
@@ -176,7 +216,7 @@ export default function CustomerHelp() {
                         required
                       />
                     </div>
-                    
+
                     <div className="flex justify-end">
                       <Button type="submit" disabled={isSubmitting}>
                         {isSubmitting ? "Sending..." : "Send Message"}
@@ -184,10 +224,12 @@ export default function CustomerHelp() {
                     </div>
                   </form>
                 </div>
-                
+
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Contact Information</CardTitle>
+                    <CardTitle className="text-base">
+                      Contact Information
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-2">
                     <div className="space-y-4">
@@ -195,25 +237,35 @@ export default function CustomerHelp() {
                         <Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
                         <div>
                           <p className="font-medium">Email Support</p>
-                          <p className="text-sm text-muted-foreground">support@agworks.com</p>
-                          <p className="text-sm text-muted-foreground">Response within 24 hours</p>
+                          <p className="text-sm text-muted-foreground">
+                            {configSystem?.email?.supportEmail || ""}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Response within 24 hours
+                          </p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-start space-x-3">
                         <Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
                         <div>
                           <p className="font-medium">Phone Support</p>
-                          <p className="text-sm text-muted-foreground">1-800-555-FARM</p>
-                          <p className="text-sm text-muted-foreground">Mon-Fri, 8am-5pm PT</p>
+                          <p className="text-sm text-muted-foreground">
+                            1-800-555-FARM
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Mon-Fri, 8am-5pm PT
+                          </p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-start space-x-3">
                         <MessageCircle className="h-5 w-5 text-muted-foreground mt-0.5" />
                         <div>
                           <p className="font-medium">Live Chat</p>
-                          <p className="text-sm text-muted-foreground">Available during business hours</p>
+                          <p className="text-sm text-muted-foreground">
+                            Available during business hours
+                          </p>
                           <Button size="sm" variant="link" className="px-0">
                             Start Chat <ArrowRight className="ml-1 h-3 w-3" />
                           </Button>
@@ -226,7 +278,7 @@ export default function CustomerHelp() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="resources">
           <Card>
             <CardHeader>
@@ -239,11 +291,14 @@ export default function CustomerHelp() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Getting Started Guide</CardTitle>
+                    <CardTitle className="text-lg">
+                      Getting Started Guide
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground">
-                      Learn the basics of setting up your account, adding sites, and managing workers.
+                      Learn the basics of setting up your account, adding sites,
+                      and managing workers.
                     </p>
                   </CardContent>
                   <CardFooter>
@@ -253,14 +308,15 @@ export default function CustomerHelp() {
                     </Button>
                   </CardFooter>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Video Tutorials</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground">
-                      Watch step-by-step video tutorials on how to use all platform features.
+                      Watch step-by-step video tutorials on how to use all
+                      platform features.
                     </p>
                   </CardContent>
                   <CardFooter>
@@ -269,14 +325,15 @@ export default function CustomerHelp() {
                     </Button>
                   </CardFooter>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Best Practices</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground">
-                      Tips and tricks for optimizing your vineyard management workflow.
+                      Tips and tricks for optimizing your vineyard management
+                      workflow.
                     </p>
                   </CardContent>
                   <CardFooter>
@@ -285,14 +342,15 @@ export default function CustomerHelp() {
                     </Button>
                   </CardFooter>
                 </Card>
-                
+
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">API Documentation</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-muted-foreground">
-                      Technical information for developers integrating with our platform.
+                      Technical information for developers integrating with our
+                      platform.
                     </p>
                   </CardContent>
                   <CardFooter>
@@ -305,7 +363,7 @@ export default function CustomerHelp() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="account">
           <Card>
             <CardHeader>
@@ -318,7 +376,9 @@ export default function CustomerHelp() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="h-full">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Profile Settings</CardTitle>
+                    <CardTitle className="text-base">
+                      Profile Settings
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-2">
                     <ul className="space-y-2 text-sm">
@@ -337,10 +397,12 @@ export default function CustomerHelp() {
                     </ul>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="h-full">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Notification Settings</CardTitle>
+                    <CardTitle className="text-base">
+                      Notification Settings
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-2">
                     <ul className="space-y-2 text-sm">
@@ -359,10 +421,12 @@ export default function CustomerHelp() {
                     </ul>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="h-full">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-base">Security Settings</CardTitle>
+                    <CardTitle className="text-base">
+                      Security Settings
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-2">
                     <ul className="space-y-2 text-sm">
@@ -382,15 +446,18 @@ export default function CustomerHelp() {
                   </CardContent>
                 </Card>
               </div>
-              
+
               <div className="bg-muted p-6 rounded-lg">
                 <div className="flex items-start">
                   <HelpCircle className="h-6 w-6 mr-3 text-primary mt-0.5" />
                   <div>
-                    <h3 className="font-medium mb-2">Need to Delete Your Account?</h3>
+                    <h3 className="font-medium mb-2">
+                      Need to Delete Your Account?
+                    </h3>
                     <p className="text-sm text-muted-foreground mb-4">
-                      If you need to close your account, please contact our support team.
-                      We may need to ensure all outstanding work orders are completed first.
+                      If you need to close your account, please contact our
+                      support team. We may need to ensure all outstanding work
+                      orders are completed first.
                     </p>
                     <Button variant="outline" size="sm">
                       <MessageCircle className="mr-2 h-4 w-4" />

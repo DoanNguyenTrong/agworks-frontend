@@ -131,8 +131,8 @@ const _handleSucess = (response: any, option: any) => {
   return response;
 };
 const _handleError = (err: any, option: any) => {
-  console.log('err :>> ', err);
-  const data = get(err, "response.data", "error")
+  console.log("err :>> ", err);
+  const data = get(err, "response.data", "error");
   if (data?.message) {
     toast({
       title: "Error",
@@ -142,7 +142,9 @@ const _handleError = (err: any, option: any) => {
   } else if (data?.code === 11000) {
     toast({
       title: "Error",
-      description: `Duplicate field name: [${Object.keys(data?.keyValue || {}).join(', ')}]`,
+      description: `Duplicate field name: [${Object.keys(
+        data?.keyValue || {}
+      ).join(", ")}]`,
       variant: "destructive",
     });
   }
@@ -221,4 +223,3 @@ const apiClient = {
 // };
 
 export { apiClient };
-

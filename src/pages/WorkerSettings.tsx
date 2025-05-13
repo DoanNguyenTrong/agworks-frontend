@@ -26,9 +26,7 @@ export default function WorkerSettings() {
   const [name, setName] = useState(currentUser?.name || "");
   const [email, setEmail] = useState(currentUser?.email || "");
   const [phone, setPhone] = useState(currentUser?.phone || "");
-  const [profileImage, setProfileImage] = useState(
-    currentUser?.profileImage || ""
-  );
+  const [profileImage, setProfileImage] = useState(currentUser?.logo || "");
 
   // Notification settings
   const [newJobNotif, setNewJobNotif] = useState(true);
@@ -48,7 +46,7 @@ export default function WorkerSettings() {
         name: name,
         email: email,
         phone: phone,
-        profileImage: profileImage,
+        logo: profileImage,
       };
       console.log("body :>> ", body);
       // In a real app, this would make an API call
