@@ -57,6 +57,7 @@ export default function AdminSettings() {
   const [activeTab, setActiveTab] = useState("general");
   const [settings, setSettings] = useState<any>({});
   const { updateInfoUser, currentUser } = useAuth();
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   const getAdminConfig = async () => {
     try {
@@ -72,9 +73,14 @@ export default function AdminSettings() {
   useEffect(() => {
     getAdminConfig();
   }, []);
-  // useEffect(() => {
-  //   getAdminConfig();
-  // }, []);
+
+  useEffect(() => {
+    if (Object.keys(settings).length > 0 && !settingsLoaded) {
+      generalForm.reset(settings.general);
+      emailForm.reset(settings.email);
+      setSettingsLoaded(true);
+    }
+  }, [settings]);
 
   // General settings form
 
@@ -104,6 +110,7 @@ export default function AdminSettings() {
           logoUrl: base64String,
         },
       }));
+      generalForm.setValue("logoUrl", base64String);
     };
     reader.readAsDataURL(file);
   };
@@ -131,11 +138,6 @@ export default function AdminSettings() {
       senderName: "",
     },
   });
-  // Update forms when settings change
-  useEffect(() => {
-    generalForm.reset(settings.general);
-    emailForm.reset(settings.email);
-  }, [settings]);
 
   // Submit handlers
   console.log("setting::", settings);
