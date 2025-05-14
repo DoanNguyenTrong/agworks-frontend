@@ -204,7 +204,7 @@ export default function SiteManagerHelp() {
                       <div>
                         <p className="font-medium">Email Support</p>
                         <p className="text-sm text-muted-foreground">
-                          {configSystem?.email?.supportEmail || ""}
+                          {configSystem?.general?.supportEmail || ""}
                         </p>
                         <p className="text-sm text-muted-foreground">
                           Response within 24 hours
