@@ -95,7 +95,7 @@ export default function CustomerDashboard() {
         { userId: [get(res, "data.metaData.user._id")] },
         data.siteId
       );
-      // await fetchData();
+      await getAllManagers();
       // Update local state
       toast({
         title: "Site manager invited",
@@ -376,11 +376,9 @@ export default function CustomerDashboard() {
               Assign managers to your vineyard sites to supervise work orders
               and oversee field operations.
             </p>
-            <Button asChild>
-              <Link to="/customer/blocks/new">
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Add New Manager
-              </Link>
+            <Button onClick={() => setIsAddManagerDialogOpen(true)}>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              Add Site Manager
             </Button>
           </div>
         )}

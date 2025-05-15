@@ -99,7 +99,7 @@ export default function CustomerAccounts() {
   };
 
   const handleRowDoubleClick = (id: string) => {
-    navigate(`/customer/managers/edit/${id}`);
+    navigate(`/customer/managers/${id}`);
   };
 
   const handleResetAccount = (manager: User) => {
