@@ -46,7 +46,6 @@ export default function BlockEditPage() {
       try {
         setIsLoading(true);
         const { data } = await apiGetDetailBlock(id);
-        console.log("data :>> ", data);
         setBlockData(get(data, "metaData", {}));
         setName(get(data, "metaData.name", ""));
         setSiteId(get(data, "metaData.siteId._id", ""));

@@ -37,7 +37,6 @@ export default function SiteDetails() {
     const getDetail = async (id: string) => {
       try {
         const { data } = await apiGetDetailSite(id);
-        console.log("data :>> ", data);
         setSite(get(data, "metaData"));
         setManager(get(data, "metaData.userIds", []));
       } catch (error) {

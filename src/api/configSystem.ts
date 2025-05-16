@@ -6,8 +6,6 @@ export const apiGetConfigSystem = async () => {
 };
 
 export const apiUpdateConfigSystem = async (payload: any) => {
-  console.log("payload::", payload);
-
   const res = await apiClient.patch(`/config-system/${payload._id}`, payload);
   return res;
 };

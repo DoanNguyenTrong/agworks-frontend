@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { apiGetConfigSystem, apiUpdateConfigSystem } from "@/api/configSystem";
 import MainLayout from "@/components/MainLayout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -9,12 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   FormControl,
@@ -24,16 +18,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { toast } from "@/hooks/use-toast";
-import { adminSettings } from "@/lib/data";
-import { updateAdminSettings } from "@/lib/utils/dataManagement";
-import {
-  apiGetConfigSystem,
-  apiUpdateConfigSystem,
-  apiCreateConfigSystem,
-} from "@/api/configSystem";
-import { get, set } from "lodash";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { get } from "lodash";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 
 // Form schemas
 const generalSettingsSchema = z.object({
@@ -140,7 +134,6 @@ export default function AdminSettings() {
   });
 
   // Submit handlers
-  console.log("setting::", settings);
   const handleSubmit = async () => {
     const updatedSettings = {
       ...settings,

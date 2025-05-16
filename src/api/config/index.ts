@@ -131,7 +131,6 @@ const _handleSucess = (response: any, option: any) => {
   return response;
 };
 const _handleError = (err: any, option: any) => {
-  console.log("err :>> ", err);
   const data = get(err, "response.data", "error");
   if (data?.message) {
     toast({
@@ -223,3 +222,4 @@ const apiClient = {
 // };
 
 export { apiClient };
+

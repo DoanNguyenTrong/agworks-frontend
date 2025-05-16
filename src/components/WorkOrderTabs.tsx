@@ -66,7 +66,6 @@ export default function WorkOrderTabs({
         },
         taskId
       );
-      console.log("res :>> ", res);
       toast({
         title: "Task approved",
         description: "The task has been approved for payment.",
@@ -85,7 +84,6 @@ export default function WorkOrderTabs({
         },
         taskId
       );
-      console.log("res :>> ", res);
       toast({
         title: "Task rejected",
         description: "The task has been rejected.",

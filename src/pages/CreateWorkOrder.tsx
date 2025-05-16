@@ -16,9 +16,7 @@ export default function CreateWorkOrder() {
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      console.log("Creating work order:", data);
       await apiCreateWorkOrder(data);
-
       toast({
         title: "Work Order Created",
         description: "The work order has been created successfully.",

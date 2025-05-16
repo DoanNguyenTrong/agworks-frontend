@@ -48,7 +48,6 @@ export default function EditWorkOrder() {
         const convertData = {
           ...get(data, "metaData"),
         };
-        console.log("convertData :>> ", convertData);
         setInitForm(convertData);
       } catch (error) {
         console.log("error :>> ", error);

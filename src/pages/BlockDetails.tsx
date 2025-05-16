@@ -35,7 +35,6 @@ export default function BlockDetails() {
       const getDetail = async (id: string) => {
         try {
           const { data } = await apiGetDetailBlock(id);
-          console.log("data :>> ", data);
           setBlock(get(data, "metaData", {}));
           setSite(get(data, "metaData.siteId", ""));
           //   // Get active orders for this block

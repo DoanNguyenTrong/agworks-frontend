@@ -35,7 +35,6 @@ export default function WorkerDashboard() {
   const getAllImage = async (payload: string[]) => {
     try {
       const { data } = await apiGetAllImage({ filter: { taskId: payload } });
-      console.log("data", data.metaData);
       setlistImage(get(data, "metaData", []));
     } catch (error) {
       console.log("error :>> ", error);
@@ -134,7 +133,6 @@ export default function WorkerDashboard() {
 
   useEffect(() => {
     if (taskID && uploadImg) {
-      console.log("1 :>> ", [taskID, uploadImg]);
       uploadImage(taskID, uploadImg);
     }
   }, [taskID, uploadImg]);
@@ -350,11 +348,9 @@ export default function WorkerDashboard() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {listImage.length > 0 ? (
               listImage.map((i) => {
-                console.log("completedTasks :>> ", completedTasks);
                 const task = completedTasks.find(
                   (t) => get(t, "orderId._id") === get(i, "taskId.orderId")
                 );
-                console.log("111111 :>> ", task);
                 return (
                   <div
                     key={get(i, "_id")}

@@ -1,4 +1,4 @@
-import { apiGetAccList, apiGetAllAccOrganization } from "@/api/account";
+import { apiGetAccList } from "@/api/account";
 import { apiGetDetailSite, apiUpdateSite } from "@/api/site";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { User } from "@/lib/types";
-import { add, get, uniq } from "lodash";
+import { get, uniq } from "lodash";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -62,18 +62,11 @@ export default function SiteEditPage() {
     getSiteManager();
   }, [siteData]);
 
-  console.log("site manager: ", siteManagers);
-
   useEffect(() => {
     const getDetail = async (id: string) => {
       try {
         setIsLoading(true);
         const { data } = await apiGetDetailSite(id);
-        console.log("data :>> ", data);
-        console.log(
-          'get(data, "metaData.userIds", "") :>> ',
-          get(data, "metaData.userIds", "")
-        );
         setSiteData(get(data, "metaData", {}));
         setName(get(data, "metaData.name", ""));
         setAddress(get(data, "metaData.address", ""));
@@ -104,7 +97,6 @@ export default function SiteEditPage() {
           managerId,
         ]).filter((item) => item !== ""),
       };
-      console.log("object :>> ", newData);
       await apiUpdateSite(newData, id);
       toast({
         title: "Site updated",

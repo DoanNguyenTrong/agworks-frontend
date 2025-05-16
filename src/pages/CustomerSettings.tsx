@@ -157,7 +157,6 @@ export default function CustomerSettings() {
   };
 
   const onNotificationSubmit = (data: z.infer<typeof notificationSchema>) => {
-    console.log("Notification settings:", data);
     toast({
       title: "Notification settings updated",
       description: "Your notification preferences have been saved.",

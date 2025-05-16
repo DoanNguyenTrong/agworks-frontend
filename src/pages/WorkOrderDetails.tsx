@@ -36,7 +36,6 @@ export default function WorkOrderDetails() {
         const { data } = await apiGetAllWorkerTask({
           filter: { orderId: payload },
         });
-        console.log("getDataTask :>> ", data);
         const task = get(data, "metaData", []);
         setTasks(task);
         const wokers = map(
@@ -59,7 +58,6 @@ export default function WorkOrderDetails() {
               .map((t: any) => t?._id),
           },
         });
-        console.log("image :>> ", get(res, "data.metaData", []));
         setImage(get(res, "data.metaData", []));
       }
     } catch (error) {

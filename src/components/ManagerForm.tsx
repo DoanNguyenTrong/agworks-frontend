@@ -72,8 +72,6 @@ export default function ManagerForm({
   });
 
   const handleSubmit = (data: ManagerFormData) => {
-    console.log("Site manager data:", data);
-
     if (onSubmit) {
       onSubmit(data);
     } else {

@@ -32,8 +32,6 @@ export default function PreviewImageDialog({
     }
   };
 
-  console.log("image", image);
-
   useEffect(() => {
     if (id) {
       setOpen(true);

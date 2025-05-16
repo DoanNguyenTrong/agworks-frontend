@@ -52,9 +52,7 @@ export default function AdminCustomerEdit() {
 
   const handleSave = async (data: any) => {
     try {
-      console.log("update data", data);
       await apiUpdateAcc({ ...data, _id: id });
-
       toast({
         title: "Customer updated",
         description: "Customer information has been updated successfully.",

@@ -85,7 +85,6 @@ export default function BlockForm() {
     const getSite = async () => {
       try {
         const { data } = await apiGetAllSite();
-        console.log("data :>> ", data);
         setSite(get(data, "metaData", []));
       } catch (error) {
         console.log("error :>> ", error);
@@ -97,7 +96,6 @@ export default function BlockForm() {
   const onSubmit = async (data: z.infer<typeof blockSchema>) => {
     // In a real app, you would save this data to your backend
     try {
-      console.log("Form data:", data);
       await apiCreateBlock(data);
       toast({
         title: isEditMode ? "Block updated" : "Block created",

@@ -43,13 +43,11 @@ export default function WorkerTaskDetails() {
   };
 
   useEffect(() => {
-    console.log("task ====", taskId);
     if (taskId) {
       getTaskDetails(taskId);
       // setWorkOrder(task?.orderId);
     }
   }, [taskId]);
-  console.log("task", task);
 
   if (!task) {
     return (

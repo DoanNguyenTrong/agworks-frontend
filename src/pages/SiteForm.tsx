@@ -79,15 +79,12 @@ export default function SiteForm() {
   const onSubmit = async (data: z.infer<typeof siteSchema>) => {
     // Convert "none" value back to empty string or undefined for backend
     const { managerId, ...cloneData } = data;
-    console.log("data->", data);
 
     const formattedData = {
       ...cloneData,
       userId: managerId ? [managerId] : [],
       organizationId: customerId,
     };
-
-    console.log("formatted data = ", formattedData);
 
     await apiCreateSite(formattedData);
 

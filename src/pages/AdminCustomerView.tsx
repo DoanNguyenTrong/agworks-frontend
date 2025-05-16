@@ -39,8 +39,6 @@ export default function AdminCustomerView() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  console.log("id= ", id);
-
   useEffect(() => {
     const fetchCustomerData = async () => {
       if (!id) return;
