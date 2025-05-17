@@ -5,7 +5,7 @@ import axios, { AxiosRequestConfig } from "axios";
 import { get } from "lodash";
 
 const PORT = "3501";
-export const BASE_URL = `http://localhost:${PORT}`;
+export const BASE_URL = `http://34.142.213.7:${PORT}`;
 
 const timeout = 10000;
 const ACCESS_TOKEN = "accessToken";
