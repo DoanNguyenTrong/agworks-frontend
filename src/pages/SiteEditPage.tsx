@@ -204,7 +204,7 @@ export default function SiteEditPage() {
                     >
                       <div className="bg-blue-200 hover:bg-red-500 px-5 py-1 rounded-full font-bold cursor-pointer delete-user">
                         <div className="name">{i.name}</div>
-                        <div className="des hidden text-[#FFF]">Xóa</div>
+                        <div className="des hidden text-[#FFF]">Delete</div>
                       </div>
                       {idx < curentManager.length - 1 && <>,</>}
                     </div>

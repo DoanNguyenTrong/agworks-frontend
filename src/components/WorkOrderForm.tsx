@@ -99,8 +99,8 @@ export default function WorkOrderForm({
       startTime: "08:00",
       endTime: "17:00",
       workType: undefined,
-      neededWorkers: 1,
-      payRate: 0.5,
+      neededWorkers: undefined,
+      payRate: undefined,
       acres: undefined,
       rows: undefined,
       vines: undefined,
@@ -469,7 +469,7 @@ export default function WorkOrderForm({
               <FormItem>
                 <FormLabel>Needed Workers*</FormLabel>
                 <FormControl>
-                  <Input type="number" min="1" {...field} />
+                  <Input placeholder="eg: 5" type="number" min="1" {...field} />
                 </FormControl>
                 <FormDescription>
                   Number of workers needed for this job.
@@ -487,7 +487,13 @@ export default function WorkOrderForm({
               <FormItem>
                 <FormLabel>Pay Rate ($ per vine)*</FormLabel>
                 <FormControl>
-                  <Input type="number" step="0.01" min="0.01" {...field} />
+                  <Input
+                    placeholder="eg: 0,5"
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    {...field}
+                  />
                 </FormControl>
                 <FormDescription>Payment rate per vine.</FormDescription>
                 <FormMessage />
