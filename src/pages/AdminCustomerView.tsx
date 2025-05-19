@@ -286,7 +286,7 @@ export default function AdminCustomerView() {
             ) : (
               <div className="text-center py-8">
                 <p className="text-muted-foreground">
-                  No sites found for this customer?.
+                  No sites found for this customer.
                 </p>
                 <Button className="mt-4" size="sm" asChild>
                   <Link to={`/admin/sites/new?customerId=${customer?._id}`}>
