@@ -173,8 +173,6 @@ export default function AdminWorkers() {
     setShowResetDialog(true);
   };
 
-  console.log(workersList);
-
   return (
     <MainLayout pageTitle="Worker Management">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6">

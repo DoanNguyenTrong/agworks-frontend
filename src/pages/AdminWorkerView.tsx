@@ -63,8 +63,6 @@ export default function AdminWorkerView() {
     }
   };
 
-  console.log("completedTasks", completedTasks);
-
   useEffect(() => {
     if (id) {
       loadWorker(id);
