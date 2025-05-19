@@ -92,16 +92,18 @@ export default function CustomerDashboard() {
         role: MAP_ROLE.SITE_MANAGER,
       };
       const res = await apiCreateAcc(newManagerSite);
-      // await apiUpdateByFieldUserIds(
-      //   { userId: [get(res, "data.metaData.user._id")] },
-      //   data.siteId
-      // );
+      if (data?.siteId) {
+        await apiUpdateByFieldUserIds(
+          { userId: [get(res, "data.metaData.user._id")] },
+          data.siteId
+        );
+      }
       await getAllManagers();
       // Update local state
-      toast({
-        title: "Site manager invited",
-        description: `${data.name} has been invited as a site manager.`,
-      });
+      // toast({
+      //   title: "Site manager invited",
+      //   description: `${data.name} has been invited as a site manager.`,
+      // });
       setIsAddManagerDialogOpen(false);
     } catch (error) {
       console.log("error :>> ", error);
