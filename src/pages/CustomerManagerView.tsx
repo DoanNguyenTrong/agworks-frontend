@@ -151,7 +151,15 @@ export default function CustomerManagerView() {
           <CardContent>
             <div className="flex flex-col items-center mb-6">
               <Avatar className="h-24 w-24 mb-4">
-                <AvatarImage src={`${BASE_URL}${manager?.logo}`} />
+                <AvatarImage
+                  src={
+                    manager?.logo &&
+                    (!manager?.logo.includes("base64")
+                      ? `${BASE_URL}${manager?.logo}`
+                      : manager?.logo)
+                  }
+                  alt={manager?.name}
+                />
                 <AvatarFallback className="text-2xl">
                   {manager?.name?.charAt(0) || "M"}
                 </AvatarFallback>

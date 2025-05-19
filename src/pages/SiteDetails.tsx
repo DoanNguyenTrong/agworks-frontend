@@ -1,4 +1,5 @@
 import { apiGetBlockByFiled } from "@/api/block";
+import { BASE_URL } from "@/api/config";
 import { apiDeleteSite, apiGetDetailSite } from "@/api/site";
 import MainLayout from "@/components/MainLayout";
 import {
@@ -47,7 +48,7 @@ export default function SiteDetails() {
     const getByBlockBySiteId = async (id: string) => {
       try {
         const { data } = await apiGetBlockByFiled({ siteId: id });
-        console.log("data==============:>> ", data);
+        // console.log("data==============:>> ", data);
         setSiteBlocks(get(data, "metaData", []));
       } catch (error) {
         console.log("error :>> ", error);
@@ -222,9 +223,17 @@ export default function SiteDetails() {
                   {manager.map((item, index) => (
                     <div key={index} className="flex items-center gap-4">
                       <Avatar className="h-16 w-16">
-                        <AvatarImage src={item?.logo} />
+                        <AvatarImage
+                          src={
+                            item?.logo &&
+                            (!item?.logo.includes("base64")
+                              ? `${BASE_URL}${item?.logo}`
+                              : item?.logo)
+                          }
+                          alt={item?.name}
+                        />
                         <AvatarFallback className="text-lg">
-                          {item?.name}
+                          {item?.name?.charAt(0) || "M"}
                         </AvatarFallback>
                       </Avatar>
                       <div>

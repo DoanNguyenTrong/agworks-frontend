@@ -1,4 +1,5 @@
 import { apiGetAccDetail } from "@/api/account";
+import { BASE_URL } from "@/api/config";
 import { apiGetAllWorkerTask } from "@/api/workerTask";
 import MainLayout from "@/components/MainLayout";
 import PreviewImageDialog from "@/components/PreviewImageDialog";
@@ -47,7 +48,7 @@ export default function AdminWorkerView() {
 
       // Get completed tasks for this worker
       const { data: _data } = await apiGetAllWorkerTask({
-        filter: { status: StatusType.APPROVED, workerId: id },
+        filter: { status: StatusType.APPROVED, workerId: [id] },
       });
       setCompletedTasks(get(_data, "metaData", []));
     } catch (error: any) {
@@ -61,6 +62,8 @@ export default function AdminWorkerView() {
       setIsLoading(false);
     }
   };
+
+  console.log("completedTasks", completedTasks);
 
   useEffect(() => {
     if (id) {
@@ -119,11 +122,21 @@ export default function AdminWorkerView() {
           <CardContent>
             <div className="flex flex-col items-center mb-6">
               <Avatar className="h-24 w-24 mb-4">
-                <AvatarImage src={worker.profileImage} />
-                <AvatarFallback>{worker.name?.charAt(0) || "W"}</AvatarFallback>
+                <AvatarImage
+                  src={
+                    worker?.logo &&
+                    (!worker?.logo.includes("base64")
+                      ? `${BASE_URL}${worker?.logo}`
+                      : worker?.logo)
+                  }
+                  alt={worker?.name}
+                />
+                <AvatarFallback>
+                  {worker?.name?.charAt(0) || "W"}
+                </AvatarFallback>
               </Avatar>
-              <h2 className="text-2xl font-bold">{worker.name}</h2>
-              <Badge className="mt-2 bg-agworks-brown">{worker.role}</Badge>
+              <h2 className="text-2xl font-bold">{worker?.name}</h2>
+              <Badge className="mt-2 bg-agworks-brown">{worker?.role}</Badge>
             </div>
 
             <Separator className="my-4" />
@@ -134,7 +147,7 @@ export default function AdminWorkerView() {
                 <div>
                   <p className="text-sm font-medium">Email</p>
                   <p className="text-sm text-muted-foreground">
-                    {worker.email}
+                    {worker?.email}
                   </p>
                 </div>
               </div>
@@ -144,7 +157,7 @@ export default function AdminWorkerView() {
                 <div>
                   <p className="text-sm font-medium">Phone</p>
                   <p className="text-sm text-muted-foreground">
-                    {worker.phone || "Not provided"}
+                    {worker?.phone || "Not provided"}
                   </p>
                 </div>
               </div>
@@ -154,7 +167,7 @@ export default function AdminWorkerView() {
                 <div>
                   <p className="text-sm font-medium">Joined</p>
                   <p className="text-sm text-muted-foreground">
-                    {new Date(worker.createdAt).toLocaleDateString()}
+                    {new Date(worker?.createdAt).toLocaleDateString()}
                   </p>
                 </div>
               </div>

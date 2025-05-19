@@ -1,4 +1,5 @@
 import { apiCreateAcc, apiDeleteAcc, apiGetAccList } from "@/api/account";
+import { BASE_URL } from "@/api/config";
 import { apiGetListSite } from "@/api/site";
 import AccountResetDialog from "@/components/AccountResetDialog";
 import CustomerForm, { CustomerFormData } from "@/components/CustomerForm";
@@ -59,9 +60,9 @@ export default function AdminCustomers() {
   const filteredCustomers = customersList.filter(
     (customer) =>
       searchTerm === "" ||
-      customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.companyName?.toLowerCase().includes(searchTerm.toLowerCase())
+      customer?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer?.companyName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getList = async () => {
@@ -220,24 +221,32 @@ export default function AdminCustomers() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar>
-                          <AvatarImage src={customer.logo} />
+                          <AvatarImage
+                            src={
+                              customer?.logo &&
+                              (!customer?.logo.includes("base64")
+                                ? `${BASE_URL}${customer?.logo}`
+                                : customer?.logo)
+                            }
+                            alt={customer?.name}
+                          />
                           <AvatarFallback>
-                            {customer.name?.charAt(0) || "C"}
+                            {customer?.name?.charAt(0) || "C"}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{customer.name}</p>
+                          <p className="font-medium">{customer?.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {customer.email}
+                            {customer?.email}
                           </p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{customer.companyName || "—"}</TableCell>
-                    <TableCell>{customer.phone || "—"}</TableCell>
+                    <TableCell>{customer?.companyName || "—"}</TableCell>
+                    <TableCell>{customer?.phone || "—"}</TableCell>
                     <TableCell>
                       {
-                        sites.filter((i) => i?.organizationId === customer._id)
+                        sites.filter((i) => i?.organizationId === customer?._id)
                           .length
                       }{" "}
                       Sites
@@ -289,7 +298,7 @@ export default function AdminCustomers() {
                               </AlertDialogTitle>
                               <AlertDialogDescription>
                                 Are you sure you want to delete{" "}
-                                {customer.companyName || customer.name}? This
+                                {customer?.companyName || customer?.name}? This
                                 action cannot be undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
