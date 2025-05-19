@@ -1,4 +1,5 @@
 import { apiCreateAcc, apiDeleteAcc, apiGetAccList } from "@/api/account";
+import { BASE_URL } from "@/api/config";
 import { apiGetAllWorkerTask } from "@/api/workerTask";
 import AccountResetDialog from "@/components/AccountResetDialog";
 import MainLayout from "@/components/MainLayout";
@@ -68,8 +69,8 @@ export default function AdminWorkers() {
   // Filter workers based on search term and status
   const filteredWorkers = workersList.filter((worker) => {
     // Search filter
-    const searchString = `${worker.name} ${worker.email} ${
-      worker.phone || ""
+    const searchString = `${worker?.name} ${worker?.email} ${
+      worker?.phone || ""
     }`.toLowerCase();
     if (!searchString.includes(searchTerm.toLowerCase())) return false;
 
@@ -245,20 +246,28 @@ export default function AdminWorkers() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar>
-                          <AvatarImage src={worker.profileImage} />
+                          <AvatarImage
+                            src={
+                              worker?.logo &&
+                              (!worker?.logo.includes("base64")
+                                ? `${BASE_URL}${worker?.logo}`
+                                : worker?.logo)
+                            }
+                            alt={worker?.name}
+                          />
                           <AvatarFallback>
-                            {worker.name?.charAt(0) || "W"}
+                            {worker?.name?.charAt(0) || "W"}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{worker.name}</p>
+                          <p className="font-medium">{worker?.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {worker.email}
+                            {worker?.email}
                           </p>
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{worker.phone || "—"}</TableCell>
+                    <TableCell>{worker?.phone || "—"}</TableCell>
                     <TableCell>
                       {calculateCompletedTasks(worker?._id)} tasks
                     </TableCell>
@@ -306,7 +315,7 @@ export default function AdminWorkers() {
                                 Confirm Deletion
                               </AlertDialogTitle>
                               <AlertDialogDescription>
-                                Are you sure you want to delete {worker.name}?
+                                Are you sure you want to delete {worker?.name}?
                                 This action cannot be undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
@@ -349,8 +358,8 @@ export default function AdminWorkers() {
           open={showResetDialog}
           onComplete={getList}
           onOpenChange={setShowResetDialog}
-          userName={selectedUser.name}
-          userEmail={selectedUser.email}
+          userName={selectedUser?.name}
+          userEmail={selectedUser?.email}
           userId={selectedUser["_id"]}
         />
       )}

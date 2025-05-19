@@ -144,6 +144,7 @@ export default function MainLayout({
                           ? `${BASE_URL}${configSystem?.general?.logoUrl}`
                           : `${BASE_URL}${currentUser?.logo}`
                       }
+                      alt={currentUser?.name}
                     />
                     <AvatarFallback className="bg-primary/10 text-primary">
                       {currentUser?.name.charAt(0)}
@@ -153,7 +154,7 @@ export default function MainLayout({
                     <p className="font-medium">{currentUser?.name}</p>
                     <p className="text-xs text-muted-foreground">
                       {currentUser?.role.charAt(0).toUpperCase() +
-                        currentUser.role.slice(1)}
+                        currentUser?.role.slice(1)}
                     </p>
                   </div>
                 </div>
@@ -236,7 +237,14 @@ export default function MainLayout({
               <div className="p-4">
                 <div className="flex items-center gap-4 mb-6">
                   <Avatar>
-                    <AvatarImage src={currentUser?.logo} />
+                    <AvatarImage
+                      src={
+                        currentUser?.role === MAP_ROLE.ADMIN
+                          ? `${BASE_URL}${configSystem?.general?.logoUrl}`
+                          : `${BASE_URL}${currentUser?.logo}`
+                      }
+                      alt={currentUser?.name}
+                    />
                     <AvatarFallback className="bg-primary/10 text-primary">
                       {currentUser?.name.charAt(0)}
                     </AvatarFallback>
@@ -245,7 +253,7 @@ export default function MainLayout({
                     <p className="font-medium">{currentUser?.name}</p>
                     <p className="text-xs text-muted-foreground">
                       {currentUser?.role.charAt(0).toUpperCase() +
-                        currentUser.role.slice(1)}
+                        currentUser?.role.slice(1)}
                     </p>
                   </div>
                 </div>
