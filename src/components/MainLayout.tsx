@@ -141,7 +141,7 @@ export default function MainLayout({
                     <AvatarImage
                       src={
                         currentUser?.role === MAP_ROLE.ADMIN
-                          ? `${BASE_URL}${configSystem?.general?.logoUrl}`
+                          ? configSystem?.general?.logoUrl
                           : `${BASE_URL}${currentUser?.logo}`
                       }
                     />
