@@ -21,6 +21,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { MAP_ROLE } from "@/lib/utils/role";
+import clsx from "clsx";
 import { format } from "date-fns";
 import { get } from "lodash";
 import { ClipboardList, Grape, Map, PlusCircle, UserPlus } from "lucide-react";
@@ -91,10 +92,10 @@ export default function CustomerDashboard() {
         role: MAP_ROLE.SITE_MANAGER,
       };
       const res = await apiCreateAcc(newManagerSite);
-      await apiUpdateByFieldUserIds(
-        { userId: [get(res, "data.metaData.user._id")] },
-        data.siteId
-      );
+      // await apiUpdateByFieldUserIds(
+      //   { userId: [get(res, "data.metaData.user._id")] },
+      //   data.siteId
+      // );
       await getAllManagers();
       // Update local state
       toast({

@@ -1,4 +1,5 @@
 import { apiDeleteAcc, apiGetAccDetail } from "@/api/account";
+import { BASE_URL } from "@/api/config";
 import { apiGetListSite } from "@/api/site";
 import MainLayout from "@/components/MainLayout";
 import {
@@ -58,7 +59,7 @@ export default function AdminCustomerView() {
         const { data } = await apiGetAccDetail({ id: id });
         setCustomer(get(data, "metaData", {}));
 
-        // if (!customer || customer.role !== "Customer") {
+        // if (!customer || customer?.role !== "Customer") {
         //   throw new Error("Customer not found");
         // }
         // Fetch customer sites from local data
@@ -146,13 +147,21 @@ export default function AdminCustomerView() {
           <CardContent>
             <div className="flex flex-col items-center mb-6">
               <Avatar className="h-24 w-24 mb-4">
-                <AvatarImage src={customer.logo} />
+                <AvatarImage
+                  src={
+                    customer?.logo &&
+                    (!customer?.logo.includes("base64")
+                      ? `${BASE_URL}${customer?.logo}`
+                      : customer?.logo)
+                  }
+                  alt={customer?.name}
+                />
                 <AvatarFallback className="text-2xl">
-                  {customer.name?.charAt(0) || "C"}
+                  {customer?.name?.charAt(0) || "C"}
                 </AvatarFallback>
               </Avatar>
-              <h2 className="text-xl font-bold">{customer.name}</h2>
-              <p className="text-muted-foreground">{customer.email}</p>
+              <h2 className="text-xl font-bold">{customer?.name}</h2>
+              <p className="text-muted-foreground">{customer?.email}</p>
             </div>
 
             <Separator className="my-4" />
@@ -162,25 +171,25 @@ export default function AdminCustomerView() {
                 <p className="text-sm font-medium text-muted-foreground">
                   Company Name
                 </p>
-                <p>{customer.companyName || "—"}</p>
+                <p>{customer?.companyName || "—"}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
                   Phone
                 </p>
-                <p>{customer.phone || "—"}</p>
+                <p>{customer?.phone || "—"}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
                   Address
                 </p>
-                <p>{customer.address || "—"}</p>
+                <p>{customer?.address || "—"}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
                   Created
                 </p>
-                <p>{new Date(customer.createdAt).toLocaleDateString()}</p>
+                <p>{new Date(customer?.createdAt).toLocaleDateString()}</p>
               </div>
             </div>
 
@@ -209,7 +218,7 @@ export default function AdminCustomerView() {
                     <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
                     <AlertDialogDescription>
                       Are you sure you want to delete{" "}
-                      {customer.companyName || customer.name}? This action
+                      {customer?.companyName || customer?.name}? This action
                       cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
@@ -234,7 +243,7 @@ export default function AdminCustomerView() {
             <div className="flex justify-between items-center">
               <CardTitle>Sites</CardTitle>
               <Button size="sm" variant="outline" asChild>
-                <Link to={`/admin/sites/new?customerId=${customer._id}`}>
+                <Link to={`/admin/sites/new?customerId=${customer?._id}`}>
                   Add Site
                 </Link>
               </Button>
