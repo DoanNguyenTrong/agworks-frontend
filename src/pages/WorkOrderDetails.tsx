@@ -53,9 +53,7 @@ export default function WorkOrderDetails() {
         // get list image to task
         const res = await apiGetAllImage({
           filter: {
-            taskId: task
-              .filter((t) => t?.status === StatusType.APPROVED)
-              .map((t: any) => t?._id),
+            taskId: payload,
           },
         });
         setImage(get(res, "data.metaData", []));
