@@ -61,9 +61,9 @@ export default function SiteManagerDashboard() {
         const res = await apiGetAllImage({
           filter: {
             taskId: tasks
-              .filter(
-                (app: WorkerApplication) => app.status === StatusType.APPROVED
-              )
+              // .filter(
+              //   (app: WorkerApplication) => app.status !== StatusType.PENDING
+              // )
               .map((t: any) => t?._id),
           },
         });

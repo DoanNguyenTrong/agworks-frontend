@@ -50,9 +50,9 @@ export default function WorkerPerformance({
 
   useEffect(() => {
     const workerMap = groupBy(image, (item: any) => item?.taskId?._id);
-
+    // console.log("tasks :>> ", tasks);
     const completedItems = tasks.filter(
-      (item) => get(item, "status", null) === StatusType.COMPLETED
+      (item) => get(item, "status", null) === StatusType._COMPLETED
     );
     const groupedByDate = groupBy(completedItems, (item: WorkerTask) =>
       get(item, "createdAt", "").slice(0, 10)
@@ -90,6 +90,8 @@ export default function WorkerPerformance({
       setDailyProgress(result);
     }
   }, [image, tasks]);
+
+  console.log("worker :>> ", worker);
 
   return (
     <div className="space-y-6">

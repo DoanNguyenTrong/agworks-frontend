@@ -42,6 +42,7 @@ export enum StatusType {
   APPROVED = 'approved',
   PENDING = 'pending',
   REJECTED = 'rejected',
+  _COMPLETED = 'completed',
   // =============================
   PRUNING = "pruning",
   SHOOT_THINNING = "shoot_thinning",

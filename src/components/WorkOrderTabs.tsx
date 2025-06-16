@@ -133,6 +133,7 @@ export default function WorkOrderTabs({
     }
   }, [tasks, image]);
 
+  // console.log("listImage :>> ", listImage);
   return (
     <Tabs
       defaultValue="overview"
@@ -287,10 +288,10 @@ export default function WorkOrderTabs({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {listTasks.filter((t) => t.status === StatusType.APPROVED)
+                {listTasks.filter((t) => t.status !== StatusType.PENDING)
                   .length > 0 ? (
                   listTasks
-                    .filter((t) => t.status === StatusType.APPROVED)
+                    .filter((t) => t.status !== StatusType.PENDING)
                     .map((task) => (
                       <TableRow key={`${task._id}`}>
                         <TableCell className="font-medium">
@@ -510,10 +511,10 @@ export default function WorkOrderTabs({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {listTasks.filter((t) => t.status === StatusType.APPROVED)
+                    {listTasks.filter((t) => t.status !== StatusType.PENDING)
                       .length > 0 ? (
                       listTasks
-                        .filter((t) => t.status === StatusType.APPROVED)
+                        .filter((t) => t.status !== StatusType.PENDING)
                         .map((item) => (
                           <TableRow key={item._id}>
                             <TableCell>{get(item, "workerId.name")}</TableCell>

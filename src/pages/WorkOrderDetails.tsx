@@ -36,26 +36,30 @@ export default function WorkOrderDetails() {
         const { data } = await apiGetAllWorkerTask({
           filter: { orderId: payload },
         });
-        const task = get(data, "metaData", []);
+        const task = get(data, "metaData", []).filter(
+          (t) => t?.status !== StatusType.PENDING
+        );
         setTasks(task);
+        console.log("task :>> ", task);
         const wokers = map(
           groupBy(
             task
-              .filter((t) => t?.status === StatusType.APPROVED)
+              .filter((t) => t?.status !== StatusType.PENDING)
               .map((t) => t.workerId),
             "_id"
           ),
           (items) => merge({}, ...items)
         );
-        // console.log("wokers :>> ", wokers);
+        console.log("wokers :>> ", wokers);
         setWorker(wokers);
 
         // get list image to task
         const res = await apiGetAllImage({
           filter: {
-            taskId: payload,
+            taskId: task.map((i) => i?._id),
           },
         });
+        console.log("res :>> ", res.data.metaData);
         setImage(get(res, "data.metaData", []));
       }
     } catch (error) {
