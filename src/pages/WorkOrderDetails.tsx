@@ -37,10 +37,10 @@ export default function WorkOrderDetails() {
           filter: { orderId: payload },
         });
         const task = get(data, "metaData", []).filter(
-          (t) => t?.status !== StatusType.PENDING
+          (t) => t?.status !== StatusType.REJECTED
         );
         setTasks(task);
-        console.log("task :>> ", task);
+        // console.log("task :>> ", task);
         const wokers = map(
           groupBy(
             task
@@ -50,7 +50,7 @@ export default function WorkOrderDetails() {
           ),
           (items) => merge({}, ...items)
         );
-        console.log("wokers :>> ", wokers);
+        // console.log("wokers :>> ", wokers);
         setWorker(wokers);
 
         // get list image to task
@@ -59,7 +59,7 @@ export default function WorkOrderDetails() {
             taskId: task.map((i) => i?._id),
           },
         });
-        console.log("res :>> ", res.data.metaData);
+        // console.log("res :>> ", res.data.metaData);
         setImage(get(res, "data.metaData", []));
       }
     } catch (error) {

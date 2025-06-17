@@ -110,7 +110,9 @@ export default function WorkerPerformance({
             <CardTitle className="text-sm font-medium">Total Tasks</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{tasks.length}</div>
+            <div className="text-2xl font-bold">
+              {tasks.filter((i) => i.status !== StatusType.PENDING).length}
+            </div>
           </CardContent>
         </Card>
 
@@ -122,7 +124,12 @@ export default function WorkerPerformance({
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {worker.length > 0 ? Math.round(tasks.length / worker.length) : 0}
+              {worker.length > 0
+                ? Math.round(
+                    tasks.filter((i) => i.status !== StatusType.PENDING)
+                      .length / worker.length
+                  )
+                : 0}
             </div>
           </CardContent>
         </Card>
