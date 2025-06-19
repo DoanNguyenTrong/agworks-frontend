@@ -1,20 +1,15 @@
-import { apiLogin } from "@/api/account";
+
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { User } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { users } from "@/lib/data";
-import { User } from "@/lib/types";
-import { MAP_ROLE } from "@/lib/utils/role";
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 interface AuthContextType {
   currentUser: User | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (
-    email: string,
-    password: string,
-    userData: Partial<User>
-  ) => Promise<void>;
+  signup: (email: string, password: string, userData: Partial<User>) => Promise<void>;
   logout: () => void;
 }
 
@@ -30,19 +25,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   const redirectBasedOnRole = (role: string) => {
-    console.log("role :>> ", role);
     switch (role) {
-      case MAP_ROLE.ADMIN:
-        console.log("1 :>> ", 1);
+      case "admin":
         navigate("/admin/dashboard");
         break;
-      case MAP_ROLE.CUSTOIMER:
+      case "customer":
         navigate("/customer/dashboard");
         break;
-      case MAP_ROLE.SITE_MANAGER:
+      case "siteManager":
         navigate("/manager/dashboard");
         break;
-      case MAP_ROLE.WORKER:
+      case "worker":
         navigate("/worker/dashboard");
         break;
       default:
@@ -69,64 +62,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { data } = await apiLogin({ email, password });
-      // console.log("data :>> ", data);
-
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Find user with matching email
+      const user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+      
+      // In a real app, we'd check password hash. For demo, just check if password is "password"
+      if (!user || password !== "password") {
+        throw new Error("Invalid email or password");
+      }
+      
       // Save user to state and localStorage
-      setCurrentUser(data?.metaData?.user);
-      localStorage.setItem(
-        AUTH_STORAGE_KEY,
-        JSON.stringify(data?.metaData?.user)
-      );
-
-      localStorage.setItem(
-        "accessToken",
-        JSON.stringify(data?.metaData?.access_token)
-      );
-
+      setCurrentUser(user);
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+      
       toast({
         title: "Login successful",
         description: "Welcome back!",
       });
-
+      
       // Redirect based on role
-      redirectBasedOnRole(data?.metaData?.user?.role);
+      redirectBasedOnRole(user.role);
     } catch (error: any) {
-      const { response } = error;
+      console.error("Login error:", error);
       toast({
         title: "Login failed",
-        description: response?.data?.message || "Invalid email or password",
+        description: error.message || "Invalid email or password",
         variant: "destructive",
       });
+      throw error; // Rethrow for component handling
     } finally {
       setIsLoading(false);
     }
   };
 
-  const signup = async (
-    email: string,
-    password: string,
-    userData: Partial<User>
-  ) => {
+  const signup = async (email: string, password: string, userData: Partial<User>) => {
     setIsLoading(true);
-
+    
     try {
       // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       // Check if user with this email already exists
-      if (users.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
+      if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
         throw new Error("User with this email already exists");
       }
-
+      
       // In a real app, we would create a new user in the database.
       // Here we just show a success message.
-
+      
       toast({
         title: "Signup successful",
         description: "Your account has been created. You can now log in.",
       });
-
+      
       navigate("/login");
     } catch (error: any) {
       console.error("Signup error:", error);
@@ -144,17 +134,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       // Simulate network delay
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       // Clear user from state and localStorage
       setCurrentUser(null);
       localStorage.removeItem(AUTH_STORAGE_KEY);
-
+      
       toast({
         title: "Logged out",
         description: "You have been logged out successfully",
       });
-
+      
       navigate("/login");
     } catch (error: any) {
       console.error("Logout error:", error);
@@ -167,9 +157,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider
-      value={{ currentUser, isLoading, login, signup, logout }}
-    >
+    <AuthContext.Provider value={{ currentUser, isLoading, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );

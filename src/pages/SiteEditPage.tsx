@@ -1,71 +1,57 @@
+
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "@/components/MainLayout";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/hooks/use-toast";
-import { sites, users } from "@/lib/data";
-import { MAP_ROLE } from "@/lib/utils/role";
 import { ArrowLeft } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { sites, users } from "@/lib/data";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
 
 export default function SiteEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [siteData, setSiteData] = useState<any>(null);
-
+  
   // Form state
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [managerId, setManagerId] = useState("");
-
+  
   // Get site managers for dropdown
-  const siteManagers = users.filter(
-    (user) => user.role === MAP_ROLE.SITE_MANAGER
-  );
-
+  const siteManagers = users.filter(user => user.role === "siteManager");
+  
   useEffect(() => {
     if (!id) return;
-
-    const site = sites.find((s) => s.id === id);
+    
+    const site = sites.find(s => s.id === id);
     if (site) {
       setSiteData(site);
       setName(site.name);
       setAddress(site.address);
       setManagerId(site.managerId || "");
     }
-
+    
     setIsLoading(false);
   }, [id]);
-
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     // In a real app, this would make an API call
     toast({
       title: "Site updated",
       description: `${name} has been updated successfully.`,
     });
-
+    
     navigate(`/customer/sites/${id}`);
   };
-
+  
   if (isLoading) {
     return (
       <MainLayout pageTitle="Edit Site">
@@ -75,7 +61,7 @@ export default function SiteEditPage() {
       </MainLayout>
     );
   }
-
+  
   if (!siteData) {
     return (
       <MainLayout pageTitle="Edit Site">
@@ -91,15 +77,15 @@ export default function SiteEditPage() {
 
   return (
     <MainLayout pageTitle="Edit Site">
-      <Button
-        variant="ghost"
+      <Button 
+        variant="ghost" 
         className="p-0 mb-6"
         onClick={() => navigate(`/customer/sites/${id}`)}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Site Details
       </Button>
-
+      
       <Card>
         <CardHeader>
           <CardTitle>Edit Site</CardTitle>
@@ -119,7 +105,7 @@ export default function SiteEditPage() {
                   required
                 />
               </div>
-
+              
               <div className="grid gap-2">
                 <Label htmlFor="address">Address</Label>
                 <Textarea
@@ -129,10 +115,13 @@ export default function SiteEditPage() {
                   required
                 />
               </div>
-
+              
               <div className="grid gap-2">
                 <Label htmlFor="manager">Site Manager</Label>
-                <Select value={managerId} onValueChange={setManagerId}>
+                <Select 
+                  value={managerId} 
+                  onValueChange={setManagerId}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select a manager" />
                   </SelectTrigger>
@@ -147,11 +136,11 @@ export default function SiteEditPage() {
                 </Select>
               </div>
             </div>
-
+            
             <div className="flex justify-end gap-3">
-              <Button
-                type="button"
-                variant="outline"
+              <Button 
+                type="button" 
+                variant="outline" 
                 onClick={() => navigate(`/customer/sites/${id}`)}
               >
                 Cancel

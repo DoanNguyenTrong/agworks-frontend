@@ -1,46 +1,35 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+import { useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { 
+  Home, Users, Grape, Map, ClipboardList, 
+  LogOut, Settings, Menu, X, Building, UserPlus, 
+  DollarSign, BarChart, FileText, Cog, HelpCircle, User
+} from "lucide-react";
+import { 
+  Sidebar, 
+  SidebarHeader, 
+  SidebarContent, 
+  SidebarFooter,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarProvider,
+  SidebarTrigger
+} from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { useAuth } from "@/contexts/AuthContext";
-import { MAP_ROLE } from "@/lib/utils/role";
-import {
-  Building,
-  ClipboardList,
-  Grape,
-  HelpCircle,
-  Home,
-  LogOut,
-  Map,
-  Menu,
-  Settings,
-  UserPlus,
-  Users,
-  X,
-} from "lucide-react";
-import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 interface MainLayoutProps {
   children: React.ReactNode;
   pageTitle?: string;
 }
 
-export default function MainLayout({
-  children,
-  pageTitle = "AgWorks",
-}: MainLayoutProps) {
+export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayoutProps) {
   const { currentUser, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -56,28 +45,28 @@ export default function MainLayout({
 
   const getNavItems = () => {
     switch (currentUser.role) {
-      case MAP_ROLE.ADMIN:
+      case "admin":
         return [
           { name: "Dashboard", path: "/admin/dashboard", icon: Home },
           { name: "Customers", path: "/admin/customers", icon: Building },
           { name: "Workers", path: "/admin/workers", icon: Users },
         ];
-      case MAP_ROLE.CUSTOIMER:
+      case "customer":
         return [
           { name: "Dashboard", path: "/customer/dashboard", icon: Home },
           { name: "Sites", path: "/customer/sites", icon: Map },
           { name: "Blocks", path: "/customer/blocks", icon: Grape },
           { name: "Site Managers", path: "/customer/accounts", icon: UserPlus },
         ];
-      case MAP_ROLE.SITE_MANAGER:
+      case "siteManager":
         return [
           { name: "Dashboard", path: "/manager/dashboard", icon: Home },
           { name: "Work Orders", path: "/manager/orders", icon: ClipboardList },
         ];
-      case MAP_ROLE.WORKER:
+      case "worker":
         return [
           { name: "Dashboard", path: "/worker/dashboard", icon: Home },
-          { name: "My Tasks", path: "/worker/tasks", icon: ClipboardList },
+          { name: "My Tasks", path: "/worker/tasks", icon: ClipboardList }
         ];
       default:
         return [];
@@ -86,28 +75,28 @@ export default function MainLayout({
 
   const getSettingsPath = () => {
     switch (currentUser.role) {
-      case MAP_ROLE.ADMIN:
+      case "admin":
         return "/admin/settings";
-      case MAP_ROLE.CUSTOIMER:
+      case "customer":
         return "/customer/settings";
-      case MAP_ROLE.SITE_MANAGER:
+      case "siteManager":
         return "/manager/settings";
-      case MAP_ROLE.WORKER:
+      case "worker":
         return "/worker/settings";
       default:
         return "/";
     }
   };
-
+  
   const getHelpPath = () => {
     switch (currentUser.role) {
-      case MAP_ROLE.ADMIN:
+      case "admin":
         return "/admin/help";
-      case MAP_ROLE.CUSTOIMER:
+      case "customer":
         return "/customer/help";
-      case MAP_ROLE.SITE_MANAGER:
+      case "siteManager":
         return "/manager/help";
-      case MAP_ROLE.WORKER:
+      case "worker":
         return "/worker/help";
       default:
         return "/";
@@ -142,10 +131,7 @@ export default function MainLayout({
                   </Avatar>
                   <div>
                     <p className="font-medium">{currentUser.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {currentUser.role.charAt(0).toUpperCase() +
-                        currentUser.role.slice(1)}
-                    </p>
+                    <p className="text-xs text-muted-foreground">{currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)}</p>
                   </div>
                 </div>
                 <SidebarMenu>
@@ -155,10 +141,7 @@ export default function MainLayout({
                         asChild
                         data-active={location.pathname === item.path}
                       >
-                        <Link
-                          to={item.path}
-                          className="flex items-center gap-2"
-                        >
+                        <Link to={item.path} className="flex items-center gap-2">
                           <item.icon className="h-4 w-4" />
                           <span>{item.name}</span>
                         </Link>
@@ -171,35 +154,20 @@ export default function MainLayout({
           </SidebarContent>
           <SidebarFooter className="border-t p-4">
             <div className="flex flex-col gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="justify-start"
-                asChild
-              >
+              <Button variant="ghost" size="sm" className="justify-start" asChild>
                 <Link to={getSettingsPath()}>
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
                 </Link>
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="justify-start"
-                asChild
-              >
+              <Button variant="ghost" size="sm" className="justify-start" asChild>
                 <Link to={getHelpPath()}>
                   <HelpCircle className="mr-2 h-4 w-4" />
                   Help & Support
                 </Link>
               </Button>
               <Separator className="my-1" />
-              <Button
-                variant="ghost"
-                size="sm"
-                className="justify-start text-red-500"
-                onClick={handleLogout}
-              >
+              <Button variant="ghost" size="sm" className="justify-start text-red-500" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
               </Button>
@@ -210,11 +178,7 @@ export default function MainLayout({
         <div className="flex-1 flex flex-col">
           <header className="h-16 border-b flex items-center justify-between px-4 md:hidden">
             <div className="flex items-center">
-              <Button
-                variant="ghost"
-                className="p-0 mr-4"
-                onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}
-              >
+              <Button variant="ghost" className="p-0 mr-4" onClick={() => setIsMobileNavOpen(!isMobileNavOpen)}>
                 {isMobileNavOpen ? <X size={24} /> : <Menu size={24} />}
               </Button>
               <span className="text-xl font-bold text-primary">AgWorks</span>
@@ -235,8 +199,7 @@ export default function MainLayout({
                   <div>
                     <p className="font-medium">{currentUser.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {currentUser.role.charAt(0).toUpperCase() +
-                        currentUser.role.slice(1)}
+                      {currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)}
                     </p>
                   </div>
                 </div>
@@ -244,9 +207,7 @@ export default function MainLayout({
                   {navItems.map((item) => (
                     <Button
                       key={item.path}
-                      variant={
-                        location.pathname === item.path ? "default" : "ghost"
-                      }
+                      variant={location.pathname === item.path ? "default" : "ghost"}
                       className="w-full justify-start"
                       onClick={() => {
                         navigate(item.path);
@@ -259,8 +220,8 @@ export default function MainLayout({
                   ))}
                 </nav>
                 <div className="absolute bottom-4 left-4 right-4 space-y-2">
-                  <Button
-                    variant="ghost"
+                  <Button 
+                    variant="ghost" 
                     className="w-full justify-start"
                     onClick={() => {
                       navigate(getSettingsPath());
@@ -270,8 +231,8 @@ export default function MainLayout({
                     <Settings className="mr-2 h-4 w-4" />
                     Settings
                   </Button>
-                  <Button
-                    variant="ghost"
+                  <Button 
+                    variant="ghost" 
                     className="w-full justify-start"
                     onClick={() => {
                       navigate(getHelpPath());
@@ -282,11 +243,7 @@ export default function MainLayout({
                     Help & Support
                   </Button>
                   <Separator className="my-1" />
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-red-500"
-                    onClick={handleLogout}
-                  >
+                  <Button variant="ghost" className="w-full justify-start text-red-500" onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
                   </Button>
