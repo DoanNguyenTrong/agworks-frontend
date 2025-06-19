@@ -32,6 +32,15 @@ export default function CustomerAccounts() {
     return searchStr.includes(searchTerm.toLowerCase());
   });
 
+  // Get company name for site manager
+  const getCompanyName = (manager: User) => {
+    if (manager.customerId) {
+      const customer = users.find(u => u.id === manager.customerId && u.role === "customer");
+      return customer?.companyName || "—";
+    }
+    return "—";
+  };
+
   const handleAddManager = (data: any) => {
     // Create a new site manager
     const newManager = addUser({
@@ -98,6 +107,7 @@ export default function CustomerAccounts() {
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
+                <TableHead>Company</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -127,6 +137,7 @@ export default function CustomerAccounts() {
                         <span className="text-muted-foreground">Not provided</span>
                       )}
                     </TableCell>
+                    <TableCell>{getCompanyName(manager)}</TableCell>
                     <TableCell>
                       <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
                         Active
@@ -188,7 +199,7 @@ export default function CustomerAccounts() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
+                  <TableCell colSpan={6} className="text-center py-8">
                     <p className="text-muted-foreground">No site managers found</p>
                   </TableCell>
                 </TableRow>

@@ -78,6 +78,13 @@ export default function AdminWorkers() {
       task.workerId === workerId && task.status === "approved"
     ).length;
   };
+
+  // Get service company name
+  const getServiceCompanyName = (serviceCompanyId?: string) => {
+    if (!serviceCompanyId) return "—";
+    const serviceCompany = users.find(u => u.id === serviceCompanyId && u.role === "serviceCompany");
+    return serviceCompany?.companyName || "—";
+  };
   
   // Handle adding a new worker
   const handleAddWorker = (workerData: WorkerFormData) => {
@@ -88,7 +95,8 @@ export default function AdminWorkers() {
         name: workerData.name,
         role: 'worker',
         phone: workerData.phone,
-        profileImage: '/placeholder.svg'
+        profileImage: '/placeholder.svg',
+        serviceCompanyId: workerData.serviceCompanyId
       });
       
       // Add the new worker to the local state
@@ -199,6 +207,7 @@ export default function AdminWorkers() {
               <TableRow>
                 <TableHead>Worker</TableHead>
                 <TableHead>Contact</TableHead>
+                <TableHead>Company</TableHead>
                 <TableHead>Completed Tasks</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -207,7 +216,7 @@ export default function AdminWorkers() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-6">
+                  <TableCell colSpan={6} className="text-center py-6">
                     Loading workers...
                   </TableCell>
                 </TableRow>
@@ -227,6 +236,7 @@ export default function AdminWorkers() {
                       </div>
                     </TableCell>
                     <TableCell>{worker.phone || "—"}</TableCell>
+                    <TableCell>{getServiceCompanyName(worker.serviceCompanyId)}</TableCell>
                     <TableCell>{calculateCompletedTasks(worker.id)} tasks</TableCell>
                     <TableCell>
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
@@ -289,7 +299,7 @@ export default function AdminWorkers() {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-6">
+                  <TableCell colSpan={6} className="text-center py-6">
                     {searchTerm ? "No workers found matching your search." : "No workers added yet."}
                   </TableCell>
                 </TableRow>

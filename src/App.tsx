@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -49,6 +48,9 @@ import WorkOrderDetails from "./pages/WorkOrderDetails";
 // Service Company pages
 import ServiceDashboard from "./pages/ServiceDashboard";
 import ServiceWorkers from "./pages/ServiceWorkers";
+import ServiceWorkOrders from "./pages/ServiceWorkOrders";
+import ServiceSettings from "./pages/ServiceSettings";
+import ServiceHelp from "./pages/ServiceHelp";
 
 // Worker pages
 import WorkerDashboard from "./pages/WorkerDashboard";
@@ -121,6 +123,9 @@ function App() {
             <Route index element={<Navigate to="/service/dashboard" replace />} />
             <Route path="dashboard" element={<ServiceDashboard />} />
             <Route path="workers" element={<ServiceWorkers />} />
+            <Route path="orders" element={<ServiceWorkOrders />} />
+            <Route path="settings" element={<ServiceSettings />} />
+            <Route path="help" element={<ServiceHelp />} />
           </Route>
 
           {/* Worker routes */}

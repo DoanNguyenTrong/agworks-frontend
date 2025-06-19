@@ -1,4 +1,3 @@
-
 import MainLayout from "@/components/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -40,6 +39,7 @@ export default function AdminDashboard() {
   const customerCount = users.filter(user => user.role === "customer").length;
   const workerCount = users.filter(user => user.role === "worker").length;
   const siteManagerCount = users.filter(user => user.role === "siteManager").length;
+  const serviceCompanyCount = users.filter(user => user.role === "serviceCompany").length;
   
   // Get role badge color
   const getRoleBadge = (role: User["role"]) => {
@@ -50,11 +50,27 @@ export default function AdminDashboard() {
         return <Badge className="bg-agworks-green">Vineyard Owner</Badge>;
       case "siteManager":
         return <Badge className="bg-blue-500">Site Manager</Badge>;
+      case "serviceCompany":
+        return <Badge className="bg-orange-500">Service Company</Badge>;
       case "worker":
         return <Badge className="bg-agworks-brown">Field Worker</Badge>;
       default:
-        return null;
+        return <Badge>Unknown</Badge>;
     }
+  };
+
+  // Get company name for display
+  const getCompanyName = (user: User) => {
+    if (user.companyName) return user.companyName;
+    if (user.role === "siteManager" && user.customerId) {
+      const customer = users.find(u => u.id === user.customerId);
+      return customer?.companyName || "—";
+    }
+    if (user.role === "worker" && user.serviceCompanyId) {
+      const serviceCompany = users.find(u => u.id === user.serviceCompanyId);
+      return serviceCompany?.companyName || "—";
+    }
+    return "—";
   };
 
   const handleRowDoubleClick = (user: User) => {
@@ -95,12 +111,12 @@ export default function AdminDashboard() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Site Managers</CardTitle>
+            <CardTitle className="text-sm font-medium">Service Companies</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{siteManagerCount}</div>
+            <div className="text-2xl font-bold">{serviceCompanyCount}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Overseeing operations
+              Labor providers
             </p>
           </CardContent>
         </Card>
@@ -140,6 +156,7 @@ export default function AdminDashboard() {
             <SelectContent>
               <SelectItem value="all">All Roles</SelectItem>
               <SelectItem value="customer">Vineyard Owners</SelectItem>
+              <SelectItem value="serviceCompany">Service Companies</SelectItem>
               <SelectItem value="siteManager">Site Managers</SelectItem>
               <SelectItem value="worker">Field Workers</SelectItem>
               <SelectItem value="admin">Admins</SelectItem>
@@ -170,7 +187,7 @@ export default function AdminDashboard() {
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{getRoleBadge(user.role)}</TableCell>
-                  <TableCell>{user.companyName || "-"}</TableCell>
+                  <TableCell>{getCompanyName(user)}</TableCell>
                   <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
                 </TableRow>
               ))}
