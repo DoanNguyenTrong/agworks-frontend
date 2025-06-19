@@ -1,3 +1,4 @@
+
 // Site Manager type
 export interface SiteManager {
   id: string;
@@ -14,14 +15,15 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'customer' | 'siteManager' | 'worker';
+  role: 'admin' | 'customer' | 'siteManager' | 'serviceCompany' | 'worker';
   createdAt: string;
   companyName?: string;
   phone?: string;
   address?: string;
   logo?: string;
   profileImage?: string;
-  customerId?: string; // Added this property for site managers
+  customerId?: string; // For site managers
+  serviceCompanyId?: string; // For workers - which service company they belong to
 }
 
 // Site type
@@ -66,6 +68,7 @@ export interface WorkOrder {
   status: 'draft' | 'published' | 'inProgress' | 'completed' | 'cancelled';
   createdAt: string;
   createdBy: string;
+  serviceCompanyId?: string; // Which service company should handle this work order
 }
 
 // Worker Application type
@@ -73,7 +76,7 @@ export interface WorkerApplication {
   id: string;
   workerId: string;
   workerName: string;
-  orderId: string; // Fixed typo from orderrId to orderId
+  orderId: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
 }

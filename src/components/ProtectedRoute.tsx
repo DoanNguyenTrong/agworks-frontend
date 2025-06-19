@@ -27,6 +27,8 @@ export const ProtectedRoute = ({ allowedRoles, children }: ProtectedRouteProps) 
       return <Navigate to="/customer/dashboard" />;
     } else if (currentUser.role === "siteManager") {
       return <Navigate to="/manager/dashboard" />;
+    } else if (currentUser.role === "serviceCompany") {
+      return <Navigate to="/service/dashboard" />;
     } else {
       return <Navigate to="/worker/dashboard" />;
     }

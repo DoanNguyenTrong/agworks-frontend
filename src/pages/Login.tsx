@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -67,6 +68,7 @@ export default function Login() {
     { role: "Admin", email: "admin@agworks.com", password: "password" },
     { role: "Vineyard Owner", email: "customer@vineyard.com", password: "password" },
     { role: "Site Manager", email: "manager@vineyard.com", password: "password" },
+    { role: "Service Company", email: "contact@valleylabor.com", password: "password" },
     { role: "Worker", email: "worker1@example.com", password: "password" },
   ];
 

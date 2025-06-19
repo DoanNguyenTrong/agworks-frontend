@@ -29,6 +29,30 @@ export const users: User[] = [
     phone: "555-987-6543",
     customerId: "user-2"
   },
+  // Service Companies
+  {
+    id: "service-1",
+    email: "contact@valleylabor.com",
+    name: "Valley Labor Services",
+    role: "serviceCompany",
+    createdAt: "2023-04-01T08:00:00Z",
+    companyName: "Valley Labor Services LLC",
+    phone: "555-800-1000",
+    address: "789 Business Park Dr, Napa, CA 94558",
+    logo: "/placeholder.svg"
+  },
+  {
+    id: "service-2",
+    email: "info@agworkforce.com",
+    name: "AgWorkforce Solutions",
+    role: "serviceCompany",
+    createdAt: "2023-04-05T09:00:00Z",
+    companyName: "AgWorkforce Solutions Inc",
+    phone: "555-800-2000",
+    address: "456 Industrial Way, Sonoma, CA 95476",
+    logo: "/placeholder.svg"
+  },
+  // Workers - now assigned to service companies
   {
     id: "user-4",
     email: "worker1@example.com",
@@ -36,7 +60,8 @@ export const users: User[] = [
     role: "worker",
     createdAt: "2023-04-04T11:00:00Z",
     phone: "555-111-2222",
-    profileImage: "/placeholder.svg"
+    profileImage: "/placeholder.svg",
+    serviceCompanyId: "service-1"
   },
   {
     id: "user-5",
@@ -44,9 +69,29 @@ export const users: User[] = [
     name: "Jane Worker",
     role: "worker",
     createdAt: "2023-04-05T12:00:00Z",
-    phone: "555-333-4444"
+    phone: "555-333-4444",
+    serviceCompanyId: "service-1"
   },
-  // Merge site managers from siteManagers.ts
+  {
+    id: "worker-3",
+    email: "mike.rodriguez@example.com",
+    name: "Mike Rodriguez",
+    role: "worker",
+    createdAt: "2023-04-06T13:00:00Z",
+    phone: "555-555-6666",
+    profileImage: "/placeholder.svg",
+    serviceCompanyId: "service-2"
+  },
+  {
+    id: "worker-4",
+    email: "sarah.chen@example.com",
+    name: "Sarah Chen",
+    role: "worker",
+    createdAt: "2023-04-07T14:00:00Z",
+    phone: "555-777-8888",
+    serviceCompanyId: "service-2"
+  },
+  // Site managers from the original merged data
   {
     id: "manager-1",
     email: "michael.johnson@example.com",

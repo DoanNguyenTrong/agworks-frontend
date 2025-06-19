@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
 import { addUser } from "@/lib/utils/dataManagement";
+import { users } from "@/lib/data";
 
 const workerSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -16,6 +18,7 @@ const workerSchema = z.object({
   phone: z.string().optional(),
   password: z.string().min(8, "Password must be at least 8 characters").optional(),
   sendInvite: z.boolean().default(true),
+  serviceCompanyId: z.string().optional(),
 });
 
 export type WorkerFormData = z.infer<typeof workerSchema>;
@@ -37,6 +40,9 @@ export default function WorkerForm({
 }: WorkerFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Get service companies for dropdown
+  const serviceCompanies = users.filter(user => user.role === 'serviceCompany');
+  
   const form = useForm<WorkerFormData>({
     resolver: zodResolver(workerSchema),
     defaultValues: defaultValues || {
@@ -45,6 +51,7 @@ export default function WorkerForm({
       phone: "",
       password: "",
       sendInvite: true,
+      serviceCompanyId: "",
     },
   });
 
@@ -74,7 +81,8 @@ export default function WorkerForm({
           name: data.name,
           role: 'worker',
           phone: data.phone,
-          profileImage: '/placeholder.svg'
+          profileImage: '/placeholder.svg',
+          serviceCompanyId: data.serviceCompanyId || undefined
         });
         
         // If sendInvite is true, we'd send an email in a real implementation
@@ -149,6 +157,35 @@ export default function WorkerForm({
             )}
           />
         </div>
+        
+        <FormField
+          control={form.control}
+          name="serviceCompanyId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Service Company</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a service company" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="">No company assigned</SelectItem>
+                  {serviceCompanies.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.companyName || company.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Assign this worker to a service company for management.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
         {!isEditMode && (
           <FormField

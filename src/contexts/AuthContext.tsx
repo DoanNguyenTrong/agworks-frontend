@@ -35,6 +35,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       case "siteManager":
         navigate("/manager/dashboard");
         break;
+      case "serviceCompany":
+        navigate("/service/dashboard");
+        break;
       case "worker":
         navigate("/worker/dashboard");
         break;

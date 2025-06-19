@@ -46,6 +46,10 @@ import CreateWorkOrder from "./pages/CreateWorkOrder";
 import WorkOrderManagement from "./pages/WorkOrderManagement";
 import WorkOrderDetails from "./pages/WorkOrderDetails";
 
+// Service Company pages
+import ServiceDashboard from "./pages/ServiceDashboard";
+import ServiceWorkers from "./pages/ServiceWorkers";
+
 // Worker pages
 import WorkerDashboard from "./pages/WorkerDashboard";
 import WorkerTasks from "./pages/WorkerTasks";
@@ -110,6 +114,13 @@ function App() {
             <Route path="orders/new" element={<CreateWorkOrder />} />
             <Route path="orders" element={<WorkOrderManagement />} />
             <Route path="orders/:id" element={<WorkOrderDetails />} />
+          </Route>
+
+          {/* Service Company routes */}
+          <Route path="/service" element={<ProtectedRoute allowedRoles={["serviceCompany"]} />}>
+            <Route index element={<Navigate to="/service/dashboard" replace />} />
+            <Route path="dashboard" element={<ServiceDashboard />} />
+            <Route path="workers" element={<ServiceWorkers />} />
           </Route>
 
           {/* Worker routes */}
