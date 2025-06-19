@@ -63,6 +63,12 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
           { name: "Dashboard", path: "/manager/dashboard", icon: Home },
           { name: "Work Orders", path: "/manager/orders", icon: ClipboardList },
         ];
+      case "serviceCompany":
+        return [
+          { name: "Dashboard", path: "/service/dashboard", icon: Home },
+          { name: "Workers", path: "/service/workers", icon: Users },
+          { name: "Work Orders", path: "/service/orders", icon: ClipboardList },
+        ];
       case "worker":
         return [
           { name: "Dashboard", path: "/worker/dashboard", icon: Home },
@@ -81,6 +87,8 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
         return "/customer/settings";
       case "siteManager":
         return "/manager/settings";
+      case "serviceCompany":
+        return "/service/settings";
       case "worker":
         return "/worker/settings";
       default:
@@ -96,6 +104,8 @@ export default function MainLayout({ children, pageTitle = "AgWorks" }: MainLayo
         return "/customer/help";
       case "siteManager":
         return "/manager/help";
+      case "serviceCompany":
+        return "/service/help";
       case "worker":
         return "/worker/help";
       default:
