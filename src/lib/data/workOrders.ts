@@ -1,6 +1,7 @@
+
 import { WorkOrder } from "@/lib/types";
 
-export const workOrders: WorkOrder[] = [
+const baseWorkOrders: WorkOrder[] = [
   {
     id: "order-1",
     siteId: "site-1",
@@ -202,12 +203,12 @@ export const workOrders: WorkOrder[] = [
 
 // Adding the remaining orders to reach 50+ total
 const additionalOrders: WorkOrder[] = [];
-for (let i = 11; i <= 54; i++) {
+for (let i = 11; i <= 60; i++) {
   const statuses: WorkOrder["status"][] = ["draft", "published", "inProgress", "completed", "cancelled"];
   const workTypes: WorkOrder["workType"][] = ["pruning", "shootThinning", "other"];
   const siteIds = ["site-1", "site-2", "site-3"];
   const blockIds = ["block-1", "block-2", "block-3", "block-4"];
-  const serviceCompanyIds = ["user-6", "user-7", "user-8", "user-9", "user-10", "user-11", "user-12", "user-13", "user-14", "user-15", "user-16", "user-17"];
+  const serviceCompanyIds = ["user-6", "user-7", "user-8", "user-9", "user-10", "user-11", "user-12", "user-13", "user-14", "user-15", "user-16", "user-17", "user-18", "user-19", "user-20", "user-21", "user-22", "user-23", "user-24", "user-25", "user-26", "user-27"];
   
   const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
   const randomWorkType = workTypes[Math.floor(Math.random() * workTypes.length)];
@@ -247,6 +248,6 @@ for (let i = 11; i <= 54; i++) {
 }
 
 export const workOrders: WorkOrder[] = [
-  ...workOrders.slice(0, 10),
+  ...baseWorkOrders,
   ...additionalOrders
 ];
