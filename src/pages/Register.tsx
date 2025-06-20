@@ -36,7 +36,7 @@ const formSchema = z.object({
     message: "Password must be at least 8 characters.",
   }),
   confirmPassword: z.string(),
-  role: z.enum(["customer", "worker"]),
+  role: z.enum(["customer", "serviceCompany", "worker"]),
   companyName: z.string().optional(),
   phone: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -44,14 +44,14 @@ const formSchema = z.object({
   path: ["confirmPassword"],
 }).refine(
   (data) => {
-    // If role is customer, company name is required
-    if (data.role === "customer" && (!data.companyName || data.companyName.length < 2)) {
+    // If role is customer or serviceCompany, company name is required
+    if ((data.role === "customer" || data.role === "serviceCompany") && (!data.companyName || data.companyName.length < 2)) {
       return false;
     }
     return true;
   },
   {
-    message: "Company name is required for vineyard owners",
+    message: "Company name is required for vineyard owners and service companies",
     path: ["companyName"],
   }
 );
@@ -82,7 +82,7 @@ export default function Register() {
     try {
       await signup(values.email, values.password, {
         name: values.name,
-        role: values.role === "customer" ? "customer" : "worker",
+        role: values.role,
         companyName: values.companyName,
         phone: values.phone
       });
@@ -94,6 +94,18 @@ export default function Register() {
       setIsLoading(false);
     }
   }
+
+  const getAccountTypeDescription = (roleValue: string) => {
+    switch (roleValue) {
+      case "customer":
+        return "Create an account to manage your vineyard operations";
+      case "serviceCompany":
+        return "Create an account to provide labor services to vineyards";
+      case "worker":
+      default:
+        return "Create an account to apply for vineyard jobs";
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-agworks-lightGreen/10 to-agworks-brown/10 p-4">
@@ -127,13 +139,12 @@ export default function Register() {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="customer">Vineyard Owner</SelectItem>
+                        <SelectItem value="serviceCompany">Service Company</SelectItem>
                         <SelectItem value="worker">Field Worker</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormDescription>
-                      {field.value === "customer" 
-                        ? "Create an account to manage your vineyard operations" 
-                        : "Create an account to apply for vineyard jobs"}
+                      {getAccountTypeDescription(field.value)}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -155,15 +166,20 @@ export default function Register() {
                   )}
                 />
 
-                {role === "customer" && (
+                {(role === "customer" || role === "serviceCompany") && (
                   <FormField
                     control={form.control}
                     name="companyName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Vineyard Name</FormLabel>
+                        <FormLabel>
+                          {role === "customer" ? "Vineyard Name" : "Company Name"}
+                        </FormLabel>
                         <FormControl>
-                          <Input placeholder="Your Vineyard LLC" {...field} />
+                          <Input 
+                            placeholder={role === "customer" ? "Your Vineyard LLC" : "Your Service Company LLC"} 
+                            {...field} 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
