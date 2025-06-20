@@ -36,9 +36,10 @@ export default function WorkOrderManagement() {
   const managedSites = sites.filter(site => site.managerId === currentUser?.id);
   const managedSiteIds = managedSites.map(site => site.id);
   
-  // Filter work orders by search term and status
+  // Filter work orders by search term and status - exclude draft and cancelled
   const filteredOrders = workOrders
     .filter(order => managedSiteIds.includes(order.siteId))
+    .filter(order => !['draft', 'cancelled'].includes(order.status))
     .filter(order => {
       if (statusFilter !== "all") {
         return order.status === statusFilter;
@@ -54,16 +55,12 @@ export default function WorkOrderManagement() {
   
   const getStatusBadge = (status: WorkOrder["status"]) => {
     switch (status) {
-      case "draft":
-        return <Badge variant="outline">Draft</Badge>;
       case "published":
         return <Badge variant="secondary">Published</Badge>;
       case "inProgress":
         return <Badge>In Progress</Badge>;
       case "completed":
         return <Badge className="bg-agworks-green">Completed</Badge>;
-      case "cancelled":
-        return <Badge variant="destructive">Cancelled</Badge>;
       default:
         return null;
     }
@@ -93,11 +90,9 @@ export default function WorkOrderManagement() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
               <SelectItem value="published">Published</SelectItem>
               <SelectItem value="inProgress">In Progress</SelectItem>
               <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
             </SelectContent>
           </Select>
           

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Pencil, AlertTriangle, Building2, Users, CheckCircle, XCircle, Clock } from "lucide-react";
+import { ArrowLeft, Pencil, AlertTriangle, Building2, Users, CheckCircle, XCircle, Clock, MapPin, Calendar, DollarSign } from "lucide-react";
 import { workOrders, blocks, sites, users, serviceCompanyApplications, workerApplications } from "@/lib/data";
 import { WorkOrder, ServiceCompanyApplication } from "@/lib/types";
 
@@ -140,52 +140,94 @@ export default function WorkOrderDetails() {
         </div>
       </div>
       
-      <Tabs defaultValue="details" className="space-y-6">
+      <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="companies">Companies</TabsTrigger>
+          <TabsTrigger value="tasks">Completed Tasks</TabsTrigger>
+          <TabsTrigger value="payslip">Payslip</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="details">
-          <Card>
-            <CardHeader>
-              <CardTitle>Work Order Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">Work Type</h4>
-                  <p className="capitalize">{workOrder.workType}</p>
+        <TabsContent value="overview">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Work Order Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Location</p>
+                    <p className="font-medium">{workOrder.address}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">Needed Workers</h4>
-                  <p>{workOrder.neededWorkers}</p>
+                
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Work Dates</p>
+                    <p className="font-medium">
+                      {new Date(workOrder.startDate).toLocaleDateString()} - {new Date(workOrder.endDate).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">Pay Rate</h4>
-                  <p>${workOrder.payRate.toFixed(2)} per vine</p>
+                
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Workers Needed</p>
+                    <p className="font-medium">{workOrder.neededWorkers}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">Expected Hours</h4>
-                  <p>{workOrder.expectedHours}</p>
+                
+                <div className="flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Pay Rate</p>
+                    <p className="font-medium">${workOrder.payRate.toFixed(2)} per vine</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">Start Date</h4>
-                  <p>{new Date(workOrder.startDate).toLocaleDateString()}</p>
+
+                {workOrder.notes && (
+                  <div>
+                    <h4 className="font-medium text-sm text-muted-foreground mb-2">Notes</h4>
+                    <p className="text-sm bg-muted p-3 rounded-md">{workOrder.notes}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Block Details</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Acres:</span>
+                    <span>{workOrder.acres || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Rows:</span>
+                    <span>{workOrder.rows || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Vines:</span>
+                    <span>{workOrder.vines || 'N/A'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Expected Hours:</span>
+                    <span>{workOrder.expectedHours}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Total Pay Estimate:</span>
+                    <span>${((workOrder.vines || 0) * workOrder.payRate).toFixed(2)}</span>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-medium text-sm text-muted-foreground">End Date</h4>
-                  <p>{new Date(workOrder.endDate).toLocaleDateString()}</p>
-                </div>
-              </div>
-              {workOrder.notes && (
-                <div>
-                  <h4 className="font-medium text-sm text-muted-foreground mb-2">Notes</h4>
-                  <p className="text-sm bg-muted p-3 rounded-md">{workOrder.notes}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
         
         <TabsContent value="companies">
@@ -264,6 +306,40 @@ export default function WorkOrderDetails() {
                   <p>No service companies selected for this work order.</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="tasks">
+          <Card>
+            <CardHeader>
+              <CardTitle>Completed Tasks</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-muted-foreground">
+                <CheckCircle className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No completed tasks yet</p>
+                <p className="text-sm mt-1">
+                  Tasks will appear here once work begins on this order.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="payslip">
+          <Card>
+            <CardHeader>
+              <CardTitle>Payslip Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-muted-foreground">
+                <DollarSign className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No payslip generated yet</p>
+                <p className="text-sm mt-1">
+                  Payslip will be generated once the work order is completed.
+                </p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

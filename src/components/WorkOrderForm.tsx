@@ -10,8 +10,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { CalendarIcon, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { CalendarIcon, Clock, ChevronDown, X } from "lucide-react";
 import { sites, blocks, users } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
 import { Block } from "@/lib/types";
@@ -125,6 +131,16 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
   const handleFormSubmit = (data: z.infer<typeof workOrderSchema>) => {
     onSubmit(data);
   };
+
+  const selectedCompanyIds = form.watch("serviceCompanyIds");
+  const selectedCompanies = availableServiceCompanies.filter(company => 
+    selectedCompanyIds.includes(company.id)
+  );
+
+  const removeCompany = (companyId: string) => {
+    const currentIds = form.getValues("serviceCompanyIds");
+    form.setValue("serviceCompanyIds", currentIds.filter(id => id !== companyId));
+  };
   
   return (
     <Form {...form}>
@@ -193,70 +209,70 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
           />
         </div>
 
-        {/* Service Company Selection - Updated to show as dropdown with detailed info */}
+        {/* Service Company Selection - Dropdown */}
         <FormField
           control={form.control}
           name="serviceCompanyIds"
-          render={() => (
+          render={({ field }) => (
             <FormItem>
-              <div className="mb-4">
-                <FormLabel className="text-base">Select Service Companies*</FormLabel>
-                <FormDescription>
-                  Choose which service companies can bid on this work order.
-                </FormDescription>
-              </div>
-              <div className="space-y-3">
-                {availableServiceCompanies.map((company) => (
-                  <FormField
-                    key={company.id}
-                    control={form.control}
-                    name="serviceCompanyIds"
-                    render={({ field }) => {
-                      return (
-                        <FormItem
-                          key={company.id}
-                          className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4 hover:bg-muted/50"
-                        >
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value?.includes(company.id)}
-                              onCheckedChange={(checked) => {
-                                return checked
-                                  ? field.onChange([...field.value, company.id])
-                                  : field.onChange(
-                                      field.value?.filter(
-                                        (value) => value !== company.id
-                                      )
-                                    )
-                              }}
-                            />
-                          </FormControl>
-                          <div className="flex-1 space-y-1 leading-none">
-                            <FormLabel className="text-base font-medium cursor-pointer">
-                              {company.companyName || company.name}
-                            </FormLabel>
-                            <div className="space-y-1">
-                              <FormDescription className="text-sm">
-                                📧 {company.email}
-                              </FormDescription>
-                              {company.phone && (
-                                <FormDescription className="text-sm">
-                                  📞 {company.phone}
-                                </FormDescription>
-                              )}
-                              {company.address && (
-                                <FormDescription className="text-sm">
-                                  📍 {company.address}
-                                </FormDescription>
-                              )}
-                            </div>
+              <FormLabel>Select Service Companies*</FormLabel>
+              <div className="space-y-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between">
+                      {selectedCompanies.length > 0 
+                        ? `${selectedCompanies.length} companies selected`
+                        : "Select service companies"
+                      }
+                      <ChevronDown className="h-4 w-4 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-96 max-h-64 overflow-y-auto bg-white">
+                    {availableServiceCompanies.map((company) => (
+                      <DropdownMenuCheckboxItem
+                        key={company.id}
+                        checked={field.value.includes(company.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            field.onChange([...field.value, company.id]);
+                          } else {
+                            field.onChange(field.value.filter((id: string) => id !== company.id));
+                          }
+                        }}
+                        className="flex flex-col items-start space-y-1 p-3"
+                      >
+                        <div className="font-medium">{company.companyName || company.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          📧 {company.email}
+                        </div>
+                        {company.address && (
+                          <div className="text-sm text-muted-foreground">
+                            📍 {company.address}
                           </div>
-                        </FormItem>
-                      )
-                    }}
-                  />
-                ))}
+                        )}
+                      </DropdownMenuCheckboxItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+                {/* Selected Companies Display */}
+                {selectedCompanies.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {selectedCompanies.map((company) => (
+                      <Badge key={company.id} variant="secondary" className="flex items-center gap-1">
+                        {company.companyName || company.name}
+                        <X 
+                          className="h-3 w-3 cursor-pointer" 
+                          onClick={() => removeCompany(company.id)}
+                        />
+                      </Badge>
+                    ))}
+                  </div>
+                )}
               </div>
+              <FormDescription>
+                Choose which service companies can bid on this work order.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
