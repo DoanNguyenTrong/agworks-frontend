@@ -1,13 +1,17 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { WorkOrder, WorkerTask } from "@/lib/types";
+import { users, serviceCompanyApplications } from "@/lib/data";
+import { MapPin, Calendar, Users, DollarSign, Building2, CheckCircle, XCircle, Clock } from "lucide-react";
 import WorkerPerformance from "@/components/WorkerPerformance";
 
 interface WorkOrderTabsProps {
@@ -17,7 +21,17 @@ interface WorkOrderTabsProps {
 }
 
 export default function WorkOrderTabs({ workOrder, tasks, payments = [] }: WorkOrderTabsProps) {
-  const [activeTab, setActiveTab] = useState("details");
+  const [activeTab, setActiveTab] = useState("overview");
+  const navigate = useNavigate();
+
+  // Get service company applications for this order
+  const companyApplications = serviceCompanyApplications.filter(app => app.orderId === workOrder.id);
+  
+  // Get selected service companies info
+  const selectedServiceCompanies = workOrder.serviceCompanyIds ? 
+    users.filter(user => 
+      user.role === 'serviceCompany' && workOrder.serviceCompanyIds?.includes(user.id)
+    ) : [];
 
   // Group tasks by status
   const pendingTasks = tasks.filter(task => task.status === "pending");
@@ -39,104 +53,99 @@ export default function WorkOrderTabs({ workOrder, tasks, payments = [] }: WorkO
     }
   };
 
+  const getApplication = (companyId: string) => {
+    return companyApplications.find(app => app.serviceCompanyId === companyId);
+  };
+
+  const getApplicationStatusIcon = (status: string) => {
+    switch (status) {
+      case "accepted":
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case "rejected":
+        return <XCircle className="h-4 w-4 text-red-600" />;
+      default:
+        return <Clock className="h-4 w-4 text-yellow-600" />;
+    }
+  };
+
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid grid-cols-3 md:grid-cols-4 w-full mb-6">
-        <TabsTrigger value="details">Details</TabsTrigger>
+      <TabsList className="grid grid-cols-5 w-full mb-6">
+        <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="tasks">
-          Tasks {tasks.length > 0 && `(${tasks.length})`}
+          Completed Tasks {tasks.length > 0 && `(${tasks.length})`}
         </TabsTrigger>
-        <TabsTrigger value="workers">
-          Workers {workOrder.neededWorkers > 0 && `(${workOrder.neededWorkers})`}
+        <TabsTrigger value="payslip">
+          Payslip {payments.length > 0 && `(${payments.length})`}
         </TabsTrigger>
-        <TabsTrigger value="payslips">
-          Payslips {payments.length > 0 && `(${payments.length})`}
+        <TabsTrigger value="details">Details</TabsTrigger>
+        <TabsTrigger value="companies">
+          Companies ({selectedServiceCompanies.length})
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="details">
-        <Card>
-          <CardHeader>
-            <CardTitle>Work Order Details</CardTitle>
-            <CardDescription>
-              Complete information about this work order
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Schedule</h3>
-                <p className="font-medium">
-                  {format(new Date(workOrder.startDate), "MMM d")} -{" "}
-                  {format(new Date(workOrder.endDate), "MMM d, yyyy")}
-                </p>
+      <TabsContent value="overview">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-2xl font-bold">
+                {selectedServiceCompanies.length}
               </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Work Type</h3>
-                <p className="font-medium capitalize">{workOrder.workType}</p>
+              <p className="text-xs text-muted-foreground">Total Workers</p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-2xl font-bold">
+                {tasks.length}
               </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Status</h3>
-                <p className="font-medium capitalize">{workOrder.status}</p>
+              <p className="text-xs text-muted-foreground">Total Tasks</p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-2xl font-bold">
+                {Math.round(tasks.length / (workOrder.neededWorkers || 1))}
               </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Pay Rate</h3>
-                <p className="font-medium">${workOrder.payRate}/hour</p>
+              <p className="text-xs text-muted-foreground">Average Per Worker</p>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-2xl font-bold">
+                ${payments.reduce((sum, p) => sum + p.totalAmount, 0).toFixed(2)}
               </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Expected Hours</h3>
-                <p className="font-medium">{workOrder.expectedHours} hours</p>
+              <p className="text-xs text-muted-foreground">Total Earnings</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Worker Performance</CardTitle>
+              <CardDescription>Tasks completed by each worker</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <WorkerPerformance id={workOrder.id} tasks={tasks} payRate={workOrder.payRate} />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Daily Progress</CardTitle>
+              <CardDescription>Tasks completed per day</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Daily progress tracking coming soon</p>
               </div>
-              
-              <div>
-                <h3 className="text-sm font-medium text-muted-foreground mb-1">Workers Needed</h3>
-                <p className="font-medium">{workOrder.neededWorkers}</p>
-              </div>
-            </div>
-            
-            <Separator />
-            
-            <div>
-              <h3 className="text-sm font-medium text-muted-foreground mb-2">Vineyard Information</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div>
-                  <h4 className="text-xs text-muted-foreground">Address</h4>
-                  <p className="font-medium">{workOrder.address}</p>
-                </div>
-                
-                <div>
-                  <h4 className="text-xs text-muted-foreground">Acres</h4>
-                  <p className="font-medium">{workOrder.acres || "—"}</p>
-                </div>
-                
-                <div>
-                  <h4 className="text-xs text-muted-foreground">Rows</h4>
-                  <p className="font-medium">{workOrder.rows || "—"}</p>
-                </div>
-                
-                <div>
-                  <h4 className="text-xs text-muted-foreground">Vines</h4>
-                  <p className="font-medium">{workOrder.vines || "—"}</p>
-                </div>
-              </div>
-            </div>
-            
-            {workOrder.notes && (
-              <>
-                <Separator />
-                
-                <div>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-2">Notes</h3>
-                  <p>{workOrder.notes}</p>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </TabsContent>
 
       <TabsContent value="tasks">
@@ -187,34 +196,36 @@ export default function WorkOrderTabs({ workOrder, tasks, payments = [] }: WorkO
                 {approvedTasks.length > 0 && (
                   <div>
                     <h3 className="text-sm font-medium mb-3">Approved ({approvedTasks.length})</h3>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Worker</TableHead>
-                          <TableHead>Submitted</TableHead>
-                          <TableHead>Photos</TableHead>
-                          <TableHead>Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {approvedTasks.map(task => (
-                          <TableRow key={task.id}>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Avatar className="h-8 w-8">
-                                  <AvatarImage src={task.imageUrl} />
-                                  <AvatarFallback>{task.workerName[0]}</AvatarFallback>
-                                </Avatar>
-                                <span>{task.workerName}</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {approvedTasks.map(task => (
+                        <Card key={task.id} className="p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <Avatar className="h-10 w-10">
+                              <AvatarImage src={task.imageUrl} />
+                              <AvatarFallback>{task.workerName[0]}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium">{task.workerName}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {format(new Date(task.completedAt), "MMM d, yyyy")}
                               </div>
-                            </TableCell>
-                            <TableCell>{format(new Date(task.completedAt), "MMM d, yyyy")}</TableCell>
-                            <TableCell>{task.photoUrls.length}</TableCell>
-                            <TableCell>{renderStatus(task.status)}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                            </div>
+                          </div>
+                          {task.photoUrls.length > 0 && (
+                            <div className="grid grid-cols-2 gap-2">
+                              {task.photoUrls.slice(0, 2).map((url, index) => (
+                                <img 
+                                  key={index}
+                                  src={url} 
+                                  alt={`Task photo ${index + 1}`}
+                                  className="w-full h-24 object-cover rounded"
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 )}
                 
@@ -261,59 +272,216 @@ export default function WorkOrderTabs({ workOrder, tasks, payments = [] }: WorkO
         </Card>
       </TabsContent>
 
-      <TabsContent value="workers">
+      <TabsContent value="payslip">
         <Card>
           <CardHeader>
-            <CardTitle>Worker Performance</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              Payment Calculations
+              <Button className="bg-green-600 hover:bg-green-700">
+                <DollarSign className="h-4 w-4 mr-2" />
+                Export Payroll
+              </Button>
+            </CardTitle>
             <CardDescription>
-              Track worker productivity and task completion
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <WorkerPerformance id={workOrder.id} tasks={tasks} payRate={workOrder.payRate} />
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      <TabsContent value="payslips">
-        <Card>
-          <CardHeader>
-            <CardTitle>Payment Details</CardTitle>
-            <CardDescription>
-              Worker payments for this work order
+              Pay amounts based on completed and approved tasks
             </CardDescription>
           </CardHeader>
           <CardContent>
             {payments && payments.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Worker</TableHead>
-                    <TableHead>Completed Tasks</TableHead>
-                    <TableHead>Hours</TableHead>
-                    <TableHead>Rate</TableHead>
-                    <TableHead>Total Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {payments.map((payment, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <div className="font-medium">{payment.workerName}</div>
-                      </TableCell>
-                      <TableCell>{payment.taskCount}</TableCell>
-                      <TableCell>{payment.totalHours}</TableCell>
-                      <TableCell>${workOrder.payRate.toFixed(2)}/hr</TableCell>
-                      <TableCell>${payment.totalAmount.toFixed(2)}</TableCell>
-                      <TableCell>{renderStatus(payment.status)}</TableCell>
+              <div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Worker</TableHead>
+                      <TableHead>Completed Tasks</TableHead>
+                      <TableHead>Pay Rate</TableHead>
+                      <TableHead>Total Amount</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {payments.map((payment, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">{payment.workerName}</TableCell>
+                        <TableCell>{payment.taskCount}</TableCell>
+                        <TableCell>${workOrder.payRate.toFixed(1)} per task</TableCell>
+                        <TableCell>${payment.totalAmount.toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                
+                <div className="mt-4 pt-4 border-t">
+                  <div className="flex justify-between items-center font-medium">
+                    <span>Total Payment</span>
+                    <span>${payments.reduce((sum, p) => sum + p.totalAmount, 0).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
             ) : (
               <div className="text-center py-8">
                 <p className="text-muted-foreground">No payment data available yet</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="details">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Work Order Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Location</p>
+                  <p className="font-medium">{workOrder.address}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Work Dates</p>
+                  <p className="font-medium">
+                    {new Date(workOrder.startDate).toLocaleDateString()} - {new Date(workOrder.endDate).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Workers Needed</p>
+                  <p className="font-medium">{workOrder.neededWorkers}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Pay Rate</p>
+                  <p className="font-medium">${workOrder.payRate.toFixed(2)} per vine</p>
+                </div>
+              </div>
+
+              {workOrder.notes && (
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground mb-2">Notes</h4>
+                  <p className="text-sm bg-muted p-3 rounded-md">{workOrder.notes}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Block Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Acres:</span>
+                  <span>{workOrder.acres || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Rows:</span>
+                  <span>{workOrder.rows || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Vines:</span>
+                  <span>{workOrder.vines || 'N/A'}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Expected Hours:</span>
+                  <span>{workOrder.expectedHours}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total Pay Estimate:</span>
+                  <span>${((workOrder.vines || 0) * workOrder.payRate).toFixed(2)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </TabsContent>
+
+      <TabsContent value="companies">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building2 className="h-5 w-5" />
+              Service Companies ({selectedServiceCompanies.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Company Name</TableHead>
+                  <TableHead>Contact Info</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Applied Date</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {selectedServiceCompanies.map((company) => {
+                  const application = getApplication(company.id);
+                  return (
+                    <TableRow 
+                      key={company.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigate(`/manager/orders/${workOrder.id}/companies/${company.id}`)}
+                    >
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{company.companyName || company.name}</div>
+                          <div className="text-sm text-muted-foreground">{company.address}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="text-sm">{company.email}</div>
+                          {company.phone && <div className="text-sm text-muted-foreground">{company.phone}</div>}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {application ? (
+                            <>
+                              {getApplicationStatusIcon(application.status)}
+                              <span className="capitalize">{application.status}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-muted-foreground">Invited</span>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {application ? new Date(application.createdAt).toLocaleDateString() : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <Button variant="outline" size="sm">
+                          <Users className="h-4 w-4 mr-2" />
+                          View Workers
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+            
+            {selectedServiceCompanies.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>No service companies selected for this work order.</p>
               </div>
             )}
           </CardContent>
