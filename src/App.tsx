@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -49,6 +50,7 @@ import WorkOrderDetails from "./pages/WorkOrderDetails";
 import ServiceDashboard from "./pages/ServiceDashboard";
 import ServiceWorkers from "./pages/ServiceWorkers";
 import ServiceWorkOrders from "./pages/ServiceWorkOrders";
+import ServiceOrderDetails from "./pages/ServiceOrderDetails";
 import ServiceSettings from "./pages/ServiceSettings";
 import ServiceHelp from "./pages/ServiceHelp";
 

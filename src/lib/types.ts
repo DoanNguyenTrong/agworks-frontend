@@ -1,4 +1,3 @@
-
 // Site Manager type
 export interface SiteManager {
   id: string;
@@ -48,7 +47,7 @@ export interface Block {
   createdAt: string;
 }
 
-// Work Order type
+// Work Order type - updated to support service company workflow
 export interface WorkOrder {
   id: string;
   siteId: string;
@@ -68,17 +67,33 @@ export interface WorkOrder {
   status: 'draft' | 'published' | 'inProgress' | 'completed' | 'cancelled';
   createdAt: string;
   createdBy: string;
-  serviceCompanyId?: string; // Which service company should handle this work order
+  serviceCompanyIds?: string[]; // Multiple service companies can be selected
+  acceptedByServiceCompanyId?: string; // Which service company accepted the order
 }
 
-// Worker Application type
+// Service Company Application type - when service companies apply for work orders
+export interface ServiceCompanyApplication {
+  id: string;
+  serviceCompanyId: string;
+  serviceCompanyName: string;
+  orderId: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: string;
+  notes?: string;
+}
+
+// Worker Application type - updated to include more details
 export interface WorkerApplication {
   id: string;
   workerId: string;
   workerName: string;
   orderId: string;
+  serviceCompanyId: string;
   status: 'pending' | 'approved' | 'rejected';
   createdAt: string;
+  notes?: string; // Worker can add notes about price negotiation, who they're working with, etc.
+  suggestedRate?: number; // Worker can suggest their own rate
+  companionWorkerIds?: string[]; // Workers they want to work with
 }
 
 // Worker Task type

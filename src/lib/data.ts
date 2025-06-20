@@ -1,4 +1,3 @@
-
 // Central export file for all data
 import { users } from './data/users';
 import { sites } from './data/sites';
@@ -9,6 +8,7 @@ import { workerTasks } from './data/workerTasks';
 import { getPaymentCalculations } from './data/paymentCalculations';
 import { userSettings } from './data/userSettings';
 import { adminSettings } from './data/adminSettings';
+import { serviceCompanyApplications } from './data/serviceCompanyApplications';
 
 export {
   users,
@@ -19,5 +19,6 @@ export {
   workerTasks,
   getPaymentCalculations,
   userSettings,
-  adminSettings
+  adminSettings,
+  serviceCompanyApplications
 };

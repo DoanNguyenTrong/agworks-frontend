@@ -10,15 +10,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CalendarIcon, Clock } from "lucide-react";
 import { sites, blocks, users } from "@/lib/data";
 import { useAuth } from "@/contexts/AuthContext";
 import { Block } from "@/lib/types";
 
-// Work order schema
+// Work order schema - updated to include service companies
 const workOrderSchema = z.object({
   siteId: z.string().min(1, "Site is required"),
-  blockId: z.string().min(1, "Block is required"),
+  blockId: z.string().min(1, "Block is required"),  
   workDate: z.date({
     required_error: "Work date is required",
   }),
@@ -34,6 +35,7 @@ const workOrderSchema = z.object({
   vines: z.coerce.number().optional(),
   vinesPerRow: z.coerce.number().optional(),
   notes: z.string().optional(),
+  serviceCompanyIds: z.array(z.string()).min(1, "At least one service company must be selected"),
 });
 
 interface WorkOrderFormProps {
@@ -45,12 +47,17 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
   const { currentUser } = useAuth();
   const [managedSites, setManagedSites] = useState<any[]>([]);
   const [availableBlocks, setAvailableBlocks] = useState<Block[]>([]);
+  const [availableServiceCompanies, setAvailableServiceCompanies] = useState<any[]>([]);
   
-  // Get sites managed by this manager
+  // Get sites managed by this manager and available service companies
   useEffect(() => {
     if (currentUser) {
       const userSites = sites.filter(site => site.managerId === currentUser.id);
       setManagedSites(userSites);
+      
+      // Get all service companies
+      const serviceCompanies = users.filter(user => user.role === 'serviceCompany');
+      setAvailableServiceCompanies(serviceCompanies);
     }
   }, [currentUser]);
   
@@ -61,7 +68,7 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
       siteId: "",
       blockId: "",
       workDate: new Date(),
-      startTime: "08:00",
+      startTime: "08:00", 
       endTime: "17:00",
       workType: "pruning",
       neededWorkers: 1,
@@ -71,6 +78,7 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
       vines: undefined,
       vinesPerRow: undefined,
       notes: "",
+      serviceCompanyIds: [],
     },
   });
   
@@ -184,6 +192,63 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
             )}
           />
         </div>
+
+        {/* Service Company Selection */}
+        <FormField
+          control={form.control}
+          name="serviceCompanyIds"
+          render={() => (
+            <FormItem>
+              <div className="mb-4">
+                <FormLabel className="text-base">Select Service Companies*</FormLabel>
+                <FormDescription>
+                  Choose which service companies can bid on this work order.
+                </FormDescription>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {availableServiceCompanies.map((company) => (
+                  <FormField
+                    key={company.id}
+                    control={form.control}
+                    name="serviceCompanyIds"
+                    render={({ field }) => {
+                      return (
+                        <FormItem
+                          key={company.id}
+                          className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"
+                        >
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value?.includes(company.id)}
+                              onCheckedChange={(checked) => {
+                                return checked
+                                  ? field.onChange([...field.value, company.id])
+                                  : field.onChange(
+                                      field.value?.filter(
+                                        (value) => value !== company.id
+                                      )
+                                    )
+                              }}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="font-medium">
+                              {company.companyName || company.name}
+                            </FormLabel>
+                            <FormDescription>
+                              {company.email}
+                            </FormDescription>
+                          </div>
+                        </FormItem>
+                      )
+                    }}
+                  />
+                ))}
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Work Date */}

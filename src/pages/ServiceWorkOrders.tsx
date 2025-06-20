@@ -1,43 +1,105 @@
 
 import MainLayout from "@/components/MainLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Calendar, MapPin, Users, DollarSign, Clock } from "lucide-react";
+import { Search, Calendar, MapPin, Users, DollarSign, Clock, CheckCircle, XCircle } from "lucide-react";
 import { useState } from "react";
-import { workOrders } from "@/lib/data";
+import { workOrders, serviceCompanyApplications } from "@/lib/data";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 export default function ServiceWorkOrders() {
+  const { currentUser } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   
-  // Filter work orders
-  const filteredOrders = workOrders.filter(order => {
+  // Filter work orders that this service company can see
+  const availableOrders = workOrders.filter(order => {
+    // Show orders that either:
+    // 1. Have service company IDs and this company is in the list
+    // 2. Are published and available for bidding
+    return order.serviceCompanyIds?.includes(currentUser?.id || '') || 
+           (order.status === "published" && !order.acceptedByServiceCompanyId);
+  });
+  
+  // Filter work orders by search and status
+  const filteredOrders = availableOrders.filter(order => {
     // Search filter
     const searchString = `${order.workType} ${order.address}`.toLowerCase();
     if (!searchString.includes(searchTerm.toLowerCase())) return false;
     
-    // Status filter
-    if (statusFilter !== "all" && order.status !== statusFilter) return false;
+    // Status filter - map service company perspective
+    if (statusFilter === "available" && (order.acceptedByServiceCompanyId || getApplicationStatus(order.id) !== 'none')) return false;
+    if (statusFilter === "applied" && getApplicationStatus(order.id) !== 'pending') return false;
+    if (statusFilter === "accepted" && (getApplicationStatus(order.id) !== 'accepted' || order.acceptedByServiceCompanyId !== currentUser?.id)) return false;
+    if (statusFilter === "rejected" && getApplicationStatus(order.id) !== 'rejected') return false;
     
     return true;
   });
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "published":
-        return <Badge className="bg-blue-100 text-blue-700">Available</Badge>;
-      case "inProgress":
-        return <Badge className="bg-yellow-100 text-yellow-700">In Progress</Badge>;
-      case "completed":
-        return <Badge className="bg-green-100 text-green-700">Completed</Badge>;
-      case "cancelled":
-        return <Badge className="bg-red-100 text-red-700">Cancelled</Badge>;
-      default:
-        return <Badge variant="outline">Draft</Badge>;
+  const getApplicationStatus = (orderId: string) => {
+    const application = serviceCompanyApplications.find(
+      app => app.orderId === orderId && app.serviceCompanyId === currentUser?.id
+    );
+    return application?.status || 'none';
+  };
+
+  const getStatusBadge = (order: any) => {
+    const appStatus = getApplicationStatus(order.id);
+    
+    if (appStatus === 'pending') {
+      return <Badge className="bg-yellow-100 text-yellow-700">Applied</Badge>;
+    } else if (appStatus === 'accepted') {
+      return <Badge className="bg-green-100 text-green-700">Accepted</Badge>;
+    } else if (appStatus === 'rejected') {
+      return <Badge className="bg-red-100 text-red-700">Rejected</Badge>;
+    } else if (order.acceptedByServiceCompanyId && order.acceptedByServiceCompanyId !== currentUser?.id) {
+      return <Badge variant="outline">Unavailable</Badge>;
+    } else {
+      return <Badge className="bg-blue-100 text-blue-700">Available</Badge>;
+    }
+  };
+
+  const handleAcceptOrder = async (orderId: string) => {
+    try {
+      // TODO: Implement actual API call to accept order
+      console.log("Accepting order:", orderId);
+      
+      toast({
+        title: "Order Application Submitted",
+        description: "Your application for this work order has been submitted.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit application. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRejectOrder = async (orderId: string) => {
+    try {
+      // TODO: Implement actual API call to reject order
+      console.log("Rejecting order:", orderId);
+      
+      toast({
+        title: "Order Rejected",
+        description: "You have declined this work order.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error", 
+        description: "Failed to reject order. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -52,6 +114,10 @@ export default function ServiceWorkOrders() {
     }
   };
 
+  const handleViewDetails = (orderId: string) => {
+    navigate(`/service/orders/${orderId}`);
+  };
+
   return (
     <MainLayout pageTitle="Work Orders">
       <div className="space-y-6">
@@ -62,7 +128,7 @@ export default function ServiceWorkOrders() {
             <div>
               <h1 className="text-2xl font-bold">Available Work Orders</h1>
               <p className="text-muted-foreground">
-                View and manage work orders assigned to your company
+                View and apply for work orders from vineyard managers
               </p>
             </div>
           </div>
@@ -84,10 +150,10 @@ export default function ServiceWorkOrders() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Orders</SelectItem>
-                <SelectItem value="published">Available</SelectItem>
-                <SelectItem value="inProgress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="available">Available</SelectItem>
+                <SelectItem value="applied">Applied</SelectItem>
+                <SelectItem value="accepted">Accepted</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -101,7 +167,7 @@ export default function ServiceWorkOrders() {
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Available Orders</p>
                   <p className="text-2xl font-bold">
-                    {workOrders.filter(order => order.status === "published").length}
+                    {filteredOrders.filter(order => getApplicationStatus(order.id) === 'none' && !order.acceptedByServiceCompanyId).length}
                   </p>
                 </div>
                 <Clock className="h-8 w-8 text-blue-600" />
@@ -113,9 +179,9 @@ export default function ServiceWorkOrders() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">In Progress</p>
+                  <p className="text-sm font-medium text-muted-foreground">Applied</p>
                   <p className="text-2xl font-bold">
-                    {workOrders.filter(order => order.status === "inProgress").length}
+                    {filteredOrders.filter(order => getApplicationStatus(order.id) === 'pending').length}
                   </p>
                 </div>
                 <Users className="h-8 w-8 text-yellow-600" />
@@ -127,12 +193,12 @@ export default function ServiceWorkOrders() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">Completed</p>
+                  <p className="text-sm font-medium text-muted-foreground">Accepted</p>
                   <p className="text-2xl font-bold">
-                    {workOrders.filter(order => order.status === "completed").length}
+                    {filteredOrders.filter(order => getApplicationStatus(order.id) === 'accepted').length}
                   </p>
                 </div>
-                <Badge className="h-8 w-8 bg-green-600" />
+                <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
             </CardContent>
           </Card>
@@ -195,19 +261,26 @@ export default function ServiceWorkOrders() {
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <DollarSign className="h-3 w-3 text-muted-foreground" />
-                          <span>${order.payRate}/hr</span>
+                          <span>${order.payRate}/vine</span>
                         </div>
                       </TableCell>
-                      <TableCell>{getStatusBadge(order.status)}</TableCell>
+                      <TableCell>{getStatusBadge(order)}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" onClick={() => handleViewDetails(order.id)}>
                             View Details
                           </Button>
-                          {order.status === "published" && (
-                            <Button size="sm">
-                              Assign Workers
-                            </Button>
+                          {getApplicationStatus(order.id) === 'none' && !order.acceptedByServiceCompanyId && (
+                            <>
+                              <Button size="sm" onClick={() => handleAcceptOrder(order.id)}>
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Apply
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => handleRejectOrder(order.id)}>
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Decline
+                              </Button>
+                            </>
                           )}
                         </div>
                       </TableCell>
