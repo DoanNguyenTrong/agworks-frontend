@@ -2,21 +2,23 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "@/components/MainLayout";
-import WorkOrderTabs from "@/components/WorkOrderTabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Pencil, AlertTriangle } from "lucide-react";
-import { workOrders, blocks, sites, workerTasks, getPaymentCalculations } from "@/lib/data";
-import { WorkOrder, WorkerTask } from "@/lib/types";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ArrowLeft, Pencil, AlertTriangle, Building2, Users, CheckCircle, XCircle, Clock } from "lucide-react";
+import { workOrders, blocks, sites, users, serviceCompanyApplications, workerApplications } from "@/lib/data";
+import { WorkOrder, ServiceCompanyApplication } from "@/lib/types";
 
 export default function WorkOrderDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [workOrder, setWorkOrder] = useState<WorkOrder | null>(null);
-  const [tasks, setTasks] = useState<WorkerTask[]>([]);
   const [blockName, setBlockName] = useState("");
   const [siteName, setSiteName] = useState("");
-  const [payments, setPayments] = useState<any[]>([]);
+  const [companyApplications, setCompanyApplications] = useState<ServiceCompanyApplication[]>([]);
+  const [selectedServiceCompanies, setSelectedServiceCompanies] = useState<any[]>([]);
   
   useEffect(() => {
     // Get work order data
@@ -35,14 +37,16 @@ export default function WorkOrderDetails() {
         setSiteName(site.name);
       }
       
-      // Get tasks for this work order
-      const orderTasks = workerTasks.filter(t => t.orderId === order.id);
-      setTasks(orderTasks);
+      // Get service company applications for this order
+      const applications = serviceCompanyApplications.filter(app => app.orderId === order.id);
+      setCompanyApplications(applications);
       
-      // Get payment calculations
-      if (id) {
-        const paymentData = getPaymentCalculations(id);
-        setPayments(paymentData);
+      // Get selected service companies info
+      if (order.serviceCompanyIds) {
+        const companies = users.filter(user => 
+          user.role === 'serviceCompany' && order.serviceCompanyIds?.includes(user.id)
+        );
+        setSelectedServiceCompanies(companies);
       }
     }
   }, [id]);
@@ -84,6 +88,21 @@ export default function WorkOrderDetails() {
     }
   };
 
+  const getApplication = (companyId: string) => {
+    return companyApplications.find(app => app.serviceCompanyId === companyId);
+  };
+
+  const getApplicationStatusIcon = (status: string) => {
+    switch (status) {
+      case "accepted":
+        return <CheckCircle className="h-4 w-4 text-green-600" />;
+      case "rejected":
+        return <XCircle className="h-4 w-4 text-red-600" />;
+      default:
+        return <Clock className="h-4 w-4 text-yellow-600" />;
+    }
+  };
+
   return (
     <MainLayout>
       <div className="mb-8">
@@ -121,7 +140,134 @@ export default function WorkOrderDetails() {
         </div>
       </div>
       
-      <WorkOrderTabs workOrder={workOrder} tasks={tasks} />
+      <Tabs defaultValue="details" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="companies">Companies</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="details">
+          <Card>
+            <CardHeader>
+              <CardTitle>Work Order Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">Work Type</h4>
+                  <p className="capitalize">{workOrder.workType}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">Needed Workers</h4>
+                  <p>{workOrder.neededWorkers}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">Pay Rate</h4>
+                  <p>${workOrder.payRate.toFixed(2)} per vine</p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">Expected Hours</h4>
+                  <p>{workOrder.expectedHours}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">Start Date</h4>
+                  <p>{new Date(workOrder.startDate).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground">End Date</h4>
+                  <p>{new Date(workOrder.endDate).toLocaleDateString()}</p>
+                </div>
+              </div>
+              {workOrder.notes && (
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground mb-2">Notes</h4>
+                  <p className="text-sm bg-muted p-3 rounded-md">{workOrder.notes}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="companies">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                Service Companies ({selectedServiceCompanies.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Company Name</TableHead>
+                    <TableHead>Contact Info</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Applied Date</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {selectedServiceCompanies.map((company) => {
+                    const application = getApplication(company.id);
+                    return (
+                      <TableRow 
+                        key={company.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => navigate(`/manager/orders/${id}/companies/${company.id}`)}
+                      >
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{company.companyName || company.name}</div>
+                            <div className="text-sm text-muted-foreground">{company.address}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="text-sm">{company.email}</div>
+                            {company.phone && <div className="text-sm text-muted-foreground">{company.phone}</div>}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {application ? (
+                              <>
+                                {getApplicationStatusIcon(application.status)}
+                                <span className="capitalize">{application.status}</span>
+                              </>
+                            ) : (
+                              <>
+                                <Clock className="h-4 w-4 text-muted-foreground" />
+                                <span className="text-muted-foreground">Invited</span>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {application ? new Date(application.createdAt).toLocaleDateString() : '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="outline" size="sm">
+                            <Users className="h-4 w-4 mr-2" />
+                            View Workers
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+              
+              {selectedServiceCompanies.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Building2 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No service companies selected for this work order.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </MainLayout>
   );
 }

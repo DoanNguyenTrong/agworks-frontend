@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -65,6 +64,9 @@ import WorkerHelp from "./pages/WorkerHelp";
 import HelpPage from "./pages/HelpPage";
 import SiteManagerHelp from "@/pages/SiteManagerHelp";
 
+// Import the new component
+import CompanyWorkerDetails from "./pages/CompanyWorkerDetails";
+
 function App() {
   return (
     <Router>
@@ -118,6 +120,7 @@ function App() {
             <Route path="orders/new" element={<CreateWorkOrder />} />
             <Route path="orders" element={<WorkOrderManagement />} />
             <Route path="orders/:id" element={<WorkOrderDetails />} />
+            <Route path="orders/:id/companies/:companyId" element={<CompanyWorkerDetails />} />
           </Route>
 
           {/* Service Company routes */}

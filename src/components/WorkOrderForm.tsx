@@ -193,7 +193,7 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
           />
         </div>
 
-        {/* Service Company Selection */}
+        {/* Service Company Selection - Updated to show as dropdown with detailed info */}
         <FormField
           control={form.control}
           name="serviceCompanyIds"
@@ -205,7 +205,7 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
                   Choose which service companies can bid on this work order.
                 </FormDescription>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
                 {availableServiceCompanies.map((company) => (
                   <FormField
                     key={company.id}
@@ -215,7 +215,7 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
                       return (
                         <FormItem
                           key={company.id}
-                          className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4"
+                          className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4 hover:bg-muted/50"
                         >
                           <FormControl>
                             <Checkbox
@@ -231,13 +231,25 @@ export default function WorkOrderForm({ onSubmit, isSubmitting = false }: WorkOr
                               }}
                             />
                           </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel className="font-medium">
+                          <div className="flex-1 space-y-1 leading-none">
+                            <FormLabel className="text-base font-medium cursor-pointer">
                               {company.companyName || company.name}
                             </FormLabel>
-                            <FormDescription>
-                              {company.email}
-                            </FormDescription>
+                            <div className="space-y-1">
+                              <FormDescription className="text-sm">
+                                📧 {company.email}
+                              </FormDescription>
+                              {company.phone && (
+                                <FormDescription className="text-sm">
+                                  📞 {company.phone}
+                                </FormDescription>
+                              )}
+                              {company.address && (
+                                <FormDescription className="text-sm">
+                                  📍 {company.address}
+                                </FormDescription>
+                              )}
+                            </div>
                           </div>
                         </FormItem>
                       )
