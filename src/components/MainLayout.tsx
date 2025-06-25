@@ -127,10 +127,11 @@ export default function MainLayout({
       <div className="min-h-screen flex w-full">
         <Sidebar className="hidden md:block">
           <SidebarHeader className="flex h-16 items-center px-4 border-b">
-            <div className="flex items-center">
+            <div className="flex items-center gap-1">
               <span className="text-xl font-bold text-primary">
                 {configSystem?.general?.systemName || "AgWorks"}
               </span>
+              <span className="text-sm font-bold mt-1">(v1.0)</span>
             </div>
           </SidebarHeader>
           <SidebarContent>

@@ -58,7 +58,7 @@ export default function WorkerDashboard() {
       await getAllImage(get(data, "metaData", []).map((task) => task._id));
       // console.log("Worker tasks:", data.metaData);
       const blockIds = uniq(
-        get(data, "metaData", []).map((t) => get(t, "orderId.siteId"))
+        get(data, "metaData", []).map((t) => get(t, "orderId.siteId._id"))
       );
       await getListBlockByID(blockIds);
     } catch (error) {
