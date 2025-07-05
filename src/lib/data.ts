@@ -9,6 +9,7 @@ import { workerTasks } from './data/workerTasks';
 import { getPaymentCalculations } from './data/paymentCalculations';
 import { userSettings } from './data/userSettings';
 import { adminSettings } from './data/adminSettings';
+import { workTypes } from './data/workTypes';
 
 export {
   users,
@@ -19,5 +20,6 @@ export {
   workerTasks,
   getPaymentCalculations,
   userSettings,
-  adminSettings
+  adminSettings,
+  workTypes
 };

@@ -27,6 +27,7 @@ import {
   Menu,
   Settings,
   UserPlus,
+  CheckSquare,
   Users,
   X,
 } from "lucide-react";
@@ -68,6 +69,7 @@ export default function MainLayout({
           { name: "Dashboard", path: "/customer/dashboard", icon: Home },
           { name: "Sites", path: "/customer/sites", icon: Map },
           { name: "Blocks", path: "/customer/blocks", icon: Grape },
+          { name: "Work Types", path: "/customer/tasks", icon: CheckSquare },
           { name: "Site Managers", path: "/customer/accounts", icon: UserPlus },
         ];
       case MAP_ROLE.SITE_MANAGER:
@@ -160,8 +162,8 @@ export default function MainLayout({
                   </div>
                 </div>
                 <SidebarMenu>
-                  {navItems.map((item) => (
-                    <SidebarMenuItem key={item.path}>
+                  {navItems.map((item, index) => (
+                    <SidebarMenuItem key={item.path + index}>
                       <SidebarMenuButton
                         asChild
                         data-active={location.pathname === item.path}

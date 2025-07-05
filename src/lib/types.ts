@@ -26,6 +26,23 @@ export interface User {
   organizationId?: string;
 }
 
+// Work Type interface for vineyard work orders management
+export interface WorkType {
+  _id?: string;
+  name: string;
+  description: string;
+  category: 'pruning' | 'maintenance' | 'harvest' | 'planting' | 'spraying' | 'cultivation';
+  paymentType: 'per_task' | 'per_hour' | 'per_acre' | 'per_vine';
+  baseRate: number; // Base rate for the payment type
+  season: 'spring' | 'summer' | 'fall' | 'winter' | 'year_round';
+  skillLevel: 'entry' | 'intermediate' | 'expert';
+  equipment: string[];
+  createdBy: string; // Customer ID
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Site type
 export interface Site {
   _id: string;

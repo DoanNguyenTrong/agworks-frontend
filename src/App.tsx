@@ -42,6 +42,7 @@ import SiteEditPage from "./pages/SiteEditPage";
 import SiteForm from "./pages/SiteForm";
 import SiteManagement from "./pages/SiteManagement";
 import SiteManagementPage from "./pages/SiteManagementPage";
+import WorkTypeManagement from "./pages/WorkTypeManagement";
 
 // Site Manager pages
 import CreateWorkOrder from "./pages/CreateWorkOrder";
@@ -123,6 +124,7 @@ function App() {
             <Route path="blocks/:id" element={<BlockDetails />} />
             <Route path="blocks/new" element={<BlockForm />} />
             <Route path="blocks/edit/:id" element={<BlockEditPage />} />
+            <Route path="tasks" element={<WorkTypeManagement />} />
             <Route
               path="work-order/detail/:id"
               element={<WorkOrderDetails />}
