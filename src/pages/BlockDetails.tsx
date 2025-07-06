@@ -86,10 +86,10 @@ export default function BlockDetails() {
         <Button
           variant="ghost"
           className="p-0"
-          onClick={() => navigate("/customer/blocks")}
+          onClick={() => navigate("/customer/sites")}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Blocks
+          Back to Sites
         </Button>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-4">
           <div>

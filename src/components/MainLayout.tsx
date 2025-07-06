@@ -68,7 +68,7 @@ export default function MainLayout({
         return [
           { name: "Dashboard", path: "/customer/dashboard", icon: Home },
           { name: "Sites", path: "/customer/sites", icon: Map },
-          { name: "Blocks", path: "/customer/blocks", icon: Grape },
+          // { name: "Blocks", path: "/customer/blocks", icon: Grape },
           { name: "Work Types", path: "/customer/tasks", icon: CheckSquare },
           { name: "Site Managers", path: "/customer/accounts", icon: UserPlus },
         ];

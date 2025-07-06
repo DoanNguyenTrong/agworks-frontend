@@ -40,7 +40,7 @@ import CustomerSettings from "./pages/CustomerSettings";
 import SiteDetails from "./pages/SiteDetails";
 import SiteEditPage from "./pages/SiteEditPage";
 import SiteForm from "./pages/SiteForm";
-import SiteManagement from "./pages/SiteManagement";
+import UnifiedSiteManagement from "./pages/UnifiedSiteManagement";
 import SiteManagementPage from "./pages/SiteManagementPage";
 import WorkTypeManagement from "./pages/WorkTypeManagement";
 
@@ -88,11 +88,11 @@ function App() {
             <Route path="workers" element={<AdminWorkers />} />
             <Route path="workers/:id" element={<AdminWorkerView />} />
             <Route path="workers/edit/:id" element={<AdminWorkerEdit />} />
-            <Route path="sites" element={<SiteManagement />} />
+            <Route path="sites" element={<UnifiedSiteManagement />} />
             <Route path="orders" element={<WorkOrderManagement />} />
             <Route path="sites/:id" element={<SiteDetails />} />
             <Route path="sites/new" element={<SiteForm />} />
-            <Route path="sites/edit/:id" element={<SiteEditPage />} />
+            <Route path="sites/edit/:id" element={<SiteForm />} />
             <Route path="sites/new" element={<SiteForm />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="profile" element={<AdminProfile />} />
@@ -114,11 +114,11 @@ function App() {
             <Route path="managers/edit/:id" element={<CustomerManagerEdit />} />
             <Route path="settings" element={<CustomerSettings />} />
             <Route path="help" element={<CustomerHelp />} />
-            <Route path="sites" element={<SiteManagement />} />
+            <Route path="sites" element={<UnifiedSiteManagement />} />
             <Route path="sites/manage" element={<SiteManagementPage />} />
             <Route path="sites/:id" element={<SiteDetails />} />
             <Route path="sites/new" element={<SiteForm />} />
-            <Route path="sites/edit/:id" element={<SiteEditPage />} />
+            <Route path="sites/edit/:id" element={<SiteForm />} />
             <Route path="blocks" element={<BlockManagement />} />
             <Route path="blocks/manage" element={<BlockManagementPage />} />
             <Route path="blocks/:id" element={<BlockDetails />} />

@@ -48,6 +48,8 @@ export interface Site {
   _id: string;
   name: string;
   address: string;
+  locationType: string;
+  description: string;
   customerId: string;
   managerId?: string;
   userIds?: Array<User>;
@@ -59,7 +61,7 @@ export interface Site {
 export interface Block {
   _id: string;
   name: string;
-  siteId: string;
+  siteId?: Site;
   acres?: number;
   rows?: number;
   vines?: number;
