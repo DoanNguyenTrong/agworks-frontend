@@ -38,6 +38,7 @@ export interface Role {
   employeeCount?: number;
   createdAt: string;
   updatedAt?: string;
+  employees?: User[];
 }
 
 // Work Type interface for vineyard work orders management

@@ -176,7 +176,7 @@ export default function RoleManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {roles.reduce((sum, role) => sum + role.employeeCount, 0)}
+              {roles.reduce((sum, role) => sum + role.employees.length, 0)}
             </div>
             <p className="text-xs text-muted-foreground">
               Across all roles
@@ -236,7 +236,7 @@ export default function RoleManagement() {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>{role.employeeCount}</TableCell>
+                  <TableCell>{role.employees.length}</TableCell>
                   <TableCell>
                     <Badge variant={role.isActive ? "default" : "secondary"}>
                       {role.isActive ? "Active" : "Inactive"}
