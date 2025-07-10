@@ -15,7 +15,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
-import { MAP_ROLE } from "@/lib/utils/role";
+import { MAP_ROLE, PERMISSION_EMPLOYEE, checkRoleInPermissions } from "@/lib/utils/role";
 import {
   Building,
   ClipboardList,
@@ -26,10 +26,14 @@ import {
   Map,
   Menu,
   Settings,
-  UserPlus,
+  MapPin,
   CheckSquare,
   Users,
   X,
+  Wrench,
+  DollarSign,
+  Sprout,
+  Calendar,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -43,7 +47,7 @@ export default function MainLayout({
   children,
   pageTitle = "AgWorks",
 }: MainLayoutProps) {
-  const { currentUser, logout, configSystem } = useAuth();
+  const { currentUser, logout, configSystem, permissions } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -64,13 +68,13 @@ export default function MainLayout({
           { name: "Customers", path: "/admin/customers", icon: Building },
           { name: "Workers", path: "/admin/workers", icon: Users },
         ];
-      case MAP_ROLE.CUSTOIMER:
+      case MAP_ROLE.CUSTOMER:
         return [
           { name: "Dashboard", path: "/customer/dashboard", icon: Home },
           { name: "Sites", path: "/customer/sites", icon: Map },
-          // { name: "Blocks", path: "/customer/blocks", icon: Grape },
+          { name: "Labor Management", path: "/customer/accounts", icon: Users },
           { name: "Work Types", path: "/customer/tasks", icon: CheckSquare },
-          { name: "Site Managers", path: "/customer/accounts", icon: UserPlus },
+          // { name: "Site Managers", path: "/customer/accountss", icon: UserPlus },
         ];
       case MAP_ROLE.SITE_MANAGER:
         return [
@@ -82,6 +86,34 @@ export default function MainLayout({
           { name: "Dashboard", path: "/worker/dashboard", icon: Home },
           { name: "My Tasks", path: "/worker/tasks", icon: ClipboardList },
         ];
+      case MAP_ROLE.EMPLOYEE:
+        return [
+          { name: "Dashboard", path: "/employee/dashboard", icon: Home, show: true },
+          {
+            name: "Sites",
+            path: "/employee/sites",
+            icon: MapPin,
+            show: checkRoleInPermissions([PERMISSION_EMPLOYEE.VIEW_SITES, PERMISSION_EMPLOYEE.MANAGE_SITES], permissions)
+          },
+          {
+            name: "Labor Management",
+            path: "/employee/accounts",
+            icon: Users,
+            show: checkRoleInPermissions([PERMISSION_EMPLOYEE.VIEW_EMPLOYEES, PERMISSION_EMPLOYEE.MANAGE_EMPLOYEES, PERMISSION_EMPLOYEE.MANAGE_TEAM], permissions)
+          },
+          {
+            name: "Work Orders",
+            path: "/employee/orders",
+            icon: ClipboardList,
+            show: checkRoleInPermissions([PERMISSION_EMPLOYEE.CREATE_WORK_ORDERS, PERMISSION_EMPLOYEE.MANAGE_WORK_ORDERS], permissions)
+          },
+          // {
+          //   name: "My Tasks",
+          //   path: "/employee/tasks",
+          //   icon: ClipboardList,
+          //   show: checkRoleInPermissions([PERMISSION_EMPLOYEE.VIEW_TASKS, PERMISSION_EMPLOYEE.COMPLETE_TASKS, PERMISSION_EMPLOYEE.ASSIGN_TASKS, PERMISSION_EMPLOYEE.UPLOAD_PHOTOS, PERMISSION_EMPLOYEE.LOG_TIME], permissions)
+          // },
+        ];
       default:
         return [];
     }
@@ -91,12 +123,14 @@ export default function MainLayout({
     switch (currentUser.role) {
       case MAP_ROLE.ADMIN:
         return "/admin/settings";
-      case MAP_ROLE.CUSTOIMER:
+      case MAP_ROLE.CUSTOMER:
         return "/customer/settings";
       case MAP_ROLE.SITE_MANAGER:
         return "/manager/settings";
       case MAP_ROLE.WORKER:
         return "/worker/settings";
+      case MAP_ROLE.EMPLOYEE:
+        return "/employee/settings";
       default:
         return "/";
     }
@@ -106,7 +140,7 @@ export default function MainLayout({
     switch (currentUser.role) {
       case MAP_ROLE.ADMIN:
         return "/admin/help";
-      case MAP_ROLE.CUSTOIMER:
+      case MAP_ROLE.CUSTOMER:
         return "/customer/help";
       case MAP_ROLE.SITE_MANAGER:
         return "/manager/help";
@@ -117,7 +151,12 @@ export default function MainLayout({
     }
   };
 
-  const navItems = getNavItems();
+  const navItems = (() => {
+    if (currentUser.role !== MAP_ROLE.EMPLOYEE) {
+      return getNavItems();
+    }
+    return getNavItems().filter((item: any) => item.show);
+  })();
 
   const handleLogout = () => {
     logout();
@@ -162,7 +201,7 @@ export default function MainLayout({
                   </div>
                 </div>
                 <SidebarMenu>
-                  {navItems.map((item, index) => (
+                  {navItems.map((item: any, index: number) => (
                     <SidebarMenuItem key={item.path + index}>
                       <SidebarMenuButton
                         asChild
@@ -261,7 +300,7 @@ export default function MainLayout({
                   </div>
                 </div>
                 <nav className="space-y-2">
-                  {navItems.map((item) => (
+                  {navItems.map((item: any) => (
                     <Button
                       key={item.path}
                       variant={

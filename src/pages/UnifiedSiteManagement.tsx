@@ -69,6 +69,7 @@ import { get, join } from "lodash";
 import { apiGetAllAccOrganization } from "@/api/account";
 import { apiDeleteSite, apiGetListSite, apiGetAllSite } from "@/api/site";
 import { apiCreateBlock, apiGetListBlock, apiDeleteBlock } from "@/api/block";
+import { MAP_ROLE, PERMISSION_EMPLOYEE, isPermissionCustomerOrEmployee } from "@/lib/utils/role";
 
 // Map related interfaces
 export interface MapResource {
@@ -103,7 +104,7 @@ const blockFormSchema = z.object({
 });
 
 export default function UnifiedSiteManagement() {
-  const { currentUser } = useAuth();
+  const { currentUser, permissions } = useAuth();
   const navigate = useNavigate();
 
   // Common state
@@ -285,7 +286,7 @@ export default function UnifiedSiteManagement() {
   // Site Card Component
   const SiteCard = ({ site }: { site: Site }) => {
     return (
-      <Card className="cursor-pointer hover:shadow-lg transition-shadow h-full" onClick={() => navigate(`/customer/sites/${site._id}`)}>
+      <Card className="cursor-pointer hover:shadow-lg transition-shadow h-full" onClick={() => navigate(`/${currentUser.role.toLowerCase()}/sites/${site._id}`)}>
         <CardHeader>
           <CardTitle>{site.name}</CardTitle>
           <CardDescription>Site ID: {site._id}</CardDescription>
@@ -314,60 +315,58 @@ export default function UnifiedSiteManagement() {
               asChild
             >
               <Link
-                to={
-                  location.pathname.includes("customer")
-                    ? `/customer/sites/${site._id}`
-                    : `/admin/sites/${site._id}`
-                }
+                to={`/${currentUser.role.toLowerCase()}/sites/${site._id}`}
               >
                 View
               </Link>
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              asChild
-            >
-              <Link
-                to={
-                  location.pathname.includes("customer")
-                    ? `/customer/sites/edit/${site._id}`
-                    : `/admin/sites/edit/${site._id}`
-                }
-              >
-                <Edit className="h-4 w-4 mr-1" />
-                Edit
-              </Link>
-            </Button>
-          </div>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
+            {
+              isPermissionCustomerOrEmployee(currentUser, permissions, PERMISSION_EMPLOYEE.MANAGE_SITES) &&
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-red-500"
+                asChild
               >
-                <Trash className="h-4 w-4" />
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Site</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want tsssssssssso delete "{site.name}"? This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => handleDeleteSite(site)}
-                  className="bg-red-500 hover:bg-red-600"
+                <Link
+                  to={`/${currentUser.role.toLowerCase()}/sites/edit/${site._id}`}
                 >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                  <Edit className="h-4 w-4 mr-1" />
+                  Edit
+                </Link>
+              </Button>
+            }
+          </div>
+          {
+            isPermissionCustomerOrEmployee(currentUser, permissions, PERMISSION_EMPLOYEE.MANAGE_SITES) &&
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-500"
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Site</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete "{site.name}"? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => handleDeleteSite(site)}
+                    className="bg-red-500 hover:bg-red-600"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          }
         </CardFooter>
       </Card>
     );
@@ -378,7 +377,7 @@ export default function UnifiedSiteManagement() {
     const site = customerSites.find(s => s._id === block.siteId);
 
     return (
-      <Card className="cursor-pointer hover:shadow-lg transition-shadow h-full" onClick={() => navigate(`/customer/blocks/${block._id}`)}>
+      <Card className="cursor-pointer hover:shadow-lg transition-shadow h-full" onClick={() => navigate(`/${currentUser.role.toLowerCase()}/blocks/${block._id}`)}>
         <CardHeader>
           <CardTitle>{block.name}</CardTitle>
           <p className="text-sm text-muted-foreground">
@@ -414,7 +413,7 @@ export default function UnifiedSiteManagement() {
           )}
         </CardContent>
         <CardFooter className="flex justify-between" onClick={e => e.stopPropagation()}>
-          <Button variant="outline" size="sm" onClick={() => navigate(`/customer/blocks/edit/${block._id}`)}>Edit</Button>
+          <Button variant="outline" size="sm" onClick={() => navigate(`/${currentUser.role.toLowerCase()}/blocks/edit/${block._id}`)}>Edit</Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="ghost" size="sm" className="text-red-500">
@@ -648,10 +647,13 @@ export default function UnifiedSiteManagement() {
               </div>
             </div>
             <div className="flex items-center gap-4 w-full md:w-auto justify-end">
-              <Button onClick={() => navigate('/customer/sites/new')}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Site
-              </Button>
+              {
+                isPermissionCustomerOrEmployee(currentUser, permissions, PERMISSION_EMPLOYEE.MANAGE_SITES) &&
+                <Button onClick={() => navigate(`/${currentUser.role.toLowerCase()}/sites/new`)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Site
+                </Button>
+              }
 
               <ToggleGroup type="single" value={sitesViewMode} onValueChange={(value) => value && setSitesViewMode(value as "card" | "list")}>
                 <ToggleGroupItem value="card" aria-label="Card view">
@@ -675,10 +677,13 @@ export default function UnifiedSiteManagement() {
                   "Try adjusting your search." :
                   "Add your first vineyard site to get started."}
               </p>
-              <Button onClick={() => navigate('/customer/sites/new')}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Site
-              </Button>
+              {
+                isPermissionCustomerOrEmployee(currentUser, permissions, PERMISSION_EMPLOYEE.MANAGE_SITES) &&
+                <Button onClick={() => navigate(`/${currentUser.role.toLowerCase()}/sites/new`)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Site
+                </Button>
+              }
             </div>
           ) : sitesViewMode === "card" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -722,44 +727,50 @@ export default function UnifiedSiteManagement() {
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
                               <Button variant="ghost" size="icon" asChild>
-                                <Link to={`/customer/sites/${site._id}`}>
+                                <Link to={`/${currentUser.role.toLowerCase()}/sites/${site._id}`}>
                                   <Eye className="h-4 w-4" />
                                 </Link>
                               </Button>
-                              <Button variant="ghost" size="icon" asChild>
-                                <Link to={`/customer/sites/edit/${site._id}`}>
-                                  <Edit className="h-4 w-4" />
-                                </Link>
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="text-red-500"
-                                  >
-                                    <Trash className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      This will permanently delete {site.name} and all associated blocks.
-                                      This action cannot be undone.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleDeleteSite(site)}
-                                      className="bg-red-500 hover:bg-red-600"
+                              {
+                                isPermissionCustomerOrEmployee(currentUser, permissions, PERMISSION_EMPLOYEE.MANAGE_SITES) &&
+                                <Button variant="ghost" size="icon" asChild>
+                                  <Link to={`/${currentUser.role.toLowerCase()}/sites/edit/${site._id}`}>
+                                    <Edit className="h-4 w-4" />
+                                  </Link>
+                                </Button>
+                              }
+                              {
+                                isPermissionCustomerOrEmployee(currentUser, permissions, PERMISSION_EMPLOYEE.MANAGE_SITES) &&
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="text-red-500"
                                     >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
+                                      <Trash className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This will permanently delete {site.name} and all associated blocks.
+                                        This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleDeleteSite(site)}
+                                        className="bg-red-500 hover:bg-red-600"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              }
                             </div>
                           </TableCell>
                         </TableRow>
@@ -799,81 +810,37 @@ export default function UnifiedSiteManagement() {
             </div>
 
             <div className="flex items-center gap-4 w-full md:w-auto justify-end">
-              <Dialog open={isBlockDialogOpen} onOpenChange={setIsBlockDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Block
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[500px]">
-                  <DialogHeader>
-                    <DialogTitle>Add New Vineyard Block</DialogTitle>
-                    <DialogDescription>
-                      Enter the details of your new vineyard block.
-                    </DialogDescription>
-                  </DialogHeader>
+              {
+                isPermissionCustomerOrEmployee(currentUser, permissions, PERMISSION_EMPLOYEE.MANAGE_SITES) &&
+                <Dialog open={isBlockDialogOpen} onOpenChange={setIsBlockDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add Block
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                      <DialogTitle>Add New Vineyard Block</DialogTitle>
+                      <DialogDescription>
+                        Enter the details of your new vineyard block.
+                      </DialogDescription>
+                    </DialogHeader>
 
-                  <Form {...blockForm}>
-                    <form onSubmit={blockForm.handleSubmit(onBlockSubmit)} className="space-y-6">
-                      <FormField
-                        control={blockForm.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Block Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Block A - Cabernet" {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              A descriptive name for this vineyard block
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={blockForm.control}
-                        name="siteId"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Site</FormLabel>
-                            <Select
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                            >
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select a site" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {customerSites.map(site => (
-                                  <SelectItem key={site._id} value={site._id}>
-                                    {site.name}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <FormDescription>
-                              The vineyard site where this block is located
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="grid grid-cols-3 gap-4">
+                    <Form {...blockForm}>
+                      <form onSubmit={blockForm.handleSubmit(onBlockSubmit)} className="space-y-6">
                         <FormField
                           control={blockForm.control}
-                          name="acres"
+                          name="name"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Acres</FormLabel>
+                              <FormLabel>Block Name</FormLabel>
                               <FormControl>
-                                <Input type="number" step="0.1" placeholder="5.2" {...field} />
+                                <Input placeholder="Block A - Cabernet" {...field} />
                               </FormControl>
+                              <FormDescription>
+                                A descriptive name for this vineyard block
+                              </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -881,40 +848,87 @@ export default function UnifiedSiteManagement() {
 
                         <FormField
                           control={blockForm.control}
-                          name="rows"
+                          name="siteId"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Rows</FormLabel>
-                              <FormControl>
-                                <Input type="number" placeholder="120" {...field} />
-                              </FormControl>
+                              <FormLabel>Site</FormLabel>
+                              <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                              >
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select a site" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {customerSites.map(site => (
+                                    <SelectItem key={site._id} value={site._id}>
+                                      {site.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormDescription>
+                                The vineyard site where this block is located
+                              </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
 
-                        <FormField
-                          control={blockForm.control}
-                          name="vines"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Vines</FormLabel>
-                              <FormControl>
-                                <Input type="number" placeholder="3600" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                        <div className="grid grid-cols-3 gap-4">
+                          <FormField
+                            control={blockForm.control}
+                            name="acres"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Acres</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.1" placeholder="5.2" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
 
-                      <DialogFooter>
-                        <Button type="submit">Create Block</Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
+                          <FormField
+                            control={blockForm.control}
+                            name="rows"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Rows</FormLabel>
+                                <FormControl>
+                                  <Input type="number" placeholder="120" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={blockForm.control}
+                            name="vines"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Vines</FormLabel>
+                                <FormControl>
+                                  <Input type="number" placeholder="3600" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <DialogFooter>
+                          <Button type="submit">Create Block</Button>
+                        </DialogFooter>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              }
               <ToggleGroup type="single" value={blocksViewMode} onValueChange={(value) => value && setBlocksViewMode(value as "card" | "list")}>
                 <ToggleGroupItem value="card" aria-label="Card view">
                   <LayoutGrid className="h-4 w-4" />
@@ -937,10 +951,13 @@ export default function UnifiedSiteManagement() {
                   "Try adjusting your search or filter." :
                   "Add your first vineyard block to get started."}
               </p>
-              <Button onClick={() => setIsBlockDialogOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Block
-              </Button>
+              {
+                isPermissionCustomerOrEmployee(currentUser, permissions, PERMISSION_EMPLOYEE.MANAGE_SITES) &&
+                <Button onClick={() => setIsBlockDialogOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Block
+                </Button>
+              }
             </div>
           ) : blocksViewMode === "card" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -974,44 +991,49 @@ export default function UnifiedSiteManagement() {
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Button variant="ghost" size="icon" asChild>
-                              <Link to={`/customer/blocks/${block._id}`}>
+                              <Link to={`/${currentUser.role.toLowerCase()}/blocks/${block._id}`}>
                                 <Eye className="h-4 w-4" />
                               </Link>
                             </Button>
-                            <Button variant="ghost" size="icon" asChild>
-                              <Link to={`/customer/blocks/edit/${block._id}`}>
-                                <Edit className="h-4 w-4" />
-                              </Link>
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="text-red-500"
-                                >
-                                  <Trash className="h-4 w-4" />
+                            {
+                              isPermissionCustomerOrEmployee(currentUser, permissions, PERMISSION_EMPLOYEE.MANAGE_SITES) &&
+                              <>
+                                <Button variant="ghost" size="icon" asChild>
+                                  <Link to={`/${currentUser.role.toLowerCase()}/blocks/edit/${block._id}`}>
+                                    <Edit className="h-4 w-4" />
+                                  </Link>
                                 </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This will permanently delete {block.name}.
-                                    This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDeleteBlock(block)}
-                                    className="bg-red-500 hover:bg-red-600"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      className="text-red-500"
+                                    >
+                                      <Trash className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This will permanently delete {block.name}.
+                                        This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() => handleDeleteBlock(block)}
+                                        className="bg-red-500 hover:bg-red-600"
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </>
+                            }
                           </div>
                         </TableCell>
                       </TableRow>

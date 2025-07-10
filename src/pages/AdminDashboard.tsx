@@ -93,7 +93,7 @@ export default function AdminDashboard() {
 
   // Customer and worker counts
   const customerCount = userList.filter(
-    (user) => user.role === MAP_ROLE.CUSTOIMER
+    (user) => user.role === MAP_ROLE.CUSTOMER
   ).length;
   const workerCount = userList.filter(
     (user) => user.role === MAP_ROLE.WORKER
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
     switch (role) {
       case MAP_ROLE.ADMIN:
         return <Badge className="bg-purple-500">Admin</Badge>;
-      case MAP_ROLE.CUSTOIMER:
+      case MAP_ROLE.CUSTOMER:
         return <Badge className="bg-agworks-green">Vineyard Owner</Badge>;
       case MAP_ROLE.SITE_MANAGER:
         return <Badge className="bg-blue-500">Site Manager</Badge>;
@@ -120,7 +120,7 @@ export default function AdminDashboard() {
 
   const handleRowDoubleClick = (user: User) => {
     // Navigate to user details page based on role
-    if (user.role === MAP_ROLE.CUSTOIMER) {
+    if (user.role === MAP_ROLE.CUSTOMER) {
       navigate(`/admin/customers/${user["_id"]}`);
     } else if (user.role === MAP_ROLE.WORKER) {
       navigate(`/admin/workers/${user["_id"]}`);
@@ -202,7 +202,7 @@ export default function AdminDashboard() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Roles</SelectItem>
-              <SelectItem value={MAP_ROLE.CUSTOIMER}>
+              <SelectItem value={MAP_ROLE.CUSTOMER}>
                 Vineyard Owners
               </SelectItem>
               <SelectItem value={MAP_ROLE.SITE_MANAGER}>
@@ -262,7 +262,7 @@ export default function AdminDashboard() {
             <CardContent>
               <div className="space-y-4">
                 {userList
-                  .filter((user) => user.role === MAP_ROLE.CUSTOIMER)
+                  .filter((user) => user.role === MAP_ROLE.CUSTOMER)
                   .slice(0, 3)
                   .map((i) => (
                     <div

@@ -37,7 +37,7 @@ const formSchema = z
       message: "Password must be at least 8 characters.",
     }),
     confirmPassword: z.string(),
-    role: z.enum([MAP_ROLE.CUSTOIMER, MAP_ROLE.WORKER]),
+    role: z.enum([MAP_ROLE.CUSTOMER, MAP_ROLE.WORKER]),
     companyName: z.string().optional(),
     phone: z.string().optional(),
   })
@@ -49,7 +49,7 @@ const formSchema = z
     (data) => {
       // If role is customer, company name is required
       if (
-        data.role === MAP_ROLE.CUSTOIMER &&
+        data.role === MAP_ROLE.CUSTOMER &&
         (!data.companyName || data.companyName.length < 2)
       ) {
         return false;
@@ -89,8 +89,8 @@ export default function Register() {
       await signup(values.email, values.password, {
         name: values.name,
         role:
-          values.role === MAP_ROLE.CUSTOIMER
-            ? MAP_ROLE.CUSTOIMER
+          values.role === MAP_ROLE.CUSTOMER
+            ? MAP_ROLE.CUSTOMER
             : MAP_ROLE.WORKER,
         companyName: values.companyName,
         phone: values.phone,
@@ -138,14 +138,14 @@ export default function Register() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={MAP_ROLE.CUSTOIMER}>
+                        <SelectItem value={MAP_ROLE.CUSTOMER}>
                           Vineyard Owner
                         </SelectItem>
                         <SelectItem value="worker">Field Worker</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormDescription>
-                      {field.value === MAP_ROLE.CUSTOIMER
+                      {field.value === MAP_ROLE.CUSTOMER
                         ? "Create an account to manage your vineyard operations"
                         : "Create an account to apply for vineyard jobs"}
                     </FormDescription>
@@ -169,7 +169,7 @@ export default function Register() {
                   )}
                 />
 
-                {role === MAP_ROLE.CUSTOIMER && (
+                {role === MAP_ROLE.CUSTOMER && (
                   <FormField
                     control={form.control}
                     name="companyName"

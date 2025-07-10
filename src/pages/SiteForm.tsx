@@ -141,7 +141,7 @@ export default function SiteForm() {
 
   return (
     <MainLayout pageTitle={isEditMode ? "Edit Site" : "Add New Site"}>
-      <Button variant="ghost" className="p-0 mb-6" onClick={() => navigate("/customer/sites")}>
+      <Button variant="ghost" className="p-0 mb-6" onClick={() => navigate(-1)}>
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Sites
       </Button>
@@ -314,7 +314,7 @@ export default function SiteForm() {
               )}
 
               <div className="flex justify-end gap-4 pt-4">
-                <Button type="button" variant="outline" onClick={() => navigate("/customer/sites")}>
+                <Button type="button" variant="outline" onClick={() => navigate(-1)}>
                   Cancel
                 </Button>
                 <Button type="submit">

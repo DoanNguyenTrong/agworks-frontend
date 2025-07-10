@@ -210,7 +210,7 @@ export default function HelpPage() {
           </>
         );
 
-      case MAP_ROLE.CUSTOIMER:
+      case MAP_ROLE.CUSTOMER:
         return (
           <>
             <TabsContent value="general" className="mt-6 space-y-6">

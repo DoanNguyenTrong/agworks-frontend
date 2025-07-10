@@ -30,7 +30,7 @@ export const ProtectedRoute = ({
     // Redirect based on role
     if (currentUser.role === MAP_ROLE.ADMIN) {
       return <Navigate to="/admin/dashboard" />;
-    } else if (currentUser.role === MAP_ROLE.CUSTOIMER) {
+    } else if (currentUser.role === MAP_ROLE.CUSTOMER) {
       return <Navigate to="/customer/dashboard" />;
     } else if (currentUser.role === MAP_ROLE.SITE_MANAGER) {
       return <Navigate to="/manager/dashboard" />;

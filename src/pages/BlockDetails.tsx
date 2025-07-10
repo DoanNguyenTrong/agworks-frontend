@@ -21,9 +21,12 @@ import { get } from "lodash";
 import { ArrowLeft, Edit, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { PERMISSION_EMPLOYEE, isPermissionCustomerOrEmployee } from "@/lib/utils/role";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function BlockDetails() {
   const { id } = useParams<{ id: string }>();
+  const { currentUser, permissions } = useAuth();
   const navigate = useNavigate();
   const [block, setBlock] = useState<Block | null>(null);
   const [site, setSite] = useState<any>(null);
@@ -70,7 +73,8 @@ export default function BlockDetails() {
     }
   };
 
-  if (!block || !site) {
+  // if (!block || !site) {
+  if (!block) {
     return (
       <MainLayout pageTitle="Block Details">
         <div className="flex justify-center items-center h-64">
@@ -86,7 +90,7 @@ export default function BlockDetails() {
         <Button
           variant="ghost"
           className="p-0"
-          onClick={() => navigate("/customer/sites")}
+          onClick={() => navigate(`/${currentUser.role.toLowerCase()}/sites`)}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Sites
@@ -94,47 +98,50 @@ export default function BlockDetails() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-4">
           <div>
             <h1 className="text-2xl font-bold">{block.name}</h1>
-            <p className="text-muted-foreground">{site.name}</p>
+            <p className="text-muted-foreground">{site?.name || ""}</p>
           </div>
-          <div className="flex gap-2 mt-4 sm:mt-0">
-            <Button
-              variant="outline"
-              onClick={() => navigate(`/customer/blocks/edit/${block._id}`)}
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              Edit Block
-            </Button>
+          {
+            isPermissionCustomerOrEmployee(currentUser, permissions, PERMISSION_EMPLOYEE.MANAGE_SITES) &&
+            <div className="flex gap-2 mt-4 sm:mt-0">
+              <Button
+                variant="outline"
+                onClick={() => navigate(`/${currentUser.role.toLowerCase()}/blocks/edit/${block._id}`)}
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Block
+              </Button>
 
-            <AlertDialog
-              open={isDeleteDialogOpen}
-              onOpenChange={setIsDeleteDialogOpen}
-            >
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive">
-                  <Trash className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently delete {block.name}. This action
-                    cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDeleteBlock}
-                    className="bg-red-500 hover:bg-red-600"
-                  >
+              <AlertDialog
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+              >
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive">
+                    <Trash className="h-4 w-4 mr-2" />
                     Delete
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete {block.name}. This action
+                      cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteBlock}
+                      className="bg-red-500 hover:bg-red-600"
+                    >
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          }
         </div>
       </div>
 

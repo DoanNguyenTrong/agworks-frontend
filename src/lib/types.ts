@@ -22,8 +22,22 @@ export interface User {
   logo?: string;
   profileImage?: string;
   customerId?: string;
+  employeeRoleId?: string;
+  employmentType?: string;
   siteId?: string;
   organizationId?: string;
+}
+
+export interface Role {
+  _id?: string;
+  name: string;
+  organizationId: string;
+  description: string;
+  permissions: string[];
+  isActive: boolean;
+  employeeCount?: number;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 // Work Type interface for vineyard work orders management

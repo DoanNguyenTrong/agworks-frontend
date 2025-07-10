@@ -16,7 +16,7 @@ const Index = () => {
         case MAP_ROLE.ADMIN:
           navigate("/admin/dashboard");
           break;
-        case MAP_ROLE.CUSTOIMER:
+        case MAP_ROLE.CUSTOMER:
           navigate("/customer/dashboard");
           break;
         case MAP_ROLE.SITE_MANAGER:

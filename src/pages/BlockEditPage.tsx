@@ -23,9 +23,11 @@ import { get } from "lodash";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function BlockEditPage() {
   const { id } = useParams<{ id: string }>();
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [blockData, setBlockData] = useState<any>(null);
@@ -117,7 +119,7 @@ export default function BlockEditPage() {
       <MainLayout pageTitle="Edit Block">
         <div className="flex flex-col items-center justify-center h-64">
           <p className="text-muted-foreground mb-4">Block not found</p>
-          <Button onClick={() => navigate("/customer/blocks")}>
+          <Button onClick={() => navigate(-1)}>
             Back to Blocks
           </Button>
         </div>
@@ -130,7 +132,7 @@ export default function BlockEditPage() {
       <Button
         variant="ghost"
         className="p-0 mb-6"
-        onClick={() => navigate(`/customer/blocks/${id}`)}
+        onClick={() => navigate(`/${currentUser.role.toLowerCase()}/blocks/${id}`)}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back to Block Details

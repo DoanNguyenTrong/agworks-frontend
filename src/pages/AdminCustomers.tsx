@@ -68,7 +68,7 @@ export default function AdminCustomers() {
   const getList = async () => {
     try {
       const { data } = await apiGetAccList({
-        filter: { role: MAP_ROLE.CUSTOIMER },
+        filter: { role: MAP_ROLE.CUSTOMER },
       });
       // const data = response.metaData;
       setCustomersList(get(data, "metaData", []));

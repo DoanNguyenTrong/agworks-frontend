@@ -6,6 +6,7 @@ import { User } from "@/lib/types";
 import { MAP_ROLE } from "@/lib/utils/role";
 import { get } from "lodash";
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { getRoleById } from "@/api/role";
 import { useNavigate } from "react-router-dom";
 
 interface ConfigSystem {
@@ -17,6 +18,7 @@ interface ConfigSystem {
 interface AuthContextType {
   configSystem: ConfigSystem;
   currentUser: User | null;
+  permissions: string[];
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   signup: (
@@ -35,6 +37,7 @@ const AUTH_STORAGE_KEY = "agworks_auth_user";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [permissions, setPermissions] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -45,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       case MAP_ROLE.ADMIN:
         navigate("/admin/dashboard");
         break;
-      case MAP_ROLE.CUSTOIMER:
+      case MAP_ROLE.CUSTOMER:
         navigate("/customer/dashboard");
         break;
       case MAP_ROLE.SITE_MANAGER:
@@ -53,6 +56,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         break;
       case MAP_ROLE.WORKER:
         navigate("/worker/dashboard");
+        break;
+      case MAP_ROLE.EMPLOYEE:
+        navigate("/employee/dashboard");
         break;
       default:
         navigate("/");
@@ -170,6 +176,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Fetch user permissions when user changes
+  useEffect(() => {
+    if (currentUser && currentUser.role == MAP_ROLE.EMPLOYEE)
+      fetchUserPermissions();
+  }, [currentUser]);
+
+  const fetchUserPermissions = async () => {
+    if (currentUser && currentUser.employeeRoleId) {
+      try {
+        const response = await getRoleById(currentUser.employeeRoleId);
+        setPermissions(response.data.permissions || []);
+      } catch (error) {
+        console.error("Failed to fetch user permissions:", error);
+      }
+    }
+  };
+
   useEffect(() => {
     // Check for saved user in localStorage
     const savedUser = localStorage.getItem(AUTH_STORAGE_KEY);
@@ -192,6 +215,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         currentUser,
+        permissions,
         isLoading,
         login,
         signup,

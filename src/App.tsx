@@ -43,6 +43,7 @@ import SiteForm from "./pages/SiteForm";
 import UnifiedSiteManagement from "./pages/UnifiedSiteManagement";
 import SiteManagementPage from "./pages/SiteManagementPage";
 import WorkTypeManagement from "./pages/WorkTypeManagement";
+import LaborManagement from "./pages/LaborManagement";
 
 // Site Manager pages
 import CreateWorkOrder from "./pages/CreateWorkOrder";
@@ -57,6 +58,9 @@ import WorkerHelp from "./pages/WorkerHelp";
 import WorkerSettings from "./pages/WorkerSettings";
 import WorkerTaskDetails from "./pages/WorkerTaskDetails";
 import WorkerTasks from "./pages/WorkerTasks";
+
+// Employee pages
+import EmployeeDashboard from "./pages/WorkerDashboard";
 
 // Shared pages
 import SiteManagerHelp from "@/pages/SiteManagerHelp";
@@ -109,7 +113,8 @@ function App() {
               element={<Navigate to="/customer/dashboard" replace />}
             />
             <Route path="dashboard" element={<CustomerDashboard />} />
-            <Route path="accounts" element={<CustomerAccounts />} />
+            <Route path="accounts" element={<LaborManagement />} />
+            <Route path="accountss" element={<CustomerAccounts />} />
             <Route path="managers/:id" element={<CustomerManagerView />} />
             <Route path="managers/edit/:id" element={<CustomerManagerEdit />} />
             <Route path="settings" element={<CustomerSettings />} />
@@ -162,6 +167,39 @@ function App() {
             <Route path="tasks/:taskId" element={<WorkerTaskDetails />} />
             <Route path="settings" element={<WorkerSettings />} />
             <Route path="help" element={<WorkerHelp />} />
+          </Route>
+
+          {/* Employee routes */}
+          <Route
+            path="/employee"
+            element={<ProtectedRoute allowedRoles={["Employee"]} />}
+          >
+            <Route
+              index
+              element={<Navigate to="/employee/dashboard" replace />}
+            />
+            <Route path="dashboard" element={<EmployeeDashboard />} />
+            <Route path="accounts" element={<LaborManagement />} />
+            <Route path="accountss" element={<CustomerAccounts />} />
+            <Route path="managers/:id" element={<CustomerManagerView />} />
+            <Route path="managers/edit/:id" element={<CustomerManagerEdit />} />
+            <Route path="settings" element={<CustomerSettings />} />
+            <Route path="help" element={<CustomerHelp />} />
+            <Route path="sites" element={<UnifiedSiteManagement />} />
+            <Route path="sites/manage" element={<SiteManagementPage />} />
+            <Route path="sites/:id" element={<SiteDetails />} />
+            <Route path="sites/new" element={<SiteForm />} />
+            <Route path="sites/edit/:id" element={<SiteForm />} />
+            <Route path="blocks" element={<BlockManagement />} />
+            <Route path="blocks/manage" element={<BlockManagementPage />} />
+            <Route path="blocks/:id" element={<BlockDetails />} />
+            <Route path="blocks/new" element={<BlockForm />} />
+            <Route path="blocks/edit/:id" element={<BlockEditPage />} />
+            <Route path="tasks" element={<WorkTypeManagement />} />
+            <Route
+              path="work-order/detail/:id"
+              element={<WorkOrderDetails />}
+            />
           </Route>
 
           {/* Shared routes */}
