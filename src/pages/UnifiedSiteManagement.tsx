@@ -69,7 +69,7 @@ import { get, join } from "lodash";
 import { apiGetAllAccOrganization } from "@/api/account";
 import { apiDeleteSite, apiGetListSite, apiGetAllSite } from "@/api/site";
 import { apiCreateBlock, apiGetListBlock, apiDeleteBlock } from "@/api/block";
-import { MAP_ROLE, PERMISSION_EMPLOYEE, isPermissionCustomerOrEmployee } from "@/lib/utils/role";
+import { PERMISSION_EMPLOYEE, isPermissionCustomerOrEmployee } from "@/lib/utils/role";
 
 // Map related interfaces
 export interface MapResource {

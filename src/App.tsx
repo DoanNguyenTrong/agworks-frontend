@@ -195,6 +195,10 @@ function App() {
             <Route path="blocks/:id" element={<BlockDetails />} />
             <Route path="blocks/new" element={<BlockForm />} />
             <Route path="blocks/edit/:id" element={<BlockEditPage />} />
+            <Route path="orders/new" element={<CreateWorkOrder />} />
+            <Route path="orders/edit/:id" element={<EditWorkOrder />} />
+            <Route path="orders" element={<WorkOrderManagement />} />
+            <Route path="orders/:id" element={<WorkOrderDetails />} />
             <Route path="tasks" element={<WorkTypeManagement />} />
             <Route
               path="work-order/detail/:id"

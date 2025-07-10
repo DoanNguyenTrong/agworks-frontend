@@ -35,6 +35,6 @@ export const checkRoleInPermissions = (permissions: string[], roles: string[]) =
 }
 
 export const isPermissionCustomerOrEmployee = (currentUser: User, permissions: string[], keyPermission: string) => {
-    if (currentUser.role == MAP_ROLE.CUSTOMER) return true;
+    if ([MAP_ROLE.CUSTOMER, MAP_ROLE.ADMIN].includes(currentUser.role)) return true;
     return currentUser.role == MAP_ROLE.EMPLOYEE && permissions.includes(keyPermission);
 }

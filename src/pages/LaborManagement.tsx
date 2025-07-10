@@ -21,9 +21,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { apiDeleteAcc, apiGetAllAccOrganization } from "@/api/account";
 import { apiGetListSite } from "@/api/site";
 import { filter, get } from "lodash";
+import { PERMISSION_EMPLOYEE, isPermissionCustomerOrEmployee } from "@/lib/utils/role";
 
 export default function LaborManagement() {
-  const { currentUser } = useAuth();
+  const { currentUser, permissions } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
@@ -231,10 +232,13 @@ export default function LaborManagement() {
                 ))}
               </select>
             </div>
-            <Button onClick={() => setIsDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Employee
-            </Button>
+            {
+              isPermissionCustomerOrEmployee(currentUser, permissions, PERMISSION_EMPLOYEE.MANAGE_EMPLOYEES) &&
+              <Button onClick={() => setIsDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Employee
+              </Button>
+            }
           </div>
 
           <Card>
@@ -310,49 +314,54 @@ export default function LaborManagement() {
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setSelectedEmployee(employee);
-                                setShowEmployeeDetails('edit');
-                              }}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleResetAccount(employee)}
-                            >
-                              <KeyRound className="h-4 w-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
+                            {
+                              isPermissionCustomerOrEmployee(currentUser, permissions, PERMISSION_EMPLOYEE.MANAGE_EMPLOYEES) &&
+                              <>
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  onClick={e => e.stopPropagation()}
+                                  onClick={() => {
+                                    setSelectedEmployee(employee);
+                                    setShowEmployeeDetails('edit');
+                                  }}
                                 >
-                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                  <Edit className="h-4 w-4" />
                                 </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    This action cannot be undone. This will permanently delete the employee
-                                    account and remove their access.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDelete(employee)}>
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => handleResetAccount(employee)}
+                                >
+                                  <KeyRound className="h-4 w-4" />
+                                </Button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={e => e.stopPropagation()}
+                                    >
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete the employee
+                                        account and remove their access.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDelete(employee)}>
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </>
+                            }
                           </div>
                         </TableCell>
                       </TableRow>
